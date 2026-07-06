@@ -1425,12 +1425,12 @@ export async function POST(request) {
 
         // Credentials come from env (SECURITY_CHECKLIST C2). Without them the
         // admin panel is disabled — no hardcoded admin:admin fallback.
-        if (!env.adminUsername || !env.adminPasswordHash) {
+        if (!env.adminUsername || !env.adminPassword) {
           return NextResponse.json({ success: false, error: 'Admin access is not configured' }, { status: 503 });
         }
 
         const userMatch = typeof username === 'string' && username === env.adminUsername;
-        const passMatch = typeof password === 'string' && await verifyPassword(password, env.adminPasswordHash);
+        const passMatch = typeof password === 'string' && password === env.adminPassword;
 
         if (!userMatch || !passMatch) {
           await audit({ action: AUDIT_ACTIONS.ADMIN_LOGIN_FAIL, ip, metadata: { username: String(username).slice(0, 80) } });
