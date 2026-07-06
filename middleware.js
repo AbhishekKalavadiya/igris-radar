@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { SESSION_COOKIE, PROTECTED_ROUTES, AUTH_ROUTES, ROUTES } from '@/lib/constants'
-import { isRateLimited } from '@/lib/rateLimit'
-import { isSameOriginRequest } from '@/lib/security/originCheck'
-import { env } from '@/lib/env'
+import { SESSION_COOKIE, PROTECTED_ROUTES, AUTH_ROUTES, ROUTES } from './lib/constants'
+import { isRateLimited } from './lib/rateLimit'
+import { isSameOriginRequest } from './lib/security/originCheck'
+import { env } from './lib/env'
 
 /**
  * Cheap, Edge-safe check that a session cookie is a live signed token.
