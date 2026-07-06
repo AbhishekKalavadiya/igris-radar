@@ -1,0 +1,17 @@
+# Gitleaks configuration — extends the default ruleset.
+# SECURITY_CHECKLIST: secret scanning (Gitleaks / TruffleHog).
+title = "Igris Radar Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Files that legitimately contain placeholder secrets"
+paths = [
+  '''\.env\.example$''',
+  '''docs/SECURITY_CHECKLIST\.md$''',
+  '''docs/SECURITY_IMPLEMENTATION\.md$''',
+]
+regexes = [
+  '''change-me[-a-z0-9]*''',
+]

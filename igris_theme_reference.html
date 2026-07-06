@@ -1,0 +1,380 @@
+
+<h2 class="sr-only">Igris Security design system — full color and theme reference</h2>
+
+<style>
+  .section { margin-bottom: 2rem; }
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+  .swatch-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .swatch {
+    flex: 1;
+    min-width: 100px;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    border: 0.5px solid var(--color-border-tertiary);
+  }
+  .swatch-chip { height: 52px; width: 100%; }
+  .swatch-meta { padding: 8px 10px; background: var(--color-background-primary); }
+  .swatch-name { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 2px; }
+  .swatch-hex { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-mono); margin: 0 0 1px; }
+  .swatch-role { font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+
+  .type-row { display: flex; flex-direction: column; gap: 8px; }
+  .type-item {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 14px;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+  }
+  .type-sample { flex: 1; color: var(--color-text-primary); }
+  .type-meta { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-mono); white-space: nowrap; min-width: 130px; text-align: right; }
+
+  .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .status-card {
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    border: 0.5px solid var(--color-border-tertiary);
+  }
+  .status-chip { height: 40px; display: flex; align-items: center; justify-content: center; }
+  .status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+  }
+  .status-meta { padding: 8px 10px; background: var(--color-background-primary); }
+
+  .space-row { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+  .space-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .space-bar { background: #1a5a6b; border-radius: 2px; width: 28px; }
+  .space-label { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-mono); }
+
+  .token-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .token-card {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 12px 14px;
+  }
+  .token-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px; }
+  .token-val { font-size: 11px; color: var(--color-text-secondary); font-family: var(--font-mono); margin: 0; }
+  .diamond { color: #1a5a6b; }
+</style>
+
+<div style="padding: 1.5rem 0;">
+
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1.75rem;">
+    <span class="diamond" style="font-size: 22px;">◆</span>
+    <div>
+      <p style="font-size: 18px; font-weight: 500; margin: 0; color: var(--color-text-primary);">Igris Design System</p>
+      <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0;">Color and theme token reference</p>
+    </div>
+  </div>
+
+  <!-- Brand Accent -->
+  <div class="section">
+    <p class="section-label"><span class="diamond">◆</span> Brand accent — teal</p>
+    <div class="swatch-row">
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#1a5a6b;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--primary</p>
+          <p class="swatch-hex">#1a5a6b</p>
+          <p class="swatch-role">Brand primary</p>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#134a58;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--primary-dark</p>
+          <p class="swatch-hex">#134a58</p>
+          <p class="swatch-role">Hover / emphasis</p>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#0f4c5c;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--primary-darker</p>
+          <p class="swatch-hex">#0f4c5c</p>
+          <p class="swatch-role">Pressed state</p>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#f0f9fa; border-bottom: 0.5px solid #e2e8f0;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--primary-light</p>
+          <p class="swatch-hex">#f0f9fa</p>
+          <p class="swatch-role">Selection / tint</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Surfaces -->
+  <div class="section">
+    <p class="section-label"><span class="diamond">◆</span> Surfaces</p>
+    <div class="swatch-row">
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#f8fafb; border-bottom: 0.5px solid #e2e8f0;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--bg</p>
+          <p class="swatch-hex">#f8fafb</p>
+          <p class="swatch-role">Page canvas</p>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#ffffff; border-bottom: 0.5px solid #e2e8f0;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--surface</p>
+          <p class="swatch-hex">#ffffff</p>
+          <p class="swatch-role">Card / panel</p>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#fafcfd; border-bottom: 0.5px solid #e2e8f0;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--surface-hover</p>
+          <p class="swatch-hex">#fafcfd</p>
+          <p class="swatch-role">Hover fill</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text / Foreground -->
+  <div class="section">
+    <p class="section-label"><span class="diamond">◆</span> Text / Foreground</p>
+    <div class="swatch-row">
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#0f172a;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--text-primary</p>
+          <p class="swatch-hex">#0f172a</p>
+          <p class="swatch-role">Headlines / body</p>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#64748b;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--text-secondary</p>
+          <p class="swatch-hex">#64748b</p>
+          <p class="swatch-role">Supporting text</p>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-chip" style="background:#94a3b8;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--text-muted</p>
+          <p class="swatch-hex">#94a3b8</p>
+          <p class="swatch-role">Hints / labels</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Borders -->
+  <div class="section">
+    <p class="section-label"><span class="diamond">◆</span> Borders</p>
+    <div class="swatch-row">
+      <div class="swatch" style="max-width: 220px;">
+        <div class="swatch-chip" style="background:#e2e8f0;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--border</p>
+          <p class="swatch-hex">#e2e8f0</p>
+          <p class="swatch-role">Default 1px border</p>
+        </div>
+      </div>
+      <div class="swatch" style="max-width: 220px;">
+        <div class="swatch-chip" style="background:#cbd5e1;"></div>
+        <div class="swatch-meta">
+          <p class="swatch-name">--border-strong</p>
+          <p class="swatch-hex">#cbd5e1</p>
+          <p class="swatch-role">Emphasis border</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Colors -->
+  <div class="section">
+    <p class="section-label"><span class="diamond">◆</span> Status colors</p>
+    <div class="status-grid">
+      <div class="status-card">
+        <div class="status-chip" style="background:#dcfce7;">
+          <span class="status-badge" style="background:#22c55e; color:#166534;">Success</span>
+        </div>
+        <div class="status-meta">
+          <p class="swatch-name">Success</p>
+          <p class="swatch-hex">#22c55e · #dcfce7 · #166534</p>
+          <p class="swatch-role">Solid · Light · Text</p>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-chip" style="background:#fef3c7;">
+          <span class="status-badge" style="background:#f59e0b; color:#92400e;">Warning</span>
+        </div>
+        <div class="status-meta">
+          <p class="swatch-name">Warning</p>
+          <p class="swatch-hex">#f59e0b · #fef3c7 · #92400e</p>
+          <p class="swatch-role">Solid · Light · Text</p>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-chip" style="background:#fee2e2;">
+          <span class="status-badge" style="background:#ef4444; color:#991b1b;">Danger</span>
+        </div>
+        <div class="status-meta">
+          <p class="swatch-name">Danger</p>
+          <p class="swatch-hex">#ef4444 · #fee2e2 · #991b1b</p>
+          <p class="swatch-role">Solid · Light · Text</p>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-chip" style="background:#dbeafe;">
+          <span class="status-badge" style="background:#3b82f6; color:#1e40af;">Info</span>
+        </div>
+        <div class="status-meta">
+          <p class="swatch-name">Info</p>
+          <p class="swatch-hex">#3b82f6 · #dbeafe · #1e40af</p>
+          <p class="swatch-role">Solid · Light · Text</p>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-chip" style="background:#f3e8ff;">
+          <span class="status-badge" style="background:#7c3aed; color:#5b21b6;">Purple</span>
+        </div>
+        <div class="status-meta">
+          <p class="swatch-name">Purple</p>
+          <p class="swatch-hex">#7c3aed · #f3e8ff</p>
+          <p class="swatch-role">Solid · Light</p>
+        </div>
+      </div>
+      <div class="status-card">
+        <div class="status-chip" style="background:#ccfbf1;">
+          <span class="status-badge" style="background:#0f766e; color:#134e4a;">Teal</span>
+        </div>
+        <div class="status-meta">
+          <p class="swatch-name">Teal (alt)</p>
+          <p class="swatch-hex">#0f766e · #ccfbf1</p>
+          <p class="swatch-role">Solid · Light</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Typography -->
+  <div class="section">
+    <p class="section-label"><span class="diamond">◆</span> Typography scale</p>
+    <div class="type-row">
+      <div class="type-item">
+        <span class="type-sample" style="font-size:40px; font-weight:700; line-height:1.15; letter-spacing:-0.01em;">Display</span>
+        <span class="type-meta">40px · 700 · lh 1.15</span>
+      </div>
+      <div class="type-item">
+        <span class="type-sample" style="font-size:28px; font-weight:700; line-height:1.25; letter-spacing:-0.01em;">Heading 1</span>
+        <span class="type-meta">28px · 700 · lh 1.25</span>
+      </div>
+      <div class="type-item">
+        <span class="type-sample" style="font-size:20px; font-weight:700; line-height:1.25;">Heading 2</span>
+        <span class="type-meta">20px · 700 · lh 1.25</span>
+      </div>
+      <div class="type-item">
+        <span class="type-sample" style="font-size:16px; font-weight:600; line-height:1.25;">Heading 3</span>
+        <span class="type-meta">16px · 600 · lh 1.25</span>
+      </div>
+      <div class="type-item">
+        <span class="type-sample" style="font-size:13px; line-height:1.5;">Body text — Inter regular</span>
+        <span class="type-meta">13px · 400 · lh 1.5</span>
+      </div>
+      <div class="type-item">
+        <span class="type-sample" style="font-size:12px; color: var(--color-text-secondary); line-height:1.5;">Body small — supporting text</span>
+        <span class="type-meta">12px · 400 · muted</span>
+      </div>
+      <div class="type-item">
+        <span class="type-sample" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color: var(--color-text-secondary);">Label uppercase</span>
+        <span class="type-meta">11px · 600 · +0.05em</span>
+      </div>
+      <div class="type-item">
+        <span class="type-sample" style="font-size:28px; font-weight:700; color:#1a5a6b;">42,190</span>
+        <span class="type-meta">28px · KPI / stat</span>
+      </div>
+      <div class="type-item">
+        <span class="type-sample" style="font-size:12px; font-family: 'Roboto Mono', monospace;">const key = "igris-api-key-001";</span>
+        <span class="type-meta">12px · Roboto Mono</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spacing -->
+  <div class="section">
+    <p class="section-label"><span class="diamond">◆</span> Spacing scale (4px grid)</p>
+    <div class="space-row">
+      <div class="space-item"><div class="space-bar" style="height:4px;"></div><span class="space-label">4</span></div>
+      <div class="space-item"><div class="space-bar" style="height:8px;"></div><span class="space-label">8</span></div>
+      <div class="space-item"><div class="space-bar" style="height:12px;"></div><span class="space-label">12</span></div>
+      <div class="space-item"><div class="space-bar" style="height:16px;"></div><span class="space-label">16</span></div>
+      <div class="space-item"><div class="space-bar" style="height:20px;"></div><span class="space-label">20</span></div>
+      <div class="space-item"><div class="space-bar" style="height:24px;"></div><span class="space-label">24</span></div>
+      <div class="space-item"><div class="space-bar" style="height:32px;"></div><span class="space-label">32</span></div>
+      <div class="space-item"><div class="space-bar" style="height:40px;"></div><span class="space-label">40</span></div>
+      <div class="space-item"><div class="space-bar" style="height:48px;"></div><span class="space-label">48</span></div>
+      <div class="space-item"><div class="space-bar" style="height:64px;"></div><span class="space-label">64</span></div>
+    </div>
+  </div>
+
+  <!-- Other tokens -->
+  <div class="section">
+    <p class="section-label"><span class="diamond">◆</span> Other design tokens</p>
+    <div class="token-grid">
+      <div class="token-card">
+        <p class="token-title">Radii</p>
+        <p class="token-val">--radius-none: 0px</p>
+        <p class="token-val">--radius-pill: 999px</p>
+        <p class="token-val" style="margin-top:4px; font-size:10px; color: var(--color-text-tertiary);">Sharp by default — pills for avatars only</p>
+      </div>
+      <div class="token-card">
+        <p class="token-title">Shadows</p>
+        <p class="token-val">sm: 0 1px 2px rgba(15,23,42,0.04)</p>
+        <p class="token-val">md: 0 4px 12px rgba(15,23,42,0.06)</p>
+        <p class="token-val">lg: 0 12px 32px rgba(15,23,42,0.10)</p>
+      </div>
+      <div class="token-card">
+        <p class="token-title">Motion</p>
+        <p class="token-val">ease: cubic-bezier(0.2, 0, 0, 1)</p>
+        <p class="token-val">fast: 150ms</p>
+      </div>
+      <div class="token-card">
+        <p class="token-title">Chrome / layout</p>
+        <p class="token-val">sidebar-w: 240px</p>
+        <p class="token-val">header-h: 56px</p>
+        <p class="token-val">content-max: 1200px</p>
+      </div>
+      <div class="token-card">
+        <p class="token-title">Fonts</p>
+        <p class="token-val">sans: Inter, system-ui</p>
+        <p class="token-val">mono: Roboto Mono, ui-monospace</p>
+      </div>
+      <div class="token-card">
+        <p class="token-title">Focus ring</p>
+        <p class="token-val">0 0 0 2px rgba(26,90,107,0.08)</p>
+        <p class="token-val" style="margin-top:4px; font-size:10px; color: var(--color-text-tertiary);">Teal ring on keyboard focus</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:8px; padding:12px 14px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); border-left: 2.5px solid #1a5a6b;">
+    <span class="diamond" style="font-size:14px;">◆</span>
+    <p style="font-size:12px; color: var(--color-text-secondary); margin:0;">The diamond ◆ is the brand signature. Always render it in <span style="color:#1a5a6b; font-weight:500;">#1a5a6b</span> when used decoratively as an eyebrow prefix, bullet marker, or logo element.</p>
+  </div>
+
+</div>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Architecture Overview</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #f9fafb;
+        }
+        h1 {
+            color: #111827;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+        h2 {
+            color: #1f2937;
+            margin-top: 2rem;
+        }
+        h3 {
+            color: #374151;
+        }
+        p {
+            margin-bottom: 1rem;
+        }
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        li {
+            margin-bottom: 0.5rem;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 2rem 3rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        code {
+            background-color: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Project Architecture Overview</h1>
+        
+        <div class="section">
+            <h2>Part 1: General Project Structure</h2>
+            <p>Based on the exploration of the codebase, here is a generalized overview of how the project is structured and how its components interact. The project is organized as a <strong>Monorepo</strong>, meaning all the different parts of the system live in a single repository and share dependencies.</p>
+            <p>It is divided into two main areas: <strong>User-Facing Applications</strong> and <strong>Shared Core Modules</strong>.</p>
+
+            <h3>1. User-Facing Applications</h3>
+            <p>These are the deployable entry points of the platform:</p>
+            <ul>
+                <li><strong>The Backend Gateway (API):</strong> This is the central nervous system of the platform. It handles all incoming requests, exposing endpoints for everything from user onboarding and billing to policy management, incident tracking, and health checks. It acts as the bridge between the web interfaces and the core business logic.</li>
+                <li><strong>The User Dashboard:</strong> A modern, server-rendered web application where users (like CISOs or admins) log in to view analytics, configure security rules, manage access, and monitor the system's overall health.</li>
+                <li><strong>Public Sites:</strong> Separate, lighter applications handle the public marketing pages and the developer documentation.</li>
+            </ul>
+
+            <h3>2. Shared Core Modules</h3>
+            <p>Instead of putting all the logic into the API, the system's functionality is broken down into specialized, reusable modules. This keeps the code clean and allows different apps to use the exact same logic safely:</p>
+            <ul>
+                <li><strong>The Security &amp; Policy Engine:</strong> This is the core engine of the platform. It contains a suite of detectors, parsers, and rules designed to scan and evaluate AI system behavior, ensuring everything complies with set policies.</li>
+                <li><strong>The Interception Proxy:</strong> A critical module that sits between users and AI models. It acts as a gatekeeper, intercepting requests to enforce policies in real-time. It handles tasks like detecting anomalies, estimating token usage, enforcing rate limits, and parsing the communication protocols.</li>
+                <li><strong>The Data Layer:</strong> A dedicated module responsible for all database interactions. It defines the structure of the data (schemas) and handles migrations, ensuring that data like audit logs, user configurations, and policies are stored and retrieved efficiently, often with multi-tenant separation.</li>
+                <li><strong>Identity &amp; Access Management:</strong> This module centralizes all security around <em>who</em> can access <em>what</em>. It manages user sessions for the dashboard, validates API keys for programmatic access, and enforces role-based permissions across the platform.</li>
+                <li><strong>Compliance &amp; Observability:</strong> Specialized modules exist to take the raw data and turn it into actionable insights. One focuses on generating formal compliance documentation (like for regulatory standards), while another aggregates metrics for dashboard reporting and alerting.</li>
+            </ul>
+
+            <h3>How Everything Flows Together</h3>
+            <ol>
+                <li>A user or system makes a request (either to manage settings via the <strong>Dashboard</strong> or to route an AI prompt via the <strong>Interception Proxy</strong>).</li>
+                <li>The <strong>Identity &amp; Access Management</strong> module first verifies if the requester is authorized.</li>
+                <li>If it's an AI request, the <strong>Proxy</strong> intercepts it and hands it to the <strong>Security &amp; Policy Engine</strong> to scan for violations or anomalies.</li>
+                <li>The results, along with general usage data, are recorded securely via the <strong>Data Layer</strong>.</li>
+                <li>Finally, this stored data is processed by the <strong>Compliance &amp; Observability</strong> modules so that administrators can view real-time reports and alerts back on the <strong>Dashboard</strong>.</li>
+            </ol>
+            <p>In short, the architecture is designed to be a robust, modular pipeline where traffic is authenticated, rigorously analyzed against security rules in real-time, and deeply logged for reporting.</p>
+        </div>
+
+        <div class="section">
+            <h2>Part 2: API Architecture &amp; Authentication Flow</h2>
+            
+            <h3>General API Architecture</h3>
+            <p>The backend API is built using <strong>Hono</strong> running on <strong>Bun</strong>, which provides an extremely fast, lightweight web server. It serves a dual purpose: it acts as a traditional REST API for the dashboard and as a high-performance interception Gateway for AI traffic.</p>
+            
+            <ul>
+                <li><strong>Dual-Gateway System:</strong> The API essentially splits traffic into two main streams:
+                    <ul>
+                        <li><strong>The Management REST API (<code>/api/v1/*</code>):</strong> This serves the Next.js web dashboard. It has heavily structured routes separated by domain (e.g., policies, alerts, audit-events, billing, observability).</li>
+                        <li><strong>The Runtime Gateways (<code>/v1/mcp/*</code> and LLM endpoints):</strong> These are dedicated, high-throughput pathways that intercept programmatic AI traffic. When an AI tool call or LLM prompt comes through, the gateway dynamically authenticates the key, loads the specific organization's policy rules from a cache, scans the payload for anomalies, logs the audit event, and proxies the traffic.</li>
+                    </ul>
+                </li>
+                <li><strong>Multi-Tenant Data Isolation (Schema per Tenant):</strong> A critical architectural decision is how data is isolated. The API uses a custom middleware (<code>schemaMiddleware</code>) that intercepts requests, identifies the organization making the request, and points the database connection (Drizzle ORM) to a dedicated, secure Postgres schema specifically for that tenant. This ensures zero data bleed between customers.</li>
+                <li><strong>Real-Time Event System:</strong> The API is heavily event-driven. Instead of blocking requests, tasks like webhook dispatching, alerting, and telemetry logging happen asynchronously. It also emits Server-Sent Events (SSE) so the web dashboard updates in real-time when policy violations or anomalies are detected.</li>
+                <li><strong>Global &amp; Gateway Rate Limiting:</strong> The API employs layered rate limiting backed by Redis. General API routes have a standard global limit, while the Runtime Gateways have aggressive, distinct limits tied specifically to the incoming API key's hashed identity to prevent abuse.</li>
+            </ul>
+
+            <h3>Authentication &amp; Authorization Flow</h3>
+            <p>The platform centralizes identity management using <strong>BetterAuth</strong>, extended with several custom plugins and middleware to support its enterprise requirements.</p>
+            
+            <ul>
+                <li><strong>Human Users (Dashboard Auth):</strong>
+                    <ul>
+                        <li><strong>Flow:</strong> Users log in via Email/Password or OAuth (Google, GitHub).</li>
+                        <li><strong>Session Management:</strong> The system issues secure, HTTP-only cookies. When a user requests a dashboard route, a <code>sessionMiddleware</code> intercepts the request, validates the cookie against the database (or Redis cache), and extracts the user's active Organization ID.</li>
+                        <li><strong>Enterprise Gates:</strong> There is middleware specifically designed to check the organization's billing plan. If a user tries to access advanced security features (like enabling MFA or SAML SSO), the API checks if their tier supports it before allowing the action.</li>
+                    </ul>
+                </li>
+                <li><strong>Machine/Programmatic Users (Gateway Auth):</strong>
+                    <ul>
+                        <li><strong>Flow:</strong> For traffic hitting the AI proxy gateways or data ingestion endpoints, session cookies aren't used. Instead, programmatic access relies on API Keys sent as Bearer tokens.</li>
+                        <li><strong>Security:</strong> To prevent sensitive keys from leaking in logs or being compromised, the gateway intercepts the raw Bearer token and immediately creates a SHA-256 hash. It then looks up this hash in the database to identify the organization.</li>
+                        <li><strong>Fallback:</strong> The main REST API (<code>/api/v1/*</code>) is smart enough to fall back to this API Key authentication if a dashboard session cookie isn't present, allowing SDKs to interact with the management API.</li>
+                    </ul>
+                </li>
+                <li><strong>Organization Lifecycle Hooks:</strong> BetterAuth is heavily integrated into the organization lifecycle.
+                    <ul>
+                        <li><strong>Provisioning:</strong> The moment a new organization is created during signup, a database hook automatically fires to execute migrations and provision a brand-new, isolated Postgres schema for them.</li>
+                        <li><strong>RBAC (Role-Based Access Control):</strong> When inviting new users to an organization, hooks intercept the invite to ensure the organization's tier supports advanced roles (like assigning an 'admin' vs 'viewer') and that they haven't exceeded their active user limits.</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

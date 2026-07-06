@@ -1,0 +1,517 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Igris Design System — dark mode adaptation
+  Brand teal: #1a5a6b (hsl 192 61% 26%)
+  Dark-mode primary: hsl(192 70% 55%) — bright teal on dark surfaces
+*/
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+
+    /* Brand teal */
+    --primary: 192 70% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary surface */
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 10%;
+
+    /* Muted */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 35%;
+
+    /* Accent */
+    --accent: 192 35% 92%;
+    --accent-foreground: 192 70% 35%;
+
+    /* Semantic */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Chrome */
+    --border: 240 5% 65%;
+    --input: 240 5% 65%;
+    --ring: 192 70% 45%;
+
+    /* Radius scale — sm/md derive from --radius in tailwind.config */
+    --radius: 10px;
+    --radius-xl: 16px;
+
+    /* Semantic status */
+    --success: 160 84% 39%;
+    --warning: 38 92% 50%;
+
+    /* Scanner accents — one identity color per audit tool */
+    --accent-security: 239 84% 67%;  /* indigo */
+    --accent-seo: 217 91% 60%;       /* blue */
+    --accent-aeo: 271 91% 65%;       /* purple */
+    --accent-geo: 189 94% 43%;       /* cyan */
+    --accent-brand: 38 92% 50%;      /* amber */
+    --accent-health: 160 84% 39%;    /* emerald */
+
+    /* Finding severity */
+    --severity-critical: 0 84% 60%;
+    --severity-high: 25 95% 53%;
+    --severity-medium: 38 92% 50%;
+    --severity-low: 217 91% 60%;
+
+    /* Chart */
+    --chart-1: 192 70% 45%;
+    --chart-2: 142 71% 40%;
+    --chart-3: 38 92% 45%;
+    --chart-4: 217 91% 55%;
+    --chart-5: 262 50% 50%;
+
+    /* Sidebar */
+    --sidebar-background: 240 5% 96%;
+    --sidebar-foreground: 240 10% 10%;
+    --sidebar-primary: 192 70% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 192 35% 92%;
+    --sidebar-accent-foreground: 192 70% 35%;
+    --sidebar-border: 240 5% 84%;
+    --sidebar-ring: 192 70% 45%;
+
+    /* Igris layout tokens */
+    --sidebar-w: 240px;
+    --header-h: 56px;
+    --content-max: 1200px;
+
+    /* Igris shadow tokens */
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.40);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.50);
+    --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.60);
+
+    /* Igris motion tokens */
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --duration-fast: 150ms;
+
+    /* Igris font tokens */
+    --font-sans: Inter, system-ui, sans-serif;
+    --font-mono: 'Roboto Mono', ui-monospace, monospace;
+  }
+
+  /* App is always dark (html.dark) — dark vars mirror :root */
+  .dark {
+    --background: 240 33% 2%;
+    --foreground: 210 40% 98%;
+    --card: 240 17% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 240 17% 7%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 192 70% 55%;
+    --primary-foreground: 240 33% 2%;
+    --secondary: 240 17% 10%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 240 17% 10%;
+    --muted-foreground: 215 16% 56%; /* ≥4.5:1 on --background for WCAG AA */
+    --accent: 192 35% 14%;
+    --accent-foreground: 192 70% 75%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 192 70% 55%;
+    --chart-1: 192 70% 55%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 217 91% 60%;
+    --chart-5: 262 50% 55%;
+    --sidebar-background: 240 20% 5%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 192 70% 55%;
+    --sidebar-primary-foreground: 240 33% 2%;
+    --sidebar-accent: 192 35% 14%;
+    --sidebar-accent-foreground: 192 70% 75%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 192 70% 55%;
+
+    /* Brighter accents on dark surfaces */
+    --success: 160 84% 45%;
+    --warning: 38 92% 55%;
+    --accent-security: 234 89% 74%;  /* indigo-400 */
+    --accent-seo: 213 94% 68%;       /* blue-400 */
+    --accent-aeo: 270 95% 75%;       /* purple-400 */
+    --accent-geo: 187 92% 55%;       /* cyan-400 */
+    --accent-brand: 43 96% 56%;      /* amber-400 */
+    --accent-health: 158 64% 52%;    /* emerald-400 */
+    --severity-critical: 0 91% 71%;
+    --severity-high: 27 96% 61%;
+    --severity-medium: 43 96% 56%;
+    --severity-low: 213 94% 68%;
+  }
+}
+
+/* Light theme scope — the app shell is always dark (html.dark), but the
+   public marketing site renders inside .theme-light, which re-asserts
+   light values for every inherited token. */
+.theme-light {
+  color-scheme: light;
+  --background: 0 0% 100%;
+  --foreground: 240 24% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 24% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 24% 10%;
+  --primary: 192 85% 30%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 20% 96%;
+  --secondary-foreground: 240 24% 10%;
+  --muted: 220 20% 96%;
+  --muted-foreground: 220 10% 40%;
+  --accent: 192 60% 94%;
+  --accent-foreground: 192 85% 24%;
+  --destructive: 0 74% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 14% 89%;
+  --input: 220 14% 85%;
+  --ring: 192 85% 30%;
+  --success: 160 84% 30%;
+  --warning: 35 92% 40%;
+  --accent-security: 239 84% 60%;
+  --accent-seo: 217 91% 48%;
+  --accent-aeo: 271 81% 50%;
+  --accent-geo: 189 94% 34%;
+  --accent-brand: 32 95% 42%;
+  --accent-health: 160 84% 30%;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.10);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+  code, pre, kbd, samp {
+    font-family: var(--font-mono);
+  }
+}
+
+/* Animated waveform */
+@keyframes waveform {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+.waveform-bar {
+  animation: waveform 1s ease-in-out infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s var(--ease) forwards;
+}
+
+/* Staggered animations */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+/* Security gauge glow — Igris teal */
+.gauge-glow {
+  filter: drop-shadow(0 0 10px hsl(192 70% 55% / 0.5));
+}
+
+/* Igris teal glow — replaces acid green */
+.glow-primary {
+  box-shadow: 0 0 20px hsl(192 70% 55% / 0.3);
+}
+
+/* Igris teal glow secondary */
+.glow-accent {
+  box-shadow: 0 0 20px hsl(192 70% 55% / 0.15);
+}
+
+/* Demo animations */
+@keyframes progress {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.animate-progress {
+  animation: progress 2s var(--ease) forwards;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--duration-fast) var(--ease) forwards;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.3);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.6);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+/* --- Premium UI Enhancements --- */
+
+/* Glass elevation tiers
+   subtle   → stat cards, list rows
+   panel    → primary page containers
+   elevated → modals, popovers, floating elements */
+.glass-subtle {
+  @apply bg-card/60 backdrop-blur-sm border border-border/60;
+}
+
+.glass-panel {
+  @apply bg-card/80 backdrop-blur-xl border border-border;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+}
+
+.glass-elevated {
+  @apply bg-card/95 backdrop-blur-2xl border border-border;
+  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-card {
+  @apply bg-card/80 backdrop-blur-md border border-border transition-all duration-300;
+}
+
+.glass-card:hover {
+  @apply -translate-y-1 bg-card/90 border-primary/20 dark:border-primary/20;
+  box-shadow: 0 10px 40px -10px hsl(var(--primary) / 0.15);
+}
+
+/* Accent-tinted card hover — pair with a scanner accent, e.g. hover:border-scanner-seo/40 */
+.accent-card {
+  @apply transition-all duration-300 hover:-translate-y-0.5;
+}
+
+/* Interactive Elements */
+.premium-hover {
+  @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm;
+}
+
+/* Staggered entry animations */
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.5s var(--ease) forwards;
+  opacity: 0;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Dynamic Gradients */
+.bg-gradient-primary {
+  @apply bg-gradient-to-br from-primary to-emerald-500;
+}
+
+.text-gradient-primary {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-emerald-400;
+}
+
+/* Ambient Background Animations */
+@keyframes ambientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at 15% 50%, hsl(var(--primary) / 0.08), transparent 25%),
+              radial-gradient(circle at 85% 30%, hsl(175, 100%, 35%, 0.08), transparent 25%);
+  pointer-events: none;
+  will-change: auto;
+}
+
+/* Premium Form Controls */
+.focus-glow:focus-within {
+  @apply border-primary/50;
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15), 0 0 15px 0 hsl(var(--primary) / 0.1);
+  transition: all 0.3s ease;
+}
+
+.button-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.button-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transform: skewX(-20deg);
+  animation: none;
+}
+
+.button-shine:hover::after {
+  animation: shine 1.5s infinite;
+}
+
+@keyframes shine {
+  100% { left: 200%; }
+}
+
+/* Skeleton Loaders */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(to right, transparent 8%, hsl(var(--foreground) / 0.05) 18%, transparent 33%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Animated Typography */
+@keyframes textGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.text-gradient-primary-animated {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-400 to-primary;
+  background-size: 200% auto;
+  animation: textGradient 4s linear infinite;
+}
+
+/* Hero ticker — scrolling AI engine name strip */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker 25s linear infinite;
+  display: flex;
+  width: max-content;
+}
+
+/* Slow bounce — used on coming-soon pages */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15%); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2.5s var(--ease) infinite;
+}
+
+/* Score count-up helper — numbers keep tabular width while animating */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Screen Loader --- */
+.screen-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: hsl(var(--background) / 0.4);
+  backdrop-filter: blur(2px);
+  pointer-events: auto; 
+}
+
+.screen-loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.screen-loader-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid hsl(var(--border) / 0.5);
+  border-top-color: hsl(var(--primary));
+  border-radius: 50%;
+  animation: spin-slow 1s linear infinite;
+}
+
+.screen-loader-text {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
