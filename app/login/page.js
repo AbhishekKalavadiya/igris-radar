@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/lib/authContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +44,10 @@ function LoginForm() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8 fade-in">
+        <Link href="/landing" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back to home
+        </Link>
+
         {/* Logo */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
@@ -84,7 +88,12 @@ function LoginForm() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="login-password" className="text-sm font-medium">Password</label>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="login-password" className="text-sm font-medium">Password</label>
+                  <Link href="/forgot-password" className="text-xs text-primary hover:underline font-medium">
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input

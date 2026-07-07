@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, User, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, User, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/lib/authContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +66,10 @@ function SignupForm() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8 fade-in">
+        <Link href="/landing" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" /> Back to home
+        </Link>
+
         {/* Logo */}
         <div className="text-center">
           <div className="flex justify-center mb-4">

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { getDb, getCollection } from '@/lib/db';
 import { COLLECTIONS } from '@/lib/db/schemas';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,13 +38,15 @@ import {
   deleteAccountSchema,
   adminKeysSchema,
   brandingSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   parseOrThrow,
 } from '@/lib/validation/schemas';
 import { getUserSettings, mergeSettings } from '@/lib/settings';
 import { getUserBranding, resolveReportBranding } from '@/lib/branding';
 import { notifyScanComplete } from '@/lib/notifications';
 import { sendEmail, getEmailTransport } from '@/lib/email/mailer';
-import { loginAlertEmail, passwordChangedEmail, newUserSignupEmail, contactFormEmail } from '@/lib/email/templates';
+import { loginAlertEmail, passwordChangedEmail, passwordResetEmail, newUserSignupEmail, contactFormEmail } from '@/lib/email/templates';
 import { getKeyStatuses, setKeys, getKeys } from '@/lib/systemConfig';
 import { getAvailableAiProviders, hasAnyAiProvider, testAiProvider } from '@/lib/scanners/shared/aiAnalyzer';
 import { startMonitoring } from '@/lib/monitoring';
@@ -87,6 +90,17 @@ function getSessionUser(request) {
   const cookie = request.cookies.get(SESSION_COOKIE);
   if (!cookie) return null;
   return decodeSession(cookie.value);
+}
+
+/**
+ * Hashes a raw password-reset token for DB storage/lookup. The raw token is
+ * only ever sent in the emailed link — the DB holds just the SHA-256 hash,
+ * so a database read alone can never yield a usable token (SECURITY_CHECKLIST C1).
+ * @param {string} rawToken
+ * @returns {string}
+ */
+function hashResetToken(rawToken) {
+  return crypto.createHash('sha256').update(rawToken).digest('hex');
 }
 
 /**
@@ -723,6 +737,78 @@ export async function POST(request) {
       const response = NextResponse.json({ success: true });
       response.headers.set('Set-Cookie', clearSessionCookie());
       return response;
+    }
+
+    // Request a password reset email (public, unauthenticated)
+    if (pathParts[0] === 'auth' && pathParts[1] === 'forgot-password') {
+      const ip = clientIp(request);
+      if (isRateLimited(ip, 'reset')) {
+        return NextResponse.json({ success: false, error: 'Too many requests. Try again later.' }, { status: 429 });
+      }
+
+      const { email } = parseOrThrow(forgotPasswordSchema, await request.json());
+
+      const col = await getCollection(COLLECTIONS.USERS);
+      const user = await col.findOne({ email });
+
+      // Always respond with the same message whether or not the account
+      // exists, so this endpoint can't be used to enumerate registered
+      // emails (SECURITY_CHECKLIST A9). Only send an email if it does.
+      if (user) {
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        await col.updateOne(
+          { id: user.id },
+          { $set: {
+              resetTokenHash: hashResetToken(rawToken),
+              resetTokenExpires: new Date(Date.now() + 30 * 60 * 1000),
+              updatedAt: new Date(),
+          } }
+        );
+
+        await audit({ action: AUDIT_ACTIONS.PASSWORD_RESET_REQUEST, userId: user.id, ip, metadata: { email } });
+
+        const resetUrl = `${env.siteUrl}/reset-password?token=${rawToken}`;
+        const mail = passwordResetEmail({ name: user.name, resetUrl });
+        sendEmail({ to: user.email, ...mail }).catch((err) => console.error('[auth/forgot-password] email send failed:', err.message));
+      }
+
+      return NextResponse.json({ success: true, data: { message: 'If an account exists for that email, a reset link has been sent.' } });
+    }
+
+    // Complete a password reset with a token from the emailed link (public, unauthenticated)
+    if (pathParts[0] === 'auth' && pathParts[1] === 'reset-password') {
+      const ip = clientIp(request);
+      if (isRateLimited(ip, 'reset')) {
+        return NextResponse.json({ success: false, error: 'Too many requests. Try again later.' }, { status: 429 });
+      }
+
+      const { token, password } = parseOrThrow(resetPasswordSchema, await request.json());
+
+      const col = await getCollection(COLLECTIONS.USERS);
+      const user = await col.findOne({
+        resetTokenHash: hashResetToken(token),
+        resetTokenExpires: { $gt: new Date() },
+      });
+
+      if (!user) {
+        return NextResponse.json({ success: false, error: 'This reset link is invalid or has expired. Request a new one.' }, { status: 400 });
+      }
+
+      const passwordHash = await hashPassword(password);
+      await col.updateOne(
+        { id: user.id },
+        {
+          $set: { passwordHash, updatedAt: new Date() },
+          $unset: { resetTokenHash: '', resetTokenExpires: '' },
+        }
+      );
+
+      await audit({ action: AUDIT_ACTIONS.PASSWORD_RESET_COMPLETE, userId: user.id, ip });
+
+      const mail = passwordChangedEmail({ name: user.name, time: new Date().toUTCString() });
+      sendEmail({ to: user.email, ...mail }).catch((err) => console.error('[auth/reset-password] email send failed:', err.message));
+
+      return NextResponse.json({ success: true });
     }
 
     // Signup
