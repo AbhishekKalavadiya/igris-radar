@@ -30,15 +30,7 @@ const nextConfig = {
     // Tree-shake heavy barrel-file packages at import time
     optimizePackageImports: ['recharts', 'date-fns'],
   },
-  webpack(config, { dev, nextRuntime, webpack }) {
-    if (nextRuntime === 'edge') {
-      // Vercel's Edge runtime has no Node globals; next/server's bundled
-      // ua-parser-js references __dirname and crashes the middleware
-      // (MIDDLEWARE_INVOCATION_FAILED). Define it away for edge bundles.
-      config.plugins.push(
-        new webpack.DefinePlugin({ __dirname: JSON.stringify('/') })
-      );
-    }
+  webpack(config, { dev }) {
     if (dev) {
       // Native FS events + ignore node_modules; polling burns CPU and
       // delays rebuilds, so only aggregate rapid successive changes.
@@ -56,7 +48,21 @@ const nextConfig = {
     pagesBufferLength: 16,
   },
   async headers() {
+    // Keep private app surfaces out of search indexes. Previously set by
+    // middleware.js, removed because Vercel's Edge runtime crashed on it.
+    const noindexPaths = [
+      '/dashboard/:path*', '/settings/:path*', '/onboarding/:path*',
+      '/login/:path*', '/signup/:path*', '/api/:path*',
+      '/security-scan/:path*', '/seo-audit/:path*', '/aeo-audit/:path*',
+      '/geo-audit/:path*', '/site-health/:path*', '/uptime/:path*',
+      '/domain-health/:path*', '/brand-visibility/:path*',
+      '/companies/:path*', '/plans/:path*',
+    ];
     return [
+      ...noindexPaths.map((source) => ({
+        source,
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      })),
       {
         source: "/(.*)",
         headers: [

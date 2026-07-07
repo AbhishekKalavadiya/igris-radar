@@ -65,6 +65,24 @@ function isAdminRequest(request) {
   return payload?.admin === true;
 }
 
+/**
+ * CSRF guard for state-changing requests (moved here from middleware.js,
+ * which was removed — Vercel's Edge runtime crashed on Node globals).
+ * Browsers always send an Origin header on cross-origin POST/PUT/DELETE;
+ * same-origin or origin-less (curl, server-to-server) requests pass.
+ * @param {Request} request
+ * @returns {NextResponse|null} 403 response if blocked, null if allowed
+ */
+function rejectCrossOrigin(request) {
+  const origin = request.headers.get('origin');
+  if (!origin) return null;
+  const self = new URL(request.url).origin;
+  if (origin === self) return null;
+  const allowed = env.corsOrigins.split(',').map(o => o.trim()).filter(Boolean);
+  if (allowed.includes(origin)) return null;
+  return NextResponse.json({ success: false, error: 'Cross-origin request blocked' }, { status: 403 });
+}
+
 function getSessionUser(request) {
   const cookie = request.cookies.get(SESSION_COOKIE);
   if (!cookie) return null;
@@ -549,6 +567,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const blocked = rejectCrossOrigin(request);
+  if (blocked) return blocked;
   const { searchParams } = new URL(request.url);
   const path = searchParams.get('path') || '';
   const pathParts = path.split('/').filter(Boolean);
@@ -1525,6 +1545,8 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
+  const blocked = rejectCrossOrigin(request);
+  if (blocked) return blocked;
   const { searchParams } = new URL(request.url);
   const path = searchParams.get('path') || '';
   const pathParts = path.split('/').filter(Boolean);
