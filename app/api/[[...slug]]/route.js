@@ -81,7 +81,16 @@ function rejectCrossOrigin(request) {
   if (!origin) return null;
   const self = new URL(request.url).origin;
   if (origin === self) return null;
+  
   const allowed = env.corsOrigins.split(',').map(o => o.trim()).filter(Boolean);
+  
+  // Always allow loopback variations if we are serving on a loopback interface
+  const host = new URL(request.url).hostname;
+  const isLoopbackHost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  if (isLoopbackHost || !env.isProd) {
+    allowed.push('http://127.0.0.1:4100', 'http://localhost:4100', 'http://127.0.0.1:3000', 'http://localhost:3000');
+  }
+
   if (allowed.includes(origin)) return null;
   return NextResponse.json({ success: false, error: 'Cross-origin request blocked' }, { status: 403 });
 }
@@ -149,7 +158,7 @@ export async function GET(request) {
         return response;
       }
       const col = await getCollection(COLLECTIONS.USERS);
-      const user = await col.findOne({ id: sessionUser.id }, { projection: { passwordHash: 0 } });
+      const user = await col.findOne({ id: sessionUser.id }, { projection: { passwordHash: 0, resetTokenHash: 0, resetTokenExpires: 0 } });
       if (!user) {
         const response = NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
         response.headers.set('Set-Cookie', clearSessionCookie());
@@ -657,7 +666,7 @@ export async function POST(request) {
       await audit({ action: AUDIT_ACTIONS.PROFILE_UPDATE, userId: sessionUser.id, ip: clientIp(request), metadata: { email } });
 
       // Re-issue the session cookie so the JWT payload matches the new email
-      const user = await col.findOne({ id: sessionUser.id }, { projection: { passwordHash: 0 } });
+      const user = await col.findOne({ id: sessionUser.id }, { projection: { passwordHash: 0, resetTokenHash: 0, resetTokenExpires: 0 } });
       const token = encodeSession(user);
       const response = NextResponse.json({ success: true, data: user });
       response.headers.set('Set-Cookie', buildSessionCookie(token));
@@ -845,7 +854,7 @@ export async function POST(request) {
       sendEmail({ to: 'support@igrisecurity.com', ...alertMail }).catch(() => {});
 
       const token = encodeSession(newUser);
-      const { passwordHash: _, ...safeUser } = newUser;
+      const { passwordHash: _, resetTokenHash: __, resetTokenExpires: ___, ...safeUser } = newUser;
 
       const response = NextResponse.json({ success: true, data: safeUser }, { status: 201 });
       response.headers.set('Set-Cookie', buildSessionCookie(token));
@@ -893,7 +902,7 @@ export async function POST(request) {
       }
 
       const token = encodeSession(user);
-      const { passwordHash: _, ...safeUser } = user;
+      const { passwordHash: _, resetTokenHash: __, resetTokenExpires: ___, ...safeUser } = user;
 
       const response = NextResponse.json({ success: true, data: safeUser });
       response.headers.set('Set-Cookie', buildSessionCookie(token));
@@ -949,7 +958,7 @@ export async function POST(request) {
 
       await audit({ action: AUDIT_ACTIONS.PLAN_CHANGE, userId: sessionUser.id, ip: clientIp(request), metadata: { plan, source: 'dev-update-plan' } });
 
-      const user = await col.findOne({ id: sessionUser.id }, { projection: { passwordHash: 0 } });
+      const user = await col.findOne({ id: sessionUser.id }, { projection: { passwordHash: 0, resetTokenHash: 0, resetTokenExpires: 0 } });
       const token = encodeSession(user);
 
       const response = NextResponse.json({ success: true, data: user });
