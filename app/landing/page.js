@@ -18,7 +18,7 @@ import { Reveal, Stagger, MotionItem, AnimatedNumber } from '@/components/ui/mot
 import { NAV_PLATFORM, AI_ENGINES, HOW_IT_WORKS } from '@/lib/landingContent';
 import FeatureFaqAccordion from '@/components/landing/FeatureFaqAccordion';
 import JsonLd from '@/components/ui/JsonLd';
-import { faqPageJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd } from '@/lib/seo';
+import { faqPageJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd, howToJsonLd, SITE_PUBLISHED } from '@/lib/seo';
 
 /* Real plan data - mirrors PLAN_LIMITS in lib/constants.js and BillingTab pricing. */
 const PLANS = [
@@ -142,6 +142,7 @@ export default function LandingPage() {
       <JsonLd data={softwareApplicationJsonLd()} />
       <JsonLd data={faqPageJsonLd(HOME_FAQS)} />
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', path: '/landing' }])} />
+      <JsonLd data={howToJsonLd('How Igris Radar audits a site', HOW_IT_WORKS)} />
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div
@@ -204,7 +205,15 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <Reveal>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
+              Why doesn't ranking #1 guarantee traffic anymore?
+            </h3>
+            <p className="mt-2 text-base text-foreground/90 leading-relaxed max-w-xl">
+              Because AI assistants answer the question directly instead of sending a click. The
+              winner is whichever site gets cited inside that answer, not whichever ranks highest
+              on a results page.
+            </p>
+            <h2 className="mt-8 text-3xl md:text-4xl font-bold tracking-tight leading-tight">
               Search didn't die.<br />It stopped sending clicks.
             </h2>
             <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
@@ -236,7 +245,19 @@ export default function LandingPage() {
                   generative engine optimization
                 </a>
               </cite>{' '}
-              signals that decide who AI engines recommend.
+              signals that decide who AI engines recommend. Security matters here too: sites that
+              fail basic hardening recommended by{' '}
+              <cite className="not-italic">
+                <a
+                  href="https://www.cisa.gov/topics/cybersecurity-best-practices"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-primary/40 underline-offset-2 hover:text-foreground transition-colors"
+                >
+                  CISA's cybersecurity best practices
+                </a>
+              </cite>{' '}
+              erode the trust signals AI engines use to decide who to cite.
             </p>
           </Reveal>
           <Stagger className="grid grid-cols-2 gap-4">
@@ -316,7 +337,14 @@ export default function LandingPage() {
       <section className="bg-muted/40 border-y border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20">
           <Reveal className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Six audits. One picture of your visibility.</h2>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
+              What does Igris Radar actually audit?
+            </h3>
+            <p className="mt-2 text-base text-foreground/90 leading-relaxed">
+              Six purpose-built engines: website security, SEO, AEO, GEO, live AI brand visibility,
+              and site health. Each runs independently and returns its own 0–100 score.
+            </p>
+            <h2 className="mt-8 text-3xl md:text-4xl font-bold tracking-tight">Six audits. One picture of your visibility.</h2>
             <p className="text-muted-foreground mt-4 text-lg">
               Each engine is purpose-built and independently scored. Run one, or run the full battery.
             </p>
@@ -488,6 +516,9 @@ headers() and verify on /.`}
       <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-20">
         <Reveal className="text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Frequently asked questions</h2>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Content last reviewed <time dateTime={SITE_PUBLISHED}>{new Date(SITE_PUBLISHED).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</time>
+          </p>
         </Reveal>
         <Reveal>
           <FeatureFaqAccordion faqs={HOME_FAQS} />
