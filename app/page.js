@@ -1,36 +1,24 @@
-'use client';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { decodeSession } from '@/lib/auth/session';
+import { SESSION_COOKIE } from '@/lib/constants';
+import { getCollection } from '@/lib/db';
+import { COLLECTIONS } from '@/lib/db/schemas';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { AuthProvider, useAuth } from '@/lib/authContext';
+/**
+ * Root ("/") never renders content — it only decides where to send the
+ * visitor. A server-side redirect (rather than the previous client-side
+ * router.push) means crawlers get a real 307 straight to the canonical
+ * destination instead of indexing an empty spinner shell.
+ */
+export default async function Home() {
+  const token = cookies().get(SESSION_COOKIE)?.value;
+  const session = decodeSession(token);
 
-function HomeContent() {
-  const { user, loading, isOnboarded } = useAuth();
-  const router = useRouter();
+  if (!session) redirect('/landing');
 
-  useEffect(() => {
-    if (!loading) {
-      if (user && isOnboarded) {
-        router.push('/dashboard');
-      } else if (user && !isOnboarded) {
-        router.push('/onboarding');
-      } else {
-        router.push('/landing');
-      }
-    }
-  }, [user, loading, isOnboarded, router]);
+  const usersCol = await getCollection(COLLECTIONS.USERS);
+  const user = await usersCol.findOne({ id: session.id }, { projection: { onboarded: 1 } });
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-    </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <AuthProvider>
-      <HomeContent />
-    </AuthProvider>
-  );
+  redirect(user?.onboarded ? '/dashboard' : '/onboarding');
 }

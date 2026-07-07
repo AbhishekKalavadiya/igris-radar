@@ -52,7 +52,7 @@ const nextConfig = {
     // middleware.js, removed because Vercel's Edge runtime crashed on it.
     const noindexPaths = [
       '/dashboard/:path*', '/settings/:path*', '/onboarding/:path*',
-      '/login/:path*', '/signup/:path*', '/api/:path*',
+      '/login/:path*', '/signup/:path*', '/forgot-password/:path*', '/reset-password/:path*', '/api/:path*',
       '/security-scan/:path*', '/seo-audit/:path*', '/aeo-audit/:path*',
       '/geo-audit/:path*', '/site-health/:path*', '/uptime/:path*',
       '/domain-health/:path*', '/brand-visibility/:path*',

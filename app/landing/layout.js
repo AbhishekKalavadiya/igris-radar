@@ -1,12 +1,11 @@
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import JsonLd from '@/components/ui/JsonLd';
-import { buildMetadata, organizationJsonLd, webSiteJsonLd, personJsonLd } from '@/lib/seo';
+import { buildMetadata, organizationJsonLd, webSiteJsonLd, personJsonLd, SITE_DESCRIPTION } from '@/lib/seo';
 
 export const metadata = buildMetadata({
   title: 'Igris Radar: AI Search Visibility & Web Audit Platform',
-  description:
-    'Measure and grow your visibility in AI search. Website security scanner, SEO audit, AEO & GEO audits, live AI brand visibility tracking, and Core Web Vitals monitoring in one platform.',
+  description: SITE_DESCRIPTION,
   path: '/landing',
   keywords: [
     'AEO', 'answer engine optimization', 'GEO', 'generative engine optimization',
