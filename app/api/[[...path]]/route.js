@@ -17,12 +17,14 @@ import { assertFeatureAccess, canAccessFeature, getPlanLimits, assertScanLimit, 
 import { env } from '@/lib/env';
 import { audit, AUDIT_ACTIONS, clientIp } from '@/lib/audit';
 import { checkLoginAllowed, recordFailedLogin, recordSuccessfulLogin } from '@/lib/security/loginThrottle';
+import { isRateLimited } from '@/lib/rateLimit';
 import { assertSafeUrl } from '@/lib/security/ssrf';
 import { safeContainsFilter } from '@/lib/security/regex';
 import { signToken, verifyToken } from '@/lib/auth/tokenSigner';
 import {
   signupSchema,
   loginSchema,
+  contactSchema,
   scanSchema,
   brandVisibilitySchema,
   companySchema,
@@ -792,25 +794,22 @@ export async function POST(request) {
       return response;
     }
 
-    // Contact form
+    // Contact form (public, unauthenticated) — validated + IP rate-limited so
+    // it can't be abused to spam the support inbox.
     if (pathParts[0] === 'contact') {
-      const body = await request.json();
-      const { firstName, lastName, email, message } = body;
-      
-      if (!email || !message) {
-        return NextResponse.json({ success: false, error: 'Email and message are required' }, { status: 400 });
+      const ip = clientIp(request);
+      if (isRateLimited(`contact:${ip}`, 'contact')) {
+        return NextResponse.json(
+          { success: false, error: 'Too many messages. Please try again later.' },
+          { status: 429 }
+        );
       }
 
-      const mail = contactFormEmail({ 
-        firstName: firstName || '', 
-        lastName: lastName || '', 
-        email, 
-        message, 
-        time: new Date().toUTCString() 
-      });
-      
+      const { firstName, lastName, email, message } = parseOrThrow(contactSchema, await request.json());
+
+      const mail = contactFormEmail({ firstName, lastName, email, message, time: new Date().toUTCString() });
       await sendEmail({ to: 'support@igrisecurity.com', ...mail, replyTo: email });
-      
+
       return NextResponse.json({ success: true });
     }
 

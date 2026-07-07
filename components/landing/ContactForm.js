@@ -19,13 +19,14 @@ export default function ContactForm() {
     };
 
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetch('/api?path=contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      
-      if (res.ok) {
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok && json.success) {
         setStatus('success');
       } else {
         setStatus('error');
