@@ -40,7 +40,8 @@ const PLANS = [
   {
     name: 'Agency', price: '$100', period: '/month', highlight: false,
     features: ['Unlimited scans', 'Unlimited tracked sites', 'Unlimited team members', 'Daily scheduled monitoring', 'White-label PDF reports', 'API access'],
-    cta: 'Scale with Agency',
+    cta: 'Coming soon',
+    comingSoon: true,
   },
 ];
 
@@ -50,7 +51,7 @@ const HOME_FAQS = [
   { q: 'Do I need to install anything on my site?', a: 'No. Every audit runs from the outside, exactly the way crawlers and attackers see your site. Enter a URL and results arrive in seconds to minutes depending on the audit.' },
   { q: 'What makes the fix workflow different?', a: 'Every failed check ships with a plain-language explanation and an agent-native fix prompt. That is a ready-to-paste instruction for your AI coding assistant, with the full context of the finding built in. You go from "we have an issue" straight to a merged fix.' },
   { q: 'Can I compare my site against competitors?', a: 'Yes. Point SEO, AEO, or GEO audits at a competitor\'s URL. We run the same checks on both sites and show a gap analysis by category. Brand visibility tracking also shows whether AI engines recommend you or them.' },
-  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across all six audit types, no credit card required. Paid plans start at $5/month for 25 scans and 4 tracked sites; Pro at $25/month adds AI deep analysis and competitor scans; Agency at $100/month is unlimited with white-label reports and API access.' },
+  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across all six audit types, no credit card required. Starter is $5/month for 25 scans and 5 tracked sites. Pro is $20/month and adds AI deep analysis and competitor scans. Agency and Enterprise plans are not offered yet.' },
 ];
 
 /** Rotating AI engine name in the hero headline. */
@@ -514,22 +515,27 @@ headers() and verify on /.`}
                     </li>
                   ))}
                 </ul>
-                <Link href="/signup" className="mt-6">
-                  <Button
-                    className={`w-full font-semibold ${plan.highlight ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
-                    variant={plan.highlight ? 'default' : 'outline'}
-                  >
+                {plan.comingSoon ? (
+                  <Button className="w-full font-semibold mt-6" variant="outline" disabled>
                     {plan.cta}
                   </Button>
-                </Link>
+                ) : (
+                  <Link href="/signup" className="mt-6">
+                    <Button
+                      className={`w-full font-semibold ${plan.highlight ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
+                      variant={plan.highlight ? 'default' : 'outline'}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                )}
               </div>
             </MotionItem>
           ))}
         </Stagger>
         <Reveal className="text-center mt-8">
           <p className="text-sm text-muted-foreground">
-            Need unlimited sites, custom terms, or procurement?{' '}
-            <Link href="/landing/contact" className="text-primary font-semibold hover:underline">Talk to us about Enterprise</Link>
+            Agency and Enterprise plans are not offered yet. Start on Free, Starter, or Pro today.
           </p>
         </Reveal>
       </section>

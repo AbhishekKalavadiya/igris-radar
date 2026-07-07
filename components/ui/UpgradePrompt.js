@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { getUpgradeMessage } from '@/lib/plans';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 import { useToast } from '@/hooks/use-toast';
+import { isPlanAvailable } from '@/lib/constants';
 
 /**
  * @param {{
@@ -30,9 +31,11 @@ export default function UpgradePrompt({ currentPlan = 'free', reason = 'scanLimi
 
   const [fakeUpgradeModal, setFakeUpgradeModal] = useState(false);
 
+  const planAvailable = isPlanAvailable(nextPlan);
+
   const handleUpgrade = () => {
-    if (nextPlan === 'enterprise') {
-      window.location.href = '/landing/contact';
+    if (!planAvailable) {
+      toast({ title: 'Not available yet', description: `We do not offer the ${nextLabel} plan yet.`, variant: 'destructive' });
       return;
     }
     setFakeUpgradeModal(true);
@@ -71,16 +74,22 @@ export default function UpgradePrompt({ currentPlan = 'free', reason = 'scanLimi
         <p className="text-muted-foreground text-xs leading-relaxed">{description}</p>
       </div>
       <div className="shrink-0">
-        <Button
-          size="sm"
-          disabled={loading}
-          onClick={handleUpgrade}
-          className="h-9 px-4 font-semibold text-sm bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap"
-        >
-          {loading
-            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            : <>{`Upgrade to ${nextLabel}`} <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></>}
-        </Button>
+        {planAvailable ? (
+          <Button
+            size="sm"
+            disabled={loading}
+            onClick={handleUpgrade}
+            className="h-9 px-4 font-semibold text-sm bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap"
+          >
+            {loading
+              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              : <>{`Upgrade to ${nextLabel}`} <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></>}
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" disabled className="h-9 px-4 font-semibold text-sm whitespace-nowrap">
+            {nextLabel} — Coming soon
+          </Button>
+        )}
       </div>
 
       {/* Fake Upgrade Modal (TESTING ONLY) */}

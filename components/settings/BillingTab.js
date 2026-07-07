@@ -6,13 +6,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { CheckCircle2, XCircle, ArrowRight, Zap, Loader2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import UsageMeter from '@/components/ui/UsageMeter';
 import { useToast } from '@/hooks/use-toast';
+import { isPlanAvailable } from '@/lib/constants';
 
 const PLAN_META = {
   free:       { label: 'Free',       price: '$0',    period: null,    color: 'text-muted-foreground', badge: 'bg-white/10' },
@@ -74,6 +74,10 @@ export default function BillingTab({ currentPlan = 'free' }) {
   }, []);
 
   const handleUpgrade = (targetPlan) => {
+    if (!isPlanAvailable(targetPlan)) {
+      toast({ title: 'Not available yet', description: `We do not offer the ${PLAN_META[targetPlan]?.label || targetPlan} plan yet.`, variant: 'destructive' });
+      return;
+    }
     setTargetPlanToUpgrade(targetPlan);
     setFakeUpgradeModal(true);
   };
@@ -169,17 +173,23 @@ export default function BillingTab({ currentPlan = 'free' }) {
             </div>
             <div className="flex gap-2 flex-wrap">
               {plan !== 'enterprise' && currentIdx < PLANS_ORDER.indexOf('enterprise') && (
-                <Button
-                  size="sm"
-                  className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 font-semibold"
-                  onClick={() => handleUpgrade(PLANS_ORDER[currentIdx + 1])}
-                  disabled={!!upgrading}
-                >
-                  {upgrading === PLANS_ORDER[currentIdx + 1]
-                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    : <Zap className="h-3.5 w-3.5" />}
-                  Upgrade to {PLAN_META[PLANS_ORDER[currentIdx + 1]]?.label}
-                </Button>
+                isPlanAvailable(PLANS_ORDER[currentIdx + 1]) ? (
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 font-semibold"
+                    onClick={() => handleUpgrade(PLANS_ORDER[currentIdx + 1])}
+                    disabled={!!upgrading}
+                  >
+                    {upgrading === PLANS_ORDER[currentIdx + 1]
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <Zap className="h-3.5 w-3.5" />}
+                    Upgrade to {PLAN_META[PLANS_ORDER[currentIdx + 1]]?.label}
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" className="gap-2 h-9 px-4 font-semibold" disabled>
+                    {PLAN_META[PLANS_ORDER[currentIdx + 1]]?.label} — Coming soon
+                  </Button>
+                )
               )}
               {plan !== 'free' && (
                 <Button
@@ -284,8 +294,8 @@ export default function BillingTab({ currentPlan = 'free' }) {
           </table>
 
           {/* Upgrade row */}
-          <div className="mt-4 flex gap-3 justify-end flex-wrap">
-            {PLANS_ORDER.filter((p, i) => i > currentIdx && p !== 'enterprise').map((p) => (
+          <div className="mt-4 flex gap-3 justify-end flex-wrap items-center">
+            {PLANS_ORDER.filter((p, i) => i > currentIdx && isPlanAvailable(p)).map((p) => (
               <Button
                 key={p}
                 size="sm"
@@ -300,13 +310,11 @@ export default function BillingTab({ currentPlan = 'free' }) {
                 Upgrade to {PLAN_META[p].label}
               </Button>
             ))}
-            {currentIdx < PLANS_ORDER.indexOf('enterprise') && (
-              <Link href="/landing/contact">
-                <Button size="sm" variant="outline" className="h-8 px-3 text-xs font-semibold gap-1.5">
-                  Contact for Enterprise <ArrowRight className="h-3 w-3" />
-                </Button>
-              </Link>
-            )}
+            {PLANS_ORDER.filter((p, i) => i > currentIdx && !isPlanAvailable(p)).map((p) => (
+              <span key={p} className="text-xs text-muted-foreground">
+                {PLAN_META[p].label} — not offered yet
+              </span>
+            ))}
           </div>
         </CardContent>
       </Card>

@@ -13,7 +13,7 @@ import {
   verifyPassword, 
   hashPassword 
 } from '@/lib/auth/password';
-import { SESSION_COOKIE } from '@/lib/constants';
+import { SESSION_COOKIE, isPlanAvailable } from '@/lib/constants';
 import { assertFeatureAccess, canAccessFeature, getPlanLimits, assertScanLimit, countScansThisMonth, assertSiteTrackingLimit } from '@/lib/server-plans';
 import { env } from '@/lib/env';
 import { audit, AUDIT_ACTIONS, clientIp } from '@/lib/audit';
@@ -953,6 +953,10 @@ export async function POST(request) {
 
       const { plan } = parseOrThrow(updatePlanSchema, await request.json());
 
+      if (!isPlanAvailable(plan)) {
+        return NextResponse.json({ success: false, error: 'We do not offer this plan yet.' }, { status: 400 });
+      }
+
       const col = await getCollection(COLLECTIONS.USERS);
       await col.updateOne({ id: sessionUser.id }, { $set: { plan, updatedAt: new Date() } });
 
@@ -1455,6 +1459,9 @@ export async function POST(request) {
 
       const { plan } = await request.json();
       if (!plan) return NextResponse.json({ success: false, error: 'Plan is required' }, { status: 400 });
+      if (!isPlanAvailable(plan)) {
+        return NextResponse.json({ success: false, error: 'We do not offer this plan yet.' }, { status: 400 });
+      }
 
       // Look up user for stripeCustomerId
       const usersCol = await getCollection(COLLECTIONS.USERS);

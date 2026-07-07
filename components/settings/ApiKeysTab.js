@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link';
 
 export default function ApiKeysTab({ userPlan = 'free' }) {
   const [keys, setKeys] = useState([]);
@@ -83,14 +82,10 @@ export default function ApiKeysTab({ userPlan = 'free' }) {
           <ShieldAlert className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div>
             <p className="font-medium text-white text-sm mb-1">API Access is an Agency feature</p>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground">
               Integrate Igris Radar scan results directly into your own tools and pipelines with a full REST API.
+              The Agency plan is not offered yet, so this isn't available to upgrade into right now.
             </p>
-            <Link href="/settings?tab=billing">
-              <Button size="sm" className="h-8 px-4 font-semibold text-sm bg-primary text-primary-foreground hover:bg-primary/90">
-                Upgrade to Agency
-              </Button>
-            </Link>
           </div>
         </CardContent>
       </Card>
