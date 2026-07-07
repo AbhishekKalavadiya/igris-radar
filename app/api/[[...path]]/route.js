@@ -1511,7 +1511,12 @@ export async function POST(request) {
           upgradeRequired: true,
           currentPlan:     error.currentPlan,
           nextPlan:        error.nextPlan,
-          upgradeReason:   error.status === 429 ? 'scanLimit' : (error.feature || pathParts[0]),
+          // Prefer an explicit upgradeReason the thrower set (e.g. 'sites' from
+          // assertSiteTrackingLimit), then a feature flag, then fall back to
+          // scanLimit (429) or the request path. Previously the explicit
+          // upgradeReason was dropped, so the tracked-sites limit surfaced as
+          // 'security-scan' and the UI showed the wrong upgrade message.
+          upgradeReason:   error.upgradeReason || error.feature || (error.status === 429 ? 'scanLimit' : pathParts[0]),
         }),
       },
       { status: error.status || 500 }
