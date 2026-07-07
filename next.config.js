@@ -30,7 +30,15 @@ const nextConfig = {
     // Tree-shake heavy barrel-file packages at import time
     optimizePackageImports: ['recharts', 'date-fns'],
   },
-  webpack(config, { dev }) {
+  webpack(config, { dev, nextRuntime, webpack }) {
+    if (nextRuntime === 'edge') {
+      // Vercel's Edge runtime has no Node globals; next/server's bundled
+      // ua-parser-js references __dirname and crashes the middleware
+      // (MIDDLEWARE_INVOCATION_FAILED). Define it away for edge bundles.
+      config.plugins.push(
+        new webpack.DefinePlugin({ __dirname: JSON.stringify('/') })
+      );
+    }
     if (dev) {
       // Native FS events + ignore node_modules; polling burns CPU and
       // delays rebuilds, so only aggregate rapid successive changes.
