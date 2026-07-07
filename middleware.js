@@ -1,20 +1,86 @@
 import { NextResponse } from 'next/server'
-import { SESSION_COOKIE, PROTECTED_ROUTES, AUTH_ROUTES, ROUTES } from '@/lib/constants'
-import { isRateLimited } from '@/lib/rateLimit'
-import { isSameOriginRequest } from '@/lib/security/originCheck'
-import { env } from '@/lib/env'
 
-/**
- * Cheap, Edge-safe check that a session cookie is a live signed token.
- * Does NOT verify the HMAC signature (that happens server-side in the API
- * route) — it only rejects cookies that are structurally not a signed token
- * (e.g. pre-upgrade base64 JSON, which has no `.`) or are past their `exp`.
- * This prevents stale/expired cookies from being treated as an active session
- * and causing a /login ⇄ /dashboard redirect loop.
- *
- * @param {string|undefined} value
- * @returns {boolean}
- */
+// --- CONSTANTS ---
+const ROUTES = {
+  HOME:          '/',
+  LANDING:       '/landing',
+  LOGIN:         '/login',
+  SIGNUP:        '/signup',
+  ONBOARDING:    '/onboarding',
+  DASHBOARD:     '/dashboard',
+  SETTINGS:      '/settings',
+  SECURITY_SCAN: '/security-scan',
+  SEO_AUDIT:     '/seo-audit',
+  AEO_AUDIT:     '/aeo-audit',
+  GEO_AUDIT:     '/geo-audit',
+  SITE_HEALTH:   '/site-health',
+  UPTIME:        '/uptime',
+  DOMAIN_HEALTH: '/domain-health',
+  BRAND_VISIBILITY: '/brand-visibility',
+  COMPANIES:     '/companies',
+  PLANS:         '/plans',
+}
+
+const PROTECTED_ROUTES = [
+  ROUTES.DASHBOARD, ROUTES.SETTINGS, ROUTES.ONBOARDING,
+  ROUTES.SECURITY_SCAN, ROUTES.SEO_AUDIT, ROUTES.AEO_AUDIT,
+  ROUTES.GEO_AUDIT, ROUTES.SITE_HEALTH, ROUTES.UPTIME,
+  ROUTES.DOMAIN_HEALTH, ROUTES.BRAND_VISIBILITY, ROUTES.COMPANIES, ROUTES.PLANS,
+]
+
+const AUTH_ROUTES = [ROUTES.LOGIN, ROUTES.SIGNUP]
+const SESSION_COOKIE = 'provenance_session'
+
+// --- ENV (Mocked for Edge) ---
+// Note: we can't do full process.env lookup at top level cleanly across all edge runtimes, 
+// so we access it inside the middleware function where it's 100% safe.
+
+// --- SECURITY: CSRF Check ---
+const STATE_CHANGING = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+function isSameOriginRequest(request, selfOrigin, extraAllowed = []) {
+  if (!STATE_CHANGING.has(request.method)) return true
+  const origin = request.headers.get('origin')
+  if (!origin) return true 
+  if (origin === selfOrigin) return true
+  const allowed = extraAllowed.map(o => o.trim()).filter(Boolean)
+  return allowed.includes(origin)
+}
+
+// --- RATE LIMITING ---
+const rateLimitStore = new Map()
+const GLOBAL_LIMIT = 500
+const GLOBAL_WINDOW = 60000
+const API_KEY_LIMIT = 2000
+const API_KEY_WINDOW = 60000
+
+let lastSweep = Date.now()
+function sweep(now) {
+  if (now - lastSweep < 60000) return
+  lastSweep = now
+  for (const [key, rec] of rateLimitStore) {
+    if (now - rec.firstRequestTime > Math.max(GLOBAL_WINDOW, API_KEY_WINDOW)) {
+      rateLimitStore.delete(key)
+    }
+  }
+}
+
+function isRateLimited(identifier, type = 'global') {
+  const limit = type === 'key' ? API_KEY_LIMIT : GLOBAL_LIMIT
+  const windowMs = type === 'key' ? API_KEY_WINDOW : GLOBAL_WINDOW
+  const now = Date.now()
+  sweep(now)
+  const record = rateLimitStore.get(identifier) || { count: 0, firstRequestTime: now }
+  if (now - record.firstRequestTime > windowMs) {
+    record.count = 1
+    record.firstRequestTime = now
+  } else {
+    record.count += 1
+  }
+  rateLimitStore.set(identifier, record)
+  return record.count > limit
+}
+
+// --- SESSION CHECK ---
 function hasLiveSessionCookie(value) {
   if (!value || typeof value !== 'string') return false
   const parts = value.split('.')
@@ -22,6 +88,7 @@ function hasLiveSessionCookie(value) {
   try {
     let b64 = parts[0].replace(/-/g, '+').replace(/_/g, '/')
     b64 += '='.repeat((4 - (b64.length % 4)) % 4)
+    // Basic decode to avoid Buffer dependencies
     const payload = JSON.parse(atob(b64))
     if (payload && typeof payload.exp === 'number' && Date.now() > payload.exp) return false
   } catch {
@@ -30,29 +97,23 @@ function hasLiveSessionCookie(value) {
   return true
 }
 
-/**
- * Next.js Edge Middleware — Security Gateway
- *
- * Implements:
- * 1. Identity & Access Management gateway (Session checks)
- * 2. Network Perimeter Protection (Rate Limiting, Body Size Limits)
- * 3. SEO gateway (HTTPS enforcement, noindex on private routes)
- */
+// --- MIDDLEWARE ---
 export function middleware(request) {
   try {
+    const isProd = process.env.NODE_ENV === 'production'
+    const corsOrigins = process.env.CORS_ORIGINS || 'https://igrisradar.com'
+
     const { pathname } = request.nextUrl
     const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown-ip'
 
-    // --- 0. HTTPS enforcement (production, behind a proxy/CDN) ---
     const host = request.nextUrl.hostname
     const isLoopbackHost = host === 'localhost' || host === '127.0.0.1' || host === '::1'
-    if (env.isProd && !isLoopbackHost && request.headers.get('x-forwarded-proto') === 'http') {
+    if (isProd && !isLoopbackHost && request.headers.get('x-forwarded-proto') === 'http') {
       const httpsUrl = request.nextUrl.clone()
       httpsUrl.protocol = 'https:'
       return NextResponse.redirect(httpsUrl, 308)
     }
 
-    // --- 1. Network Perimeter: Layered Rate Limiting ---
     const authHeader = request.headers.get('authorization')
     if (authHeader && authHeader.startsWith('Bearer pvn_')) {
       if (isRateLimited(authHeader, 'key')) {
@@ -64,7 +125,6 @@ export function middleware(request) {
       }
     }
 
-    // --- 2. Network Perimeter: Strict Body Limits ---
     if (request.method === 'POST' || request.method === 'PUT') {
       const contentLength = request.headers.get('content-length')
       if (contentLength && parseInt(contentLength) > 2 * 1024 * 1024) {
@@ -72,8 +132,7 @@ export function middleware(request) {
       }
     }
 
-    // --- 2b. CSRF: Origin verification on state-changing requests ---
-    const allowedOrigins = (env.corsOrigins || '').split(',')
+    const allowedOrigins = (corsOrigins || '').split(',')
     if (isLoopbackHost) {
       allowedOrigins.push('http://127.0.0.1:4100', 'http://localhost:4100', 'http://127.0.0.1:4000', 'http://localhost:4000')
     }
@@ -81,7 +140,6 @@ export function middleware(request) {
       return NextResponse.json({ success: false, error: 'Cross-origin request blocked' }, { status: 403 })
     }
 
-    // --- 3. Identity & Access Management ---
     const sessionCookie = request.cookies.get(SESSION_COOKIE)
     const session = hasLiveSessionCookie(sessionCookie?.value)
 
@@ -117,14 +175,10 @@ export function middleware(request) {
     return response
   } catch (error) {
     console.error('MIDDLEWARE UNCAUGHT ERROR:', error.message, error.stack)
-    // Fail open if middleware crashes so we don't bring down the whole site,
-    // or fail closed if security is paramount. Since this is crashing the homepage,
-    // let's fail open and rely on the API routes for primary security.
     return NextResponse.next()
   }
 }
 
 export const config = {
-  // Apply middleware to all paths, including API routes, to enforce rate limits
   matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)'],
 }
