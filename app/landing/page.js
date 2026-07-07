@@ -45,11 +45,11 @@ const PLANS = [
 ];
 
 const HOME_FAQS = [
-  { q: 'What is Igris Radar?', a: 'Igris Radar is an AI search visibility and web audit platform. From a single URL it runs six audits: website security, SEO, AEO (answer engine optimization), GEO (generative engine optimization), live AI brand visibility tracking, and site health. Every audit returns severity-ranked findings with AI-ready fix prompts.' },
-  { q: 'What is AI search visibility?', a: 'AI search visibility is how often AI assistants like ChatGPT, Claude, Perplexity, and Gemini mention or cite your brand when users ask relevant questions. Igris Radar measures it two ways: audits that score whether your site is technically citable (AEO and GEO), and live brand tracking that queries the real engines with your prompts.' },
+  { q: 'What is Igris Radar?', a: 'Igris Radar is an AI search visibility and web audit platform. It runs six audits from one URL: security, SEO, AEO, GEO, brand visibility, and site health. Every audit gives you severity-ranked findings and AI-ready fix prompts.' },
+  { q: 'What is AI search visibility?', a: 'AI search visibility means how often AI assistants like ChatGPT and Perplexity mention your brand. We measure it two ways. First, audits score whether your site is easy for AI to cite. Second, live brand tracking asks the real engines your exact prompts and checks the answers.' },
   { q: 'Do I need to install anything on my site?', a: 'No. Every audit runs from the outside, exactly the way crawlers and attackers see your site. Enter a URL and results arrive in seconds to minutes depending on the audit.' },
-  { q: 'What makes the fix workflow different?', a: 'Every failed check ships with plain-language remediation and an agent-native fix prompt: a ready-to-paste instruction for your AI coding assistant with the full context of the finding. You go from "we have an issue" to a merged fix without writing the ticket.' },
-  { q: 'Can I compare my site against competitors?', a: 'Yes. SEO, AEO, and GEO audits accept a competitor URL and run the identical checks on both sites, showing a category-by-category gap analysis. Brand visibility tracking shows whether AI engines recommend you or them.' },
+  { q: 'What makes the fix workflow different?', a: 'Every failed check ships with a plain-language explanation and an agent-native fix prompt. That is a ready-to-paste instruction for your AI coding assistant, with the full context of the finding built in. You go from "we have an issue" straight to a merged fix.' },
+  { q: 'Can I compare my site against competitors?', a: 'Yes. Point SEO, AEO, or GEO audits at a competitor\'s URL. We run the same checks on both sites and show a gap analysis by category. Brand visibility tracking also shows whether AI engines recommend you or them.' },
   { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across all six audit types, no credit card required. Paid plans start at $5/month for 25 scans and 4 tracked sites; Pro at $25/month adds AI deep analysis and competitor scans; Agency at $100/month is unlimited with white-label reports and API access.' },
 ];
 
@@ -163,9 +163,9 @@ export default function LandingPage() {
           </Reveal>
           <Reveal delay={0.16}>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              Your buyers ask AI assistants for recommendations. Igris Radar audits everything that
-              decides whether the answer is you: security, SEO, answer engine readiness, generative
-              engine authority, live brand visibility, and site health.
+              Your buyers ask AI assistants for recommendations. Igris Radar checks everything that
+              decides if you're the answer. We audit security, SEO, AI answer readiness, brand
+              visibility, and site health.
             </p>
           </Reveal>
           <Reveal delay={0.24}>
@@ -217,13 +217,14 @@ export default function LandingPage() {
               Search didn't die.<br />It stopped sending clicks.
             </h2>
             <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-              When ChatGPT, Perplexity, and Google's AI Overviews answer the question directly,
-              the winner isn't whoever ranks #1. It's whoever gets <em className="not-italic font-semibold text-foreground">cited in the answer</em>.
-              That's a different game with different rules: AI crawler access, answer-shaped content,
-              entity authority, and machine-readable trust signals.
+              When ChatGPT, Perplexity, and Google's AI Overviews answer a question, the winner
+              isn't the top search result. It's whoever gets{' '}
+              <em className="not-italic font-semibold text-foreground">cited in the answer</em>.
+              That's a new game with new rules: AI crawler access, answer-shaped content, entity
+              authority, and clear trust signals.
             </p>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              Igris Radar measures all of it: the classic{' '}
+              Igris Radar checks all of it. That includes the classic{' '}
               <cite className="not-italic">
                 <a
                   href="https://en.wikipedia.org/wiki/Search_engine_optimization"
@@ -234,7 +235,7 @@ export default function LandingPage() {
                   search engine optimization
                 </a>
               </cite>{' '}
-              fundamentals you still need, and the AEO and{' '}
+              rules you still need, plus the AEO and{' '}
               <cite className="not-italic">
                 <a
                   href="https://en.wikipedia.org/wiki/Generative_engine_optimization"
@@ -245,8 +246,8 @@ export default function LandingPage() {
                   generative engine optimization
                 </a>
               </cite>{' '}
-              signals that decide who AI engines recommend. Security matters here too: sites that
-              fail basic hardening recommended by{' '}
+              signals that decide who AI engines recommend. Security matters too. Sites that skip
+              basic hardening, the kind{' '}
               <cite className="not-italic">
                 <a
                   href="https://www.cisa.gov/topics/cybersecurity-best-practices"
@@ -254,10 +255,10 @@ export default function LandingPage() {
                   rel="noopener noreferrer"
                   className="underline decoration-primary/40 underline-offset-2 hover:text-foreground transition-colors"
                 >
-                  CISA's cybersecurity best practices
+                  CISA recommends
                 </a>
-              </cite>{' '}
-              erode the trust signals AI engines use to decide who to cite.
+              </cite>
+              , lose the trust signals AI engines rely on.
             </p>
             <blockquote
               cite="https://en.wikipedia.org/wiki/Generative_engine_optimization"
