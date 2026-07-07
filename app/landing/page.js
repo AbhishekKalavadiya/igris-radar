@@ -157,7 +157,7 @@ export default function LandingPage() {
           </Reveal>
           <Reveal delay={0.08}>
             <h1 className="text-4xl sm:text-5xl lg:text-[64px] font-bold tracking-tight leading-[1.06]">
-              Win the answer in<br />
+              Win the AI search answer in<br />
               <RotatingEngines />
             </h1>
           </Reveal>
