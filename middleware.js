@@ -53,8 +53,13 @@ const GLOBAL_WINDOW = 60000
 const API_KEY_LIMIT = 2000
 const API_KEY_WINDOW = 60000
 
-let lastSweep = Date.now()
+// IMPORTANT: do NOT call Date.now() / Math.random() at module top level —
+// Vercel's Edge runtime forbids time/random access during module
+// initialization and the whole middleware fails to invoke
+// (MIDDLEWARE_INVOCATION_FAILED). Initialize lazily on first request instead.
+let lastSweep = 0
 function sweep(now) {
+  if (lastSweep === 0) lastSweep = now
   if (now - lastSweep < 60000) return
   lastSweep = now
   for (const [key, rec] of rateLimitStore) {
