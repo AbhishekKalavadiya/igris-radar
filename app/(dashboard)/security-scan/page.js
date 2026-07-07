@@ -76,7 +76,7 @@ export default function SecurityScanPage() {
         }
       }
     } catch (e) {
-      console.error('Failed to fetch history', e);
+      // Silently ignore
     }
   };
 

@@ -40,7 +40,7 @@ export default function DashboardPage() {
     fetch('/api?path=stats')
       .then(r => r.json())
       .then(data => { if (data.success) setStats(data.data); })
-      .catch(err => console.error('Failed to load dashboard stats', err))
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

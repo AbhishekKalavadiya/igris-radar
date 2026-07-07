@@ -90,7 +90,7 @@ export default function AeoAuditPage() {
         }
       }
     } catch (e) {
-      console.error('Failed to fetch history', e);
+      // Silently ignore
     }
   };
 

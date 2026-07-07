@@ -65,7 +65,7 @@ export default function BrandVisibilityPage() {
         setAllHistory(data.data);
       }
     } catch (e) {
-      console.error('Failed to fetch history', e);
+      // Silently ignore
     }
   };
 

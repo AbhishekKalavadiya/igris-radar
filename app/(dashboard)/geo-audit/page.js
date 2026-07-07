@@ -95,7 +95,7 @@ export default function GeoAuditPage() {
         }
       }
     } catch (e) {
-      console.error('Failed to fetch history', e);
+      // Silently ignore
     }
   };
 

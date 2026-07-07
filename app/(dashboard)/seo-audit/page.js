@@ -91,7 +91,7 @@ export default function SeoAuditPage() {
         }
       }
     } catch (e) {
-      console.error('Failed to fetch history', e);
+      // Silently ignore
     }
   };
 

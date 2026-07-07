@@ -67,7 +67,7 @@ export default function SiteHealthPage() {
         setAllHistory(data.data);
       }
     } catch (e) {
-      console.error('Failed to fetch history', e);
+      // Silently ignore
     }
   };
 

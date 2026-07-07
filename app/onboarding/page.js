@@ -56,7 +56,7 @@ function OnboardingContent() {
         })
       });
     } catch (e) {
-      console.error("Onboarding scan failed", e);
+      // Silently ignore
     }
     
     router.push('/dashboard');
