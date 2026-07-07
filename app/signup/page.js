@@ -176,7 +176,10 @@ function SignupForm() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground">
-          By continuing, you agree to our Terms of Service and Privacy Policy
+          By continuing, you agree to our{' '}
+          <Link href="/landing/terms" className="text-primary hover:underline">Terms of Service</Link>
+          {' '}and{' '}
+          <Link href="/landing/privacy" className="text-primary hover:underline">Privacy Policy</Link>
         </p>
       </div>
     </main>

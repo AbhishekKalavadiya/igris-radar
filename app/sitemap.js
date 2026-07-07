@@ -23,5 +23,7 @@ export default function sitemap() {
     })),
     { url: `${SITE_URL}/landing/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/landing/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/landing/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${SITE_URL}/landing/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
   ]
 }
