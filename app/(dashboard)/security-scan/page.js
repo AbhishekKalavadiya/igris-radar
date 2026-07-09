@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Shield, Loader2, Search } from 'lucide-react';
+import { Shield, Loader2, Search, Lock, Sparkles, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import AuditFindingCard from '@/components/ui/AuditFindingCard';
@@ -13,6 +14,8 @@ import CategoryScoreBreakdown from '@/components/ui/CategoryScoreBreakdown';
 import dynamic from 'next/dynamic';
 import ExportReportButton from '@/components/ui/ExportReportButton';
 import UpgradePrompt from '@/components/ui/UpgradePrompt';
+import FeatureGate from '@/components/ui/FeatureGate';
+import AiUnavailableNotice from '@/components/ui/AiUnavailableNotice';
 import PageHeader from '@/components/ui/PageHeader';
 import ScanProgressSteps from '@/components/ui/ScanProgressSteps';
 import FindingsToolbar, { filterFindings } from '@/components/ui/FindingsToolbar';
@@ -20,6 +23,8 @@ import { PageTransition } from '@/components/ui/motion';
 import { SCANNERS } from '@/lib/scannerAccents';
 import { useSettings } from '@/hooks/use-settings';
 import { notifyScanDone } from '@/lib/browserNotify';
+import { useAuth } from '@/lib/authContext';
+import { usePlanLimits } from '@/hooks/use-plan-limits';
 
 const SCAN_STEPS = [
   'Resolving target and fetching page…',
@@ -44,8 +49,12 @@ export default function SecurityScanPage() {
   const [query, setQuery] = useState('');
   const [severityFilter, setSeverityFilterState] = useState('all');
   const [activeTab, setActiveTab] = useState('overview');
+  const [enableDeepAnalysis, setEnableDeepAnalysis] = useState(false);
   const { toast } = useToast();
   const { settings } = useSettings();
+  const { user } = useAuth();
+  const userPlan = user?.plan || 'free';
+  const { planLimits } = usePlanLimits();
 
   // Selecting a severity from the summary tiles jumps to the findings list
   const setSeverityFilter = (sev) => {
@@ -102,7 +111,7 @@ export default function SecurityScanPage() {
       const res = await fetch('/api?path=security-scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: formattedUrl })
+        body: JSON.stringify({ url: formattedUrl, deepAnalysis: enableDeepAnalysis })
       });
       const data = await res.json();
 
@@ -130,6 +139,41 @@ export default function SecurityScanPage() {
 
   const accent = SCANNERS.security;
 
+  const uniqueCategories = scanResult ? [...new Set(scanResult.findings.map(f => f.category))].sort() : [];
+
+  const renderCategoryTab = (categoryName) => {
+    const categoryFindings = scanResult.findings.filter(f => categoryName === 'All' ? true : f.category === categoryName);
+    const ranks = { critical: 1, high: 2, medium: 3, low: 4, passed: 5 };
+    const visible = filterFindings([...categoryFindings], query, severityFilter)
+      .sort((a, b) => (ranks[a.severity] || 6) - (ranks[b.severity] || 6));
+    
+    return (
+      <div className="space-y-4">
+        <FindingsToolbar
+          query={query}
+          onQueryChange={setQuery}
+          severity={severityFilter}
+          onSeverityChange={setSeverityFilterState}
+          counts={{
+            all: categoryFindings.length,
+            failed: categoryFindings.filter(f => !f.passed).length,
+            passed: categoryFindings.filter(f => f.passed).length,
+          }}
+        />
+        <div className="space-y-4">
+          {visible.length === 0 ? (
+            <div className="text-muted-foreground text-center py-8">No findings match the current filter in this category.</div>
+          ) : (
+            visible.map((finding) => (
+              <AuditFindingCard key={finding.id} finding={finding} />
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
+
   return (
     <PageTransition className="space-y-6">
       <PageHeader
@@ -147,30 +191,50 @@ export default function SecurityScanPage() {
       {/* Input Form */}
       <Card className={`glass-panel rounded-xl border-t-2 border-t-scanner-security/60 animate-slide-up`}>
         <CardContent className="pt-6">
-          <form onSubmit={handleScan} className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="example.com"
-                className="pl-10"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={isScanning}
-                required
-                type="text"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-            </div>
-            <div className="flex gap-2">
-              {scanResult && (
-                <Button type="button" variant="outline" onClick={() => { setUrl(''); setScanResult(null); }}>
-                  Clear
+          <form onSubmit={handleScan} className="space-y-4">
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="example.com"
+                  className="pl-10"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  disabled={isScanning}
+                  required
+                  type="text"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                />
+              </div>
+              <div className="flex gap-2">
+                {scanResult && (
+                  <Button type="button" variant="outline" onClick={() => { setUrl(''); setScanResult(null); }}>
+                    Clear
+                  </Button>
+                )}
+                <Button type="submit" disabled={isScanning || !url} className="min-w-[120px]">
+                  {isScanning ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Scanning...</> : 'Scan Now'}
                 </Button>
-              )}
-              <Button type="submit" disabled={isScanning || !url} className="min-w-[120px]">
-                {isScanning ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Scanning...</> : 'Scan Now'}
-              </Button>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
+              <div className="flex items-center space-x-6">
+                <FeatureGate currentPlan={userPlan} feature="deepAnalysis" planLimits={planLimits} minPlan="pro">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="deepAnalysis"
+                      checked={enableDeepAnalysis} 
+                      onCheckedChange={setEnableDeepAnalysis} 
+                      disabled={isScanning}
+                    />
+                    <label htmlFor="deepAnalysis" className="text-sm font-medium leading-none cursor-pointer">
+                      AI Deep Analysis
+                    </label>
+                  </div>
+                </FeatureGate>
+              </div>
             </div>
           </form>
         </CardContent>
@@ -218,7 +282,18 @@ export default function SecurityScanPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-card border border-border w-full justify-start h-auto flex-wrap p-1">
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="findings">All Findings</TabsTrigger>
+              <TabsTrigger value="findings" className="relative">
+                All Findings
+                {scanResult.findings.filter(f => f.locked).length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                    <Lock className="h-2.5 w-2.5" />
+                    {scanResult.findings.filter(f => f.locked).length}
+                  </span>
+                )}
+              </TabsTrigger>
+              {uniqueCategories.map(cat => (
+                <TabsTrigger key={cat} value={`cat-${cat}`}>{cat}</TabsTrigger>
+              ))}
               <TabsTrigger value="trend">Trend</TabsTrigger>
             </TabsList>
 
@@ -232,8 +307,103 @@ export default function SecurityScanPage() {
                   <p className="text-center text-sm text-muted-foreground max-w-[200px]">
                     Target: {scanResult.url}
                   </p>
+                  <p className="text-center text-xs text-muted-foreground/60 mt-2 max-w-[220px]">
+                    Score includes results from all {scanResult.totalChecks || scanResult.findings.length} checks
+                  </p>
                 </Card>
                 <div className="lg:col-span-2 space-y-6 animate-slide-up delay-200">
+                  {/* AI Deep Analysis Section */}
+                  {(enableDeepAnalysis || scanResult.ai) && (
+                    <Card className="glass-card border-primary/20 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+                      <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-primary" />
+                          AI Security Analysis
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        {scanResult.ai ? (
+                          scanResult.ai.error ? (
+                            <AiUnavailableNotice reason={scanResult.ai.error} />
+                          ) : (
+                            <div className="space-y-6">
+                              <div className="space-y-2">
+                                <h4 className="text-sm font-semibold text-foreground">Executive Summary</h4>
+                                <p className="text-sm text-muted-foreground leading-relaxed">{scanResult.ai.executiveSummary}</p>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                  <AlertCircle className="h-4 w-4 text-destructive" /> Top Risks
+                                </h4>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                                  {scanResult.ai.topRisks?.map((risk, i) => (
+                                    <li key={i}>{risk}</li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {scanResult.ai.remediationSummary && (
+                                <div className="space-y-2 p-4 bg-muted/30 rounded-lg border border-border">
+                                  <h4 className="text-sm font-semibold text-foreground">Remediation Plan</h4>
+                                  <p className="text-sm text-muted-foreground">{scanResult.ai.remediationSummary}</p>
+                                </div>
+                              )}
+
+                              {scanResult.ai.threatModeling && (
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-semibold text-foreground">Threat Modeling (Attack Chains)</h4>
+                                  <p className="text-sm text-muted-foreground leading-relaxed">{scanResult.ai.threatModeling}</p>
+                                </div>
+                              )}
+
+                              {scanResult.ai.owaspMapping && (
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-semibold text-foreground">OWASP Top 10 Mapping</h4>
+                                  <div className="flex flex-wrap gap-2 mt-2">
+                                    {scanResult.ai.owaspMapping.map((cat, i) => (
+                                      <span key={i} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-md border border-border">
+                                        {cat}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {scanResult.ai.remediationCodeSnippets && scanResult.ai.remediationCodeSnippets.length > 0 && (
+                                <div className="space-y-3">
+                                  <h4 className="text-sm font-semibold text-foreground">Remediation Snippets</h4>
+                                  {scanResult.ai.remediationCodeSnippets.map((snippet, i) => (
+                                    <div key={i} className="rounded-lg overflow-hidden border border-border">
+                                      <div className="bg-muted/50 px-3 py-1.5 text-xs font-mono text-muted-foreground border-b border-border">
+                                        {snippet.title}
+                                      </div>
+                                      <pre className="p-3 bg-black/50 text-[11px] md:text-xs overflow-x-auto text-muted-foreground">
+                                        <code>{snippet.code}</code>
+                                      </pre>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        ) : (
+                          <div className="text-center py-6">
+                            <Sparkles className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+                            <p className="text-sm text-muted-foreground">AI Deep Analysis was not run for this scan.</p>
+                            <Button variant="outline" size="sm" className="mt-4" onClick={() => {
+                              setEnableDeepAnalysis(true);
+                              runScan(url);
+                            }}>
+                              Run Deep Analysis Now
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
                   <Card className="glass-card">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -241,7 +411,7 @@ export default function SecurityScanPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
                         <button type="button" onClick={() => setSeverityFilter('critical')} className="p-4 rounded-lg bg-severity-critical/10 border border-severity-critical/20 text-center hover:border-severity-critical/50 transition-colors">
                           <div className="text-3xl font-bold text-severity-critical tabular-nums">
                             {scanResult.findings.filter(f => !f.passed && f.severity === 'critical').length}
@@ -260,6 +430,18 @@ export default function SecurityScanPage() {
                           </div>
                           <div className="text-xs text-severity-medium/80 mt-1 uppercase font-semibold">Medium</div>
                         </button>
+                        <button type="button" onClick={() => setSeverityFilter('low')} className="p-4 rounded-lg bg-severity-low/10 border border-severity-low/20 text-center hover:border-severity-low/50 transition-colors">
+                          <div className="text-3xl font-bold text-severity-low tabular-nums">
+                            {scanResult.findings.filter(f => !f.passed && f.severity === 'low').length}
+                          </div>
+                          <div className="text-xs text-severity-low/80 mt-1 uppercase font-semibold">Low</div>
+                        </button>
+                        <button type="button" onClick={() => setSeverityFilter('info')} className="p-4 rounded-lg bg-primary/10 border border-primary/20 text-center hover:border-primary/50 transition-colors">
+                          <div className="text-3xl font-bold text-primary tabular-nums">
+                            {scanResult.findings.filter(f => !f.passed && f.severity === 'info').length}
+                          </div>
+                          <div className="text-xs text-primary/80 mt-1 uppercase font-semibold">Info</div>
+                        </button>
                         <button type="button" onClick={() => setSeverityFilter('passed')} className="p-4 rounded-lg bg-success/10 border border-success/20 text-center hover:border-success/50 transition-colors">
                           <div className="text-3xl font-bold text-success tabular-nums">
                             {scanResult.findings.filter(f => f.passed).length}
@@ -276,31 +458,14 @@ export default function SecurityScanPage() {
             </TabsContent>
 
             <TabsContent value="findings" className="m-0 space-y-4">
-              <FindingsToolbar
-                query={query}
-                onQueryChange={setQuery}
-                severity={severityFilter}
-                onSeverityChange={setSeverityFilterState}
-                counts={{
-                  all: scanResult.findings.length,
-                  failed: scanResult.findings.filter(f => !f.passed).length,
-                  passed: scanResult.findings.filter(f => f.passed).length,
-                }}
-              />
-              <div className="space-y-4">
-                {(() => {
-                  const ranks = { critical: 1, high: 2, medium: 3, low: 4, passed: 5 };
-                  const visible = filterFindings([...scanResult.findings], query, severityFilter)
-                    .sort((a, b) => (ranks[a.severity] || 6) - (ranks[b.severity] || 6));
-                  if (visible.length === 0) {
-                    return <div className="text-muted-foreground text-center py-8">No findings match the current filter.</div>;
-                  }
-                  return visible.map((finding) => (
-                    <AuditFindingCard key={finding.id} finding={finding} />
-                  ));
-                })()}
-              </div>
+              {renderCategoryTab('All')}
             </TabsContent>
+
+            {uniqueCategories.map(cat => (
+              <TabsContent key={cat} value={`cat-${cat}`} className="m-0 space-y-4">
+                {renderCategoryTab(cat)}
+              </TabsContent>
+            ))}
 
             <TabsContent value="trend" className="m-0">
               <ScanTrendChart scans={scanHistory} scoreKey="score" />

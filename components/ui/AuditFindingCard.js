@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, AlertTriangle, AlertCircle, Info, Copy, Check, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, AlertCircle, Info, Copy, Check, Sparkles, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { SEVERITY_STYLES } from '@/lib/scannerAccents';
+import Link from 'next/link';
 
 const FALLBACK_DETAILS = {
   'HTTPS Enforced': "HTTPS encrypts the communication between your user's browser and your server, protecting sensitive data from man-in-the-middle attacks and packet sniffing.",
@@ -86,30 +87,61 @@ const FALLBACK_DETAILS = {
   'Pronoun Ambiguity': "Replacing ambiguous pronouns (e.g., 'This is...') with explicit nouns ensures that if an AI extracts a single sentence, the context is preserved."
 };
 
+const PLAN_LABELS = {
+  starter: 'Starter',
+  pro: 'Pro',
+  agency: 'Agency',
+  enterprise: 'Enterprise',
+};
+
 export default function AuditFindingCard({ finding }) {
   const [copiedId, setCopiedId] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // ─── LOCKED FINDING (plan-gated) ──────────────────────────────────────────
+  if (finding.locked) {
+    const planLabel = PLAN_LABELS[finding.requiredPlan] || 'a higher';
+    return (
+      <Card className="glass-card overflow-hidden opacity-60 hover:opacity-80 transition-opacity">
+        <div className={`h-1 w-full ${getSeverityColorClass(finding.severity, false)}`} />
+        <CardContent className="p-0">
+          <div className="p-5 flex items-center gap-4">
+            <div className="mt-0.5">
+              {getSeverityIcon(finding.severity)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground italic">
+                    Advanced security check
+                  </span>
+                </div>
+                <Badge variant="outline" className="text-[10px] py-0 bg-muted/50">
+                  {finding.passed ? 'Passed' : finding.severity?.toUpperCase()}
+                </Badge>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <Link href="/plans">
+                  <Button size="sm" variant="outline" className="text-xs h-7 border-primary/30 text-primary hover:bg-primary/10">
+                    <Lock className="h-3 w-3 mr-1.5" />
+                    Upgrade to {planLabel} to unlock
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ─── NORMAL FINDING ───────────────────────────────────────────────────────
 
   const copyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const getSeverityIcon = (severity) => {
-    switch (severity) {
-      case 'critical': return <AlertTriangle className="h-5 w-5 text-severity-critical" />;
-      case 'high': return <AlertCircle className="h-5 w-5 text-severity-high" />;
-      case 'medium': return <AlertCircle className="h-5 w-5 text-severity-medium" />;
-      case 'low': return <Info className="h-5 w-5 text-severity-low" />;
-      case 'passed': return <CheckCircle2 className="h-5 w-5 text-success" />;
-      default: return <Info className="h-5 w-5 text-severity-low" />;
-    }
-  };
-
-  const getSeverityColorClass = (severity, passed) => {
-    if (passed || severity === 'passed') return SEVERITY_STYLES.passed.bar;
-    return (SEVERITY_STYLES[severity] || SEVERITY_STYLES.low).bar;
   };
 
   const isPassed = finding.passed || finding.severity === 'passed';
@@ -130,6 +162,11 @@ export default function AuditFindingCard({ finding }) {
             >
               <h4 className={`font-medium ${isPassed ? 'text-muted-foreground' : 'text-foreground'}`}>{finding.title}</h4>
               <Badge variant="outline" className="text-[10px] py-0">{finding.category}</Badge>
+              {finding.tier && finding.tier !== 'free' && (
+                <Badge variant="outline" className="text-[10px] py-0 bg-primary/10 text-primary border-primary/30">
+                  {PLAN_LABELS[finding.tier] || finding.tier}
+                </Badge>
+              )}
               {displayDetails && (
                 <div className="ml-auto flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors">
                   {isExpanded ? 'Hide Details' : 'Why this matters'}
@@ -182,4 +219,22 @@ export default function AuditFindingCard({ finding }) {
       </CardContent>
     </Card>
   );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getSeverityIcon(severity) {
+  switch (severity) {
+    case 'critical': return <AlertTriangle className="h-5 w-5 text-severity-critical" />;
+    case 'high': return <AlertCircle className="h-5 w-5 text-severity-high" />;
+    case 'medium': return <AlertCircle className="h-5 w-5 text-severity-medium" />;
+    case 'low': return <Info className="h-5 w-5 text-severity-low" />;
+    case 'passed': return <CheckCircle2 className="h-5 w-5 text-success" />;
+    default: return <Info className="h-5 w-5 text-severity-low" />;
+  }
+}
+
+function getSeverityColorClass(severity, passed) {
+  if (passed || severity === 'passed') return SEVERITY_STYLES.passed.bar;
+  return (SEVERITY_STYLES[severity] || SEVERITY_STYLES.low).bar;
 }

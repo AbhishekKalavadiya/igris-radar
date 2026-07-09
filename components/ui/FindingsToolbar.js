@@ -3,7 +3,7 @@
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
-const FILTERS = ['all', 'failed', 'critical', 'high', 'medium', 'low', 'passed'];
+const FILTERS = ['all', 'failed', 'critical', 'high', 'medium', 'low', 'info', 'passed'];
 
 /**
  * Search + severity filter chips for findings lists.

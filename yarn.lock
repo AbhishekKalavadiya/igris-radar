@@ -1175,6 +1175,11 @@
   dependencies:
     "@types/webidl-conversions" "*"
 
+"@vercel/analytics@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@vercel/analytics/-/analytics-2.0.1.tgz#d7d7bd37af7cfbeea95db5f132ae4889f4d26407"
+  integrity sha512-MTQG6V9qQrt1tsDeF+2Uoo5aPjqbVPys1xvnIftXSJYG2SrwXRHnqEvVoYID7BTruDz4lCd2Z7rM1BdkUehk2g==
+
 abs-svg-path@^0.1.1:
   version "0.1.1"
   resolved "https://registry.npmjs.org/abs-svg-path/-/abs-svg-path-0.1.1.tgz"
@@ -1576,6 +1581,13 @@ dlv@^1.1.3:
   version "1.1.3"
   resolved "https://registry.npmjs.org/dlv/-/dlv-1.1.3.tgz"
   integrity sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==
+
+dodopayments@^2.42.1:
+  version "2.42.1"
+  resolved "https://registry.yarnpkg.com/dodopayments/-/dodopayments-2.42.1.tgz#a15f4c9956b6b0fb26bb5bc54a800c1a81a59ac4"
+  integrity sha512-2ldU2NA5Ps1oky/LyECnkaU/Dc4co9Yj9OEeyXr94US72piapFdt7yUDKBr7a++tM3Np9pRiVP2+8ZYXmlc00w==
+  dependencies:
+    standardwebhooks "^1.0.0"
 
 dom-helpers@^5.0.1:
   version "5.2.1"

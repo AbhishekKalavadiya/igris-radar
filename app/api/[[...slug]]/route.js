@@ -50,6 +50,7 @@ import { loginAlertEmail, passwordChangedEmail, passwordResetEmail, newUserSignu
 import { getKeyStatuses, setKeys, getKeys } from '@/lib/systemConfig';
 import { getAvailableAiProviders, hasAnyAiProvider, testAiProvider } from '@/lib/scanners/shared/aiAnalyzer';
 import { startMonitoring } from '@/lib/monitoring';
+import { filterFindingsByPlan } from '@/lib/scanners/shared/findings';
 
 // Boots the built-in monitoring loop (scheduled audits + weekly digest) on
 // the first API request. Node runtime only; guarded against double-starts.
@@ -289,10 +290,16 @@ export async function GET(request) {
     // Security scans list
     if (pathParts[0] === 'security-scan') {
       const sessionUser = getSessionUser(request);
+      const userPlan = sessionUser?.plan || 'free';
       const filter = sessionUser ? { userId: sessionUser.id } : { userId: 'anonymous' };
       const col = await getCollection(COLLECTIONS.SECURITY_SCANS);
       const scans = await col.find(filter).sort({ createdAt: -1 }).limit(20).toArray();
-      return NextResponse.json({ success: true, data: scans });
+      // Apply plan-gated visibility: strip locked finding details
+      const gatedScans = scans.map(s => ({
+        ...s,
+        findings: filterFindingsByPlan(s.findings || [], userPlan),
+      }));
+      return NextResponse.json({ success: true, data: gatedScans });
     }
 
     // SEO scans list / history
@@ -1020,7 +1027,8 @@ export async function POST(request) {
 
     // Web Scanners
     if (pathParts[0] === 'security-scan') {
-      const { url } = parseOrThrow(scanSchema, await request.json());
+      const body = parseOrThrow(scanSchema, await request.json());
+      const { url } = body;
       await assertSafeUrl(url); // SSRF guard (C-I6)
 
       const sessionUser = getSessionUser(request);
@@ -1032,12 +1040,30 @@ export async function POST(request) {
       const { runSecurityScan } = await import('@/lib/scanners/securityScanner');
       const scanResult = await runSecurityScan(url);
 
+      const userPlan = sessionUser?.plan || 'free';
+      
+      let aiResult = null;
+      if (body.deepAnalysis && await hasAnyAiProvider()) {
+        const { runDeepSecurityAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
+        // Only run deep analysis if they have access
+        try {
+          if (sessionUser && !isOnboardingScan) {
+            await assertFeatureAccess(userPlan, 'deepAnalysis');
+          }
+          aiResult = await runDeepSecurityAnalysis(scanResult.findings, url, { plan: userPlan });
+        } catch(e) {
+          console.error("Deep analysis failed or no access:", e);
+        }
+      }
+
       const newScan = {
         id: uuidv4(),
         userId: sessionUser?.id || 'anonymous',
         url,
         score: scanResult.score,
-        findings: scanResult.findings,
+        totalChecks: scanResult.totalChecks || scanResult.findings.length,
+        findings: scanResult.findings,  // Store FULL findings in DB
+        ai: aiResult,
         createdAt: new Date(),
       };
       
@@ -1046,7 +1072,11 @@ export async function POST(request) {
 
       await notifyScanComplete(newScan.userId, { type: 'security', url, score: newScan.score, findings: newScan.findings });
 
-      return NextResponse.json({ success: true, data: newScan });
+      // Return plan-gated findings to the client (full data stays in DB)
+      return NextResponse.json({ success: true, data: {
+        ...newScan,
+        findings: filterFindingsByPlan(newScan.findings, userPlan),
+      } });
     }
 
     if (pathParts[0] === 'seo-scan') {

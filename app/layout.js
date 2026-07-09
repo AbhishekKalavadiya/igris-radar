@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { SITE_NAME, SITE_URL, SITE_TAGLINE, SITE_DESCRIPTION } from '@/lib/seo';
+import { Analytics } from "@vercel/analytics/next";
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,6 +24,20 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script 
+          src="https://www.googletagmanager.com/gtag/js?id=G-MKKL56RZNX" 
+          strategy="afterInteractive" 
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-MKKL56RZNX');
+          `}
+        </Script>
+      </head>
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
@@ -42,6 +58,7 @@ export default function RootLayout({ children }) {
           />
           <div className="ambient-bg" />
           {children}
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

@@ -59,6 +59,7 @@ export default function BillingTab({ currentPlan = 'free' }) {
   const [fakeUpgradeModal, setFakeUpgradeModal] = useState(false);
   const [targetPlanToUpgrade, setTargetPlanToUpgrade] = useState(null);
   const [planLimits, setPlanLimits] = useState(null);
+  const [redirecting, setRedirecting] = useState(null);
 
   useEffect(() => {
     fetch('/api?path=usage')
@@ -73,35 +74,41 @@ export default function BillingTab({ currentPlan = 'free' }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleUpgrade = (targetPlan) => {
+  const handleUpgrade = async (targetPlan) => {
     if (!isPlanAvailable(targetPlan)) {
       toast({ title: 'Not available yet', description: `We do not offer the ${PLAN_META[targetPlan]?.label || targetPlan} plan yet.`, variant: 'destructive' });
       return;
     }
-    setTargetPlanToUpgrade(targetPlan);
-    setFakeUpgradeModal(true);
-  };
 
-  const confirmFakeUpgrade = async () => {
-    setUpgrading(targetPlanToUpgrade);
+    setRedirecting(targetPlan);
+    
     try {
-      const res = await fetch('/api?path=auth/update-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: targetPlanToUpgrade }),
-      });
+      const res = await fetch('/api?path=auth/me');
       const data = await res.json();
-      if (data.success) {
-        toast({ title: 'Plan Upgraded (Test Mode)', description: `You are now on the ${targetPlanToUpgrade} plan.` });
-        window.location.reload();
-      } else {
-        toast({ title: 'Upgrade Failed', description: data.error, variant: 'destructive' });
+      const userId = data.data?.id;
+
+      let paymentLink = null;
+      if (targetPlan === 'starter') paymentLink = process.env.NEXT_PUBLIC_DODO_STARTER_LINK;
+      if (targetPlan === 'pro') paymentLink = process.env.NEXT_PUBLIC_DODO_PRO_LINK;
+      if (targetPlan === 'agency') paymentLink = process.env.NEXT_PUBLIC_DODO_AGENCY_LINK;
+
+      if (!paymentLink) {
+        toast({ title: 'Configuration Missing', description: `No payment link configured for the ${targetPlan} plan.`, variant: 'destructive' });
+        setRedirecting(null);
+        return;
       }
-    } catch {
-      toast({ title: 'Network error', description: 'Could not upgrade.', variant: 'destructive' });
-    } finally {
-      setUpgrading(null);
-      setFakeUpgradeModal(false);
+
+      const url = new URL(paymentLink);
+      if (userId) {
+        url.searchParams.set('client_reference_id', userId);
+        url.searchParams.set('metadata[userId]', userId);
+        url.searchParams.set('metadata[plan]', targetPlan);
+      }
+      
+      window.location.href = url.toString();
+    } catch (e) {
+      toast({ title: 'Error', description: 'Failed to initiate checkout.', variant: 'destructive' });
+      setRedirecting(null);
     }
   };
 
@@ -156,14 +163,12 @@ export default function BillingTab({ currentPlan = 'free' }) {
 
   return (
     <div className="space-y-6">
-      {/* Current plan card */}
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-base">Current Plan</CardTitle>
           <CardDescription>Your active subscription and this month's usage</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Plan badge + price */}
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold uppercase tracking-widest border ${meta.badge}`}>
@@ -178,9 +183,9 @@ export default function BillingTab({ currentPlan = 'free' }) {
                     size="sm"
                     className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 font-semibold"
                     onClick={() => handleUpgrade(PLANS_ORDER[currentIdx + 1])}
-                    disabled={!!upgrading}
+                    disabled={!!redirecting}
                   >
-                    {upgrading === PLANS_ORDER[currentIdx + 1]
+                    {redirecting === PLANS_ORDER[currentIdx + 1]
                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       : <Zap className="h-3.5 w-3.5" />}
                     Upgrade to {PLAN_META[PLANS_ORDER[currentIdx + 1]]?.label}
@@ -208,7 +213,6 @@ export default function BillingTab({ currentPlan = 'free' }) {
             </div>
           </div>
 
-          {/* Usage meter */}
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading usage...
@@ -226,7 +230,6 @@ export default function BillingTab({ currentPlan = 'free' }) {
             </div>
           ) : null}
 
-          {/* Plan features summary */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { label: 'Sites',         value: usage?.limits?.sites === Infinity || usage?.limits?.sites === null ? 'Unlimited' : (usage?.limits?.sites ?? planLimits?.[plan]?.sites ?? 1) },
@@ -243,7 +246,6 @@ export default function BillingTab({ currentPlan = 'free' }) {
         </CardContent>
       </Card>
 
-      {/* Plan comparison table */}
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-base">Plan Comparison</CardTitle>
@@ -263,18 +265,13 @@ export default function BillingTab({ currentPlan = 'free' }) {
               </tr>
             </thead>
             <tbody>
-              {/* Price */}
               {renderComparisonRow(COMPARISON_ROWS[0])}
-
-              {/* Limits & power features */}
               <tr className="border-b border-border/50">
                 <td colSpan={PLANS_ORDER.length + 1} className="py-2.5 pt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Limits &amp; features
                 </td>
               </tr>
               {COMPARISON_ROWS.slice(1).map(renderComparisonRow)}
-
-              {/* Audit tools — the core scanners, included on every plan */}
               <tr className="border-b border-border/50">
                 <td colSpan={PLANS_ORDER.length + 1} className="py-2.5 pt-4 text-xs font-semibold uppercase tracking-wider text-primary">
                   Audit tools · included on every plan
@@ -293,7 +290,6 @@ export default function BillingTab({ currentPlan = 'free' }) {
             </tbody>
           </table>
 
-          {/* Upgrade row */}
           <div className="mt-4 flex gap-3 justify-end flex-wrap items-center">
             {PLANS_ORDER.filter((p, i) => i > currentIdx && isPlanAvailable(p)).map((p) => (
               <Button
@@ -302,9 +298,9 @@ export default function BillingTab({ currentPlan = 'free' }) {
                 variant="outline"
                 className="h-8 px-3 text-xs font-semibold gap-1.5"
                 onClick={() => handleUpgrade(p)}
-                disabled={!!upgrading}
+                disabled={!!redirecting}
               >
-                {upgrading === p
+                {redirecting === p
                   ? <Loader2 className="h-3 w-3 animate-spin" />
                   : <ArrowRight className="h-3 w-3" />}
                 Upgrade to {PLAN_META[p].label}
@@ -319,34 +315,9 @@ export default function BillingTab({ currentPlan = 'free' }) {
         </CardContent>
       </Card>
 
-      {/* Billing notice */}
       <p className="text-xs text-muted-foreground text-center">
         All paid plans include a 14-day free trial · No credit card required during trial · Cancel anytime
       </p>
-
-      {/* Fake Upgrade Modal (TESTING ONLY) */}
-      <Dialog open={fakeUpgradeModal} onOpenChange={setFakeUpgradeModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Test Environment Upgrade</DialogTitle>
-            <DialogDescription>
-              Stripe checkout is bypassed for testing. Would you like to mock an upgrade to the <strong className="uppercase">{targetPlanToUpgrade}</strong> plan?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              This will update your account in the database and reload the application to apply the new limits.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFakeUpgradeModal(false)} disabled={!!upgrading}>Cancel</Button>
-            <Button onClick={confirmFakeUpgrade} disabled={!!upgrading}>
-              {upgrading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Confirm Fake Upgrade
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
