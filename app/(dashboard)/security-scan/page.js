@@ -461,6 +461,31 @@ export default function SecurityScanPage() {
                                   ))}
                                 </div>
                               )}
+
+                              {scanResult.ai.complianceReadiness && (
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-semibold text-foreground">Compliance Readiness</h4>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {[
+                                      { label: 'GDPR', value: scanResult.ai.complianceReadiness.gdpr },
+                                      { label: 'PCI DSS', value: scanResult.ai.complianceReadiness.pci },
+                                    ].filter(({ value }) => value).map(({ label, value }) => {
+                                      const level = String(value).toLowerCase();
+                                      const riskClass = level.includes('high')
+                                        ? 'text-destructive border-destructive/30 bg-destructive/10'
+                                        : level.includes('medium')
+                                          ? 'text-warning border-warning/30 bg-warning/10'
+                                          : 'text-success border-success/30 bg-success/10';
+                                      return (
+                                        <div key={label} className={`rounded-lg border p-3 flex items-center justify-between ${riskClass}`}>
+                                          <span className="text-sm font-medium text-foreground">{label}</span>
+                                          <span className="text-xs font-semibold uppercase tracking-wide">{value}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )
                         ) : (

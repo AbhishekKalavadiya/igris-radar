@@ -2,6 +2,7 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { Toaster } from '@/components/ui/toaster';
 import { SITE_NAME, SITE_URL, SITE_TAGLINE, SITE_DESCRIPTION } from '@/lib/seo';
 import { Analytics } from "@vercel/analytics/next";
 import Script from 'next/script';
@@ -58,6 +59,7 @@ export default function RootLayout({ children }) {
           />
           <div className="ambient-bg" />
           {children}
+          <Toaster />
           <Analytics />
         </ThemeProvider>
       </body>
