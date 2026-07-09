@@ -175,9 +175,9 @@ export default function SecurityScanPage() {
   const renderTierTab = (tier) => {
     let tierFindings = [];
     if (tier === 'free') {
-      tierFindings = scanResult.findings.filter(f => !f.requiredPlan);
+      tierFindings = scanResult.findings.filter(f => !f.tier || f.tier === 'free');
     } else {
-      tierFindings = scanResult.findings.filter(f => f.requiredPlan === tier);
+      tierFindings = scanResult.findings.filter(f => f.tier === tier);
     }
     const ranks = { critical: 1, high: 2, medium: 3, low: 4, passed: 5 };
     const visible = filterFindings([...tierFindings], query, severityFilter)
