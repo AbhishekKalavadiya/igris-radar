@@ -34,6 +34,8 @@ export default function Navbar({ onMenuClick }) {
   const router = useRouter();
   const [alerts, setAlerts] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [usage, setUsage] = useState(null);
+  const [planLimits, setPlanLimits] = useState(null);
 
   const pageTitle =
     PAGE_TITLES[pathname] ||
@@ -42,7 +44,20 @@ export default function Navbar({ onMenuClick }) {
 
   useEffect(() => {
     fetchAlerts();
-  }, []);
+    fetchUsage();
+  }, [pathname]);
+
+  const fetchUsage = async () => {
+    try {
+      const res = await fetch('/api?path=usage');
+      const data = await res.json();
+      if (data.success) {
+        setUsage(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch usage:', error);
+    }
+  };
 
   const fetchAlerts = async () => {
     try {
@@ -94,6 +109,24 @@ export default function Navbar({ onMenuClick }) {
       </div>
 
       <div className="flex items-center gap-2 md:gap-3">
+        {/* Usage Indicators */}
+        {usage && usage.limits && (
+          <div className="hidden lg:flex items-center gap-2 mr-2 text-xs font-medium cursor-pointer" onClick={() => router.push('/plans')}>
+            <div className="flex items-center gap-1.5 bg-muted/50 hover:bg-muted rounded-full px-3 py-1.5 transition-colors border border-border/50">
+              <span className="text-muted-foreground">Scans:</span>
+              <span className={usage.limits.scansPerMonth !== null && usage.scansUsed >= usage.limits.scansPerMonth ? 'text-destructive' : 'text-foreground'}>
+                {usage.scansUsed} / {usage.limits.scansPerMonth === Infinity || usage.limits.scansPerMonth === null ? '∞' : usage.limits.scansPerMonth}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-muted/50 hover:bg-muted rounded-full px-3 py-1.5 transition-colors border border-border/50">
+              <span className="text-muted-foreground">Sites:</span>
+              <span className={usage.limits.sites !== null && usage.sitesUsed >= usage.limits.sites ? 'text-destructive' : 'text-foreground'}>
+                {usage.sitesUsed} / {usage.limits.sites === Infinity || usage.limits.sites === null ? '∞' : usage.limits.sites}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Notifications */}
         <DropdownMenu open={showNotifications} onOpenChange={setShowNotifications}>
           <DropdownMenuTrigger asChild>

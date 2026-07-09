@@ -5,11 +5,11 @@ const isDev = process.env.NODE_ENV !== 'production';
 // dev-only (webpack HMR). Tighten to nonces when moving off inline scripts.
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob: https: https://www.google-analytics.com",
   "font-src 'self' data:",
-  `connect-src 'self' https:${isDev ? ' ws:' : ''}`,
+  `connect-src 'self' https: https://www.google-analytics.com https://stats.g.doubleclick.net https://vitals.vercel-insights.com${isDev ? ' ws:' : ''}`,
   "frame-ancestors 'self'",
   "object-src 'none'",
   "base-uri 'self'",

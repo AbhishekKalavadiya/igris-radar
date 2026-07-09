@@ -431,11 +431,16 @@ export async function GET(request) {
       const plan = sessionUser.plan || 'free';
       const limits = await getPlanLimits(plan);
       const scansUsed = await countScansThisMonth(sessionUser.id);
+      
+      const compCol = await getCollection(COLLECTIONS.COMPANIES);
+      const sitesUsed = await compCol.countDocuments({ userId: sessionUser.id });
+
       return NextResponse.json({
         success: true,
         data: {
           plan,
           scansUsed,
+          sitesUsed,
           scansLimit: limits.scansPerMonth,
           limits,
         },
@@ -1576,12 +1581,21 @@ export async function POST(request) {
 
         // Credentials come from env (SECURITY_CHECKLIST C2). Without them the
         // admin panel is disabled — no hardcoded admin:admin fallback.
-        if (!env.adminUsername || !env.adminPassword) {
+        if (!env.adminUsername || (!env.adminPassword && !env.adminPasswordHash)) {
           return NextResponse.json({ success: false, error: 'Admin access is not configured' }, { status: 503 });
         }
 
         const userMatch = typeof username === 'string' && username === env.adminUsername;
-        const passMatch = typeof password === 'string' && password === env.adminPassword;
+        let passMatch = false;
+        
+        if (typeof password === 'string') {
+          if (env.adminPasswordHash) {
+            const { verifyPassword } = await import('@/lib/auth/password');
+            passMatch = await verifyPassword(password, env.adminPasswordHash);
+          } else if (env.adminPassword) {
+            passMatch = password === env.adminPassword;
+          }
+        }
 
         if (!userMatch || !passMatch) {
           await audit({ action: AUDIT_ACTIONS.ADMIN_LOGIN_FAIL, ip, metadata: { username: String(username).slice(0, 80) } });

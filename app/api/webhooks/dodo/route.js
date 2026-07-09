@@ -19,6 +19,7 @@ export async function POST(req) {
     const client = new DodoPayments({
       bearerToken: process.env.DODO_PAYMENTS_API_KEY || 'placeholder_for_webhook',
       webhookKey: process.env.DODO_PAYMENTS_WEBHOOK_KEY || env.DODO_PAYMENTS_WEBHOOK_KEY,
+      environment: process.env.DODO_ENV === 'live_mode' ? 'live_mode' : 'test_mode',
     });
 
     let event;

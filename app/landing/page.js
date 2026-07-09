@@ -51,7 +51,7 @@ const HOME_FAQS = [
   { q: 'Do I need to install anything on my site?', a: 'No. Every audit runs from the outside, exactly the way crawlers and attackers see your site. Enter a URL and results arrive in seconds to minutes depending on the audit.' },
   { q: 'What makes the fix workflow different?', a: 'Every failed check ships with a plain-language explanation and an agent-native fix prompt. That is a ready-to-paste instruction for your AI coding assistant, with the full context of the finding built in. You go from "we have an issue" straight to a merged fix.' },
   { q: 'Can I compare my site against competitors?', a: 'Yes. Point SEO, AEO, or GEO audits at a competitor\'s URL. We run the same checks on both sites and show a gap analysis by category. Brand visibility tracking also shows whether AI engines recommend you or them.' },
-  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across all six audit types, no credit card required. Starter is $5/month for 25 scans and 5 tracked sites. Pro is $20/month and adds AI deep analysis and competitor scans. Agency and Enterprise plans are not offered yet.' },
+  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across all six audit types, no credit card required. Starter is $5/month for 25 scans and 5 tracked sites. Pro is $20/month and adds AI deep analysis. Agency is $399/month for unlimited scanning. Enterprise plans are not offered yet.' },
 ];
 
 /** Rotating AI engine name in the hero headline. */
@@ -535,7 +535,7 @@ headers() and verify on /.`}
         </Stagger>
         <Reveal className="text-center mt-8">
           <p className="text-sm text-muted-foreground">
-            Agency and Enterprise plans are not offered yet. Start on Free, Starter, or Pro today.
+            Enterprise plans are not offered yet. Start on Free, Starter, Pro, or Agency today.
           </p>
         </Reveal>
       </section>

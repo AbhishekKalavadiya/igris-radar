@@ -21,9 +21,7 @@ const PLAN_META = {
   agency:     { label: 'Agency',     price: '$399',  period: '/mo',   color: 'text-purple-400',       badge: 'bg-purple-500/10 border-purple-500/20' },
   enterprise: { label: 'Enterprise', price: 'Custom', period: null,   color: 'text-yellow-400',       badge: 'bg-yellow-500/10 border-yellow-500/20' },
 };
-
-const PLANS_ORDER = ['free', 'starter', 'pro', 'agency', 'enterprise'];
-
+const PLANS_ORDER = ['free', 'starter', 'pro', 'agency'];
 // Every plan includes the full audit suite — the scanners are the core product,
 // so gating them behind higher tiers would block free users from experiencing
 // the value. Plans are differentiated by quota + power features below, not by
@@ -83,29 +81,23 @@ export default function BillingTab({ currentPlan = 'free' }) {
     setRedirecting(targetPlan);
     
     try {
-      const res = await fetch('/api?path=auth/me');
+      // Create a dynamic checkout session
+      const res = await fetch('/api/billing/dodo/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: targetPlan }),
+      });
+      
       const data = await res.json();
-      const userId = data.data?.id;
 
-      let paymentLink = null;
-      if (targetPlan === 'starter') paymentLink = process.env.NEXT_PUBLIC_DODO_STARTER_LINK;
-      if (targetPlan === 'pro') paymentLink = process.env.NEXT_PUBLIC_DODO_PRO_LINK;
-      if (targetPlan === 'agency') paymentLink = process.env.NEXT_PUBLIC_DODO_AGENCY_LINK;
-
-      if (!paymentLink) {
-        toast({ title: 'Configuration Missing', description: `No payment link configured for the ${targetPlan} plan.`, variant: 'destructive' });
+      if (!data.success) {
+        toast({ title: 'Checkout Failed', description: data.error || 'Could not start checkout', variant: 'destructive' });
         setRedirecting(null);
         return;
       }
-
-      const url = new URL(paymentLink);
-      if (userId) {
-        url.searchParams.set('client_reference_id', userId);
-        url.searchParams.set('metadata[userId]', userId);
-        url.searchParams.set('metadata[plan]', targetPlan);
-      }
       
-      window.location.href = url.toString();
+      // Redirect to the newly generated Dodo checkout session URL
+      window.location.href = data.url;
     } catch (e) {
       toast({ title: 'Error', description: 'Failed to initiate checkout.', variant: 'destructive' });
       setRedirecting(null);
@@ -287,37 +279,33 @@ export default function BillingTab({ currentPlan = 'free' }) {
                   ))}
                 </tr>
               ))}
+              <tr>
+                <td className="py-4"></td>
+                {PLANS_ORDER.map((p, i) => (
+                  <td key={p} className="text-center py-4 px-2">
+                    {i > currentIdx && isPlanAvailable(p) ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-3 text-xs font-semibold gap-1.5 w-full justify-center"
+                        onClick={() => handleUpgrade(p)}
+                        disabled={!!redirecting}
+                      >
+                        {redirecting === p
+                          ? <Loader2 className="h-3 w-3 animate-spin" />
+                          : <ArrowRight className="h-3 w-3" />}
+                        Upgrade
+                      </Button>
+                    ) : i > currentIdx && !isPlanAvailable(p) ? (
+                      <span className="text-[10px] text-muted-foreground uppercase font-semibold block text-center mt-2">Not offered yet</span>
+                    ) : null}
+                  </td>
+                ))}
+              </tr>
             </tbody>
           </table>
-
-          <div className="mt-4 flex gap-3 justify-end flex-wrap items-center">
-            {PLANS_ORDER.filter((p, i) => i > currentIdx && isPlanAvailable(p)).map((p) => (
-              <Button
-                key={p}
-                size="sm"
-                variant="outline"
-                className="h-8 px-3 text-xs font-semibold gap-1.5"
-                onClick={() => handleUpgrade(p)}
-                disabled={!!redirecting}
-              >
-                {redirecting === p
-                  ? <Loader2 className="h-3 w-3 animate-spin" />
-                  : <ArrowRight className="h-3 w-3" />}
-                Upgrade to {PLAN_META[p].label}
-              </Button>
-            ))}
-            {PLANS_ORDER.filter((p, i) => i > currentIdx && !isPlanAvailable(p)).map((p) => (
-              <span key={p} className="text-xs text-muted-foreground">
-                {PLAN_META[p].label} — not offered yet
-              </span>
-            ))}
-          </div>
         </CardContent>
       </Card>
-
-      <p className="text-xs text-muted-foreground text-center">
-        All paid plans include a 14-day free trial · No credit card required during trial · Cancel anytime
-      </p>
     </div>
   );
 }

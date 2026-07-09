@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Shield, Loader2, Search, Lock, Sparkles, AlertCircle } from 'lucide-react';
+import { Shield, Loader2, Search, Lock, Sparkles, AlertCircle, Zap, Star, Crown, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import AuditFindingCard from '@/components/ui/AuditFindingCard';
@@ -172,6 +172,42 @@ export default function SecurityScanPage() {
       </div>
     );
   };
+  const renderTierTab = (tier) => {
+    let tierFindings = [];
+    if (tier === 'free') {
+      tierFindings = scanResult.findings.filter(f => !f.requiredPlan);
+    } else {
+      tierFindings = scanResult.findings.filter(f => f.requiredPlan === tier);
+    }
+    const ranks = { critical: 1, high: 2, medium: 3, low: 4, passed: 5 };
+    const visible = filterFindings([...tierFindings], query, severityFilter)
+      .sort((a, b) => (ranks[a.severity] || 6) - (ranks[b.severity] || 6));
+    
+    return (
+      <div className="space-y-4">
+        <FindingsToolbar
+          query={query}
+          onQueryChange={setQuery}
+          severity={severityFilter}
+          onSeverityChange={setSeverityFilterState}
+          counts={{
+            all: tierFindings.length,
+            failed: tierFindings.filter(f => !f.passed).length,
+            passed: tierFindings.filter(f => f.passed).length,
+          }}
+        />
+        <div className="space-y-4">
+          {visible.length === 0 ? (
+            <div className="text-muted-foreground text-center py-8">No findings match the current filter in this tier.</div>
+          ) : (
+            visible.map((finding) => (
+              <AuditFindingCard key={finding.id} finding={finding} />
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
 
 
   return (
@@ -291,6 +327,34 @@ export default function SecurityScanPage() {
                   </span>
                 )}
               </TabsTrigger>
+              <div className="w-px h-5 bg-border mx-1.5 hidden sm:block" />
+              
+              <TabsTrigger 
+                value="tier-free" 
+                className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-border/50 data-[state=active]:bg-background"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Free
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tier-starter" 
+                className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+              >
+                <Zap className="w-3.5 h-3.5 text-primary" /> Starter
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tier-pro" 
+                className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+              >
+                <Star className="w-3.5 h-3.5 text-warning" /> Pro
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tier-agency" 
+                className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+              >
+                <Crown className="w-3.5 h-3.5 text-destructive" /> Agency
+              </TabsTrigger>
+
+              <div className="w-px h-5 bg-border mx-1.5 hidden sm:block" />
               {uniqueCategories.map(cat => (
                 <TabsTrigger key={cat} value={`cat-${cat}`}>{cat}</TabsTrigger>
               ))}
@@ -459,6 +523,19 @@ export default function SecurityScanPage() {
 
             <TabsContent value="findings" className="m-0 space-y-4">
               {renderCategoryTab('All')}
+            </TabsContent>
+
+            <TabsContent value="tier-free" className="m-0 space-y-4">
+              {renderTierTab('free')}
+            </TabsContent>
+            <TabsContent value="tier-starter" className="m-0 space-y-4">
+              {renderTierTab('starter')}
+            </TabsContent>
+            <TabsContent value="tier-pro" className="m-0 space-y-4">
+              {renderTierTab('pro')}
+            </TabsContent>
+            <TabsContent value="tier-agency" className="m-0 space-y-4">
+              {renderTierTab('agency')}
             </TabsContent>
 
             {uniqueCategories.map(cat => (
