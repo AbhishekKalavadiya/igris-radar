@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Reveal, Stagger, MotionItem, AnimatedNumber } from '@/components/ui/motion';
-import { NAV_PLATFORM, AI_ENGINES, HOW_IT_WORKS } from '@/lib/landingContent';
+import { NAV_PLATFORM, AI_ENGINES, HOW_IT_WORKS, SHOW_AUTH_CTAS } from '@/lib/landingContent';
 import FeatureFaqAccordion from '@/components/landing/FeatureFaqAccordion';
 import JsonLd from '@/components/ui/JsonLd';
 import { faqPageJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd, howToJsonLd, SITE_PUBLISHED, FOUNDER } from '@/lib/seo';
@@ -171,16 +171,20 @@ export default function LandingPage() {
           </Reveal>
           <Reveal delay={0.24}>
             <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/signup">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 text-base h-12">
-                  Analyze my site free <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
+              {SHOW_AUTH_CTAS && (
+                <Link href="/signup">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 text-base h-12">
+                    Analyze my site free <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              )}
               <Link href="/landing/features/aeo-audit">
                 <Button size="lg" variant="outline" className="h-12 px-8 text-base">What is AEO?</Button>
               </Link>
             </div>
-            <p className="mt-4 text-xs text-muted-foreground">Free plan · 10 full scans a month · No credit card</p>
+            {SHOW_AUTH_CTAS && (
+              <p className="mt-4 text-xs text-muted-foreground">Free plan · 10 full scans a month · No credit card</p>
+            )}
           </Reveal>
           <Reveal delay={0.34} className="mt-14">
             <ReportMockup />
@@ -519,7 +523,7 @@ headers() and verify on /.`}
                   <Button className="w-full font-semibold mt-6" variant="outline" disabled>
                     {plan.cta}
                   </Button>
-                ) : (
+                ) : SHOW_AUTH_CTAS ? (
                   <Link href="/signup" className="mt-6">
                     <Button
                       className={`w-full font-semibold ${plan.highlight ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
@@ -528,7 +532,7 @@ headers() and verify on /.`}
                       {plan.cta}
                     </Button>
                   </Link>
-                )}
+                ) : null}
               </div>
             </MotionItem>
           ))}
@@ -572,13 +576,15 @@ headers() and verify on /.`}
             <p className="mt-3 text-primary-foreground/85 text-lg relative">
               Your first full audit takes about a minute. Free plan, no credit card.
             </p>
-            <div className="mt-8 relative">
-              <Link href="/signup">
-                <Button size="lg" variant="secondary" className="h-12 px-8 text-base font-semibold">
-                  Get Started Free <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
+            {SHOW_AUTH_CTAS && (
+              <div className="mt-8 relative">
+                <Link href="/signup">
+                  <Button size="lg" variant="secondary" className="h-12 px-8 text-base font-semibold">
+                    Get Started Free <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </Reveal>
       </section>

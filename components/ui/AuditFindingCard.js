@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, AlertTriangle, AlertCircle, Info, Copy, Check, Sparkles, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, AlertCircle, Info, Copy, Check, Sparkles, ChevronDown, ChevronUp, Lock, Search } from 'lucide-react';
 import { SEVERITY_STYLES } from '@/lib/scannerAccents';
 import Link from 'next/link';
 
@@ -94,6 +94,30 @@ const PLAN_LABELS = {
   enterprise: 'Enterprise',
 };
 
+// "How we test this" — a plain-language description of the scan METHOD, keyed by the
+// finding's category. Explains WHAT the scanner actually does to produce the result,
+// complementing the per-finding "why it matters" (details) text. Categories not listed
+// simply omit this section (e.g. SEO/AEO/GEO findings render as before).
+const CATEGORY_METHODOLOGY = {
+  'Headers': 'We send a standard HTTPS request to your site and inspect the HTTP response headers your server returns — no header on the response means the protection is not active.',
+  'SSL/TLS': 'We open a live TLS connection to your server to read its certificate and negotiated protocol, and cross-check public Certificate Transparency logs.',
+  'DNS Security': 'We perform live DNS lookups for your domain (TXT/SPF/DMARC, MX, CAA, DKIM selectors, and DNSSEC via a validating resolver).',
+  'Secrets': 'We scan your page\'s raw HTML and inline scripts for text patterns that match known API-key, token, and private-key formats.',
+  'Active Probing': 'We send targeted requests to commonly-exposed paths (e.g. /.env, /admin, /backup, /.git) and inspect the responses for exposure signatures.',
+  'Info Disclosure': 'We inspect your response headers, a triggered error page, and linked source files for details that reveal your technology stack.',
+  'Infrastructure': 'We probe network-level properties of your host — DNS records, response timing, protocol support, and open ports.',
+  'Domain Reputation': 'We check your domain against Cloudflare\'s public threat-intelligence resolver and read your registration record via RDAP.',
+  'Attack Surface': 'We enumerate your public subdomains from Certificate Transparency logs and test each for dangling-CNAME takeover risk.',
+  'Auth & Session': 'We inspect login forms, password fields, and Set-Cookie attributes on the page for authentication weaknesses.',
+  'Content & Data': 'We scan the page content and HTML source (including comments) for exposed personal or sensitive data.',
+  'Client-Side': 'We analyze the JavaScript and external resources your page loads, including inline scripts and Subresource Integrity.',
+  'Client-Side / JS': 'We analyze the JavaScript and external resources your page loads, including inline scripts and dangerous DOM sinks.',
+  'Supply Chain': 'We inventory the third-party domains and libraries your site depends on and assess their risk.',
+  'Dependencies': 'We fingerprint the JavaScript libraries your page loads and check each version against the public OSV vulnerability database.',
+  'Compliance': 'We aggregate signals from the other checks and map them to the relevant compliance framework.',
+  'Best Practices': 'We check for the presence of recommended security files and configurations (e.g. security.txt).',
+};
+
 export default function AuditFindingCard({ finding }) {
   const [copiedId, setCopiedId] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -146,6 +170,10 @@ export default function AuditFindingCard({ finding }) {
 
   const isPassed = finding.passed || finding.severity === 'passed';
   const displayDetails = finding.details || FALLBACK_DETAILS[finding.title];
+  // Methodology: prefer a per-finding override, else the category-level description.
+  const methodology = finding.methodology || CATEGORY_METHODOLOGY[finding.category];
+  // The dropdown is available whenever we have any deeper content to show.
+  const hasMoreInfo = !!(displayDetails || methodology);
 
   return (
     <Card className={`glass-card premium-hover overflow-hidden ${isPassed ? 'opacity-75 bg-card/30' : ''}`}>
@@ -156,9 +184,9 @@ export default function AuditFindingCard({ finding }) {
             {getSeverityIcon(finding.severity)}
           </div>
           <div className="flex-1 min-w-0">
-            <div 
-              className={`flex items-center gap-2 mb-1 flex-wrap ${displayDetails ? 'cursor-pointer' : ''}`}
-              onClick={() => displayDetails && setIsExpanded(!isExpanded)}
+            <div
+              className={`flex items-center gap-2 mb-1 flex-wrap ${hasMoreInfo ? 'cursor-pointer' : ''}`}
+              onClick={() => hasMoreInfo && setIsExpanded(!isExpanded)}
             >
               <h4 className={`font-medium ${isPassed ? 'text-muted-foreground' : 'text-foreground'}`}>{finding.title}</h4>
               <Badge variant="outline" className="text-[10px] py-0">{finding.category}</Badge>
@@ -167,21 +195,56 @@ export default function AuditFindingCard({ finding }) {
                   {PLAN_LABELS[finding.tier] || finding.tier}
                 </Badge>
               )}
-              {displayDetails && (
+              {hasMoreInfo && (
                 <div className="ml-auto flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  {isExpanded ? 'Hide Details' : 'Why this matters'}
+                  {isExpanded ? 'Hide details' : 'More information'}
                   {isExpanded ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
                 </div>
               )}
             </div>
             <p className="text-sm text-muted-foreground mb-4">{finding.description}</p>
-            
-            {isExpanded && displayDetails && (
-              <div className="bg-muted/30 border border-border rounded-md p-4 mb-4 text-sm text-foreground/90 animate-in fade-in slide-in-from-top-2">
-                <div className="font-semibold mb-1 flex items-center gap-2">
-                  <Info className="h-4 w-4 text-primary" /> In-Depth Explanation
+
+            {isExpanded && hasMoreInfo && (
+              <div className="bg-muted/30 border border-border rounded-md p-4 mb-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                {methodology && (
+                  <div className="text-sm text-foreground/90">
+                    <div className="font-semibold mb-1 flex items-center gap-2">
+                      <Search className="h-4 w-4 text-primary" /> How we test this
+                    </div>
+                    <p className="leading-relaxed text-muted-foreground">{methodology}</p>
+                  </div>
+                )}
+
+                <div className="text-sm text-foreground/90">
+                  <div className="font-semibold mb-1 flex items-center gap-2">
+                    {isPassed
+                      ? <CheckCircle2 className="h-4 w-4 text-success" />
+                      : <AlertCircle className="h-4 w-4 text-severity-medium" />} What we found
+                  </div>
+                  <p className="leading-relaxed text-muted-foreground">
+                    {isPassed ? 'This check passed. ' : 'This check needs attention. '}{finding.description}
+                  </p>
                 </div>
-                <p className="leading-relaxed">{displayDetails}</p>
+
+                {displayDetails && (
+                  <div className="text-sm text-foreground/90">
+                    <div className="font-semibold mb-1 flex items-center gap-2">
+                      <Info className="h-4 w-4 text-primary" /> Why this matters
+                    </div>
+                    <p className="leading-relaxed text-muted-foreground">{displayDetails}</p>
+                  </div>
+                )}
+
+                {/* For FAILED findings the remediation + fix prompt already render below
+                    the card, so we only surface it here for PASSED findings. */}
+                {isPassed && finding.remediation && (
+                  <div className="text-sm text-foreground/90">
+                    <div className="font-semibold mb-1 flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary" /> How to keep it that way
+                    </div>
+                    <p className="leading-relaxed text-muted-foreground">{finding.remediation}</p>
+                  </div>
+                )}
               </div>
             )}
             

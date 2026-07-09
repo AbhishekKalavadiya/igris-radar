@@ -1037,7 +1037,14 @@ export async function POST(request) {
       await assertSafeUrl(url); // SSRF guard (C-I6)
 
       const sessionUser = getSessionUser(request);
-      if (sessionUser) {
+      // Onboarding scans are exempt from limits and not counted (mirrors seo-scan).
+      let isOnboardingScan = false;
+      if (sessionUser && body.isOnboarding) {
+        const usersCol = await getCollection(COLLECTIONS.USERS);
+        const dbUser = await usersCol.findOne({ id: sessionUser.id }, { projection: { onboarded: 1 } });
+        isOnboardingScan = dbUser && dbUser.onboarded !== true;
+      }
+      if (sessionUser && !isOnboardingScan) {
         await assertScanLimit(sessionUser.id, sessionUser.plan || 'free');
         await assertSiteTrackingLimit(sessionUser.id, sessionUser.plan || 'free', url);
       }
@@ -1046,7 +1053,7 @@ export async function POST(request) {
       const scanResult = await runSecurityScan(url);
 
       const userPlan = sessionUser?.plan || 'free';
-      
+
       let aiResult = null;
       if (body.deepAnalysis && await hasAnyAiProvider()) {
         const { runDeepSecurityAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
@@ -1069,6 +1076,7 @@ export async function POST(request) {
         totalChecks: scanResult.totalChecks || scanResult.findings.length,
         findings: scanResult.findings,  // Store FULL findings in DB
         ai: aiResult,
+        isOnboarding: isOnboardingScan,
         createdAt: new Date(),
       };
       

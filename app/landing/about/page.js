@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Target, Compass, Wrench, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { buildMetadata, breadcrumbJsonLd, FOUNDER } from '@/lib/seo';
+import { SHOW_AUTH_CTAS } from '@/lib/landingContent';
 import JsonLd from '@/components/ui/JsonLd';
 
 export const metadata = buildMetadata({
@@ -127,11 +128,13 @@ export default function AboutPage() {
           The fastest way to understand Igris Radar is to run your first audit.
         </p>
         <div className="mt-7 flex items-center justify-center gap-3">
-          <Link href="/signup">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12 px-7">
-              Get Started Free <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-          </Link>
+          {SHOW_AUTH_CTAS && (
+            <Link href="/signup">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12 px-7">
+                Get Started Free <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
+          )}
           <Link href="/landing/contact">
             <Button size="lg" variant="outline" className="h-12 px-7">Contact us</Button>
           </Link>

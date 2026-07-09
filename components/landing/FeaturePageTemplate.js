@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { CheckCircle2, ArrowRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Reveal, Stagger, MotionItem, AnimatedNumber } from '@/components/ui/motion';
-import { HOW_IT_WORKS } from '@/lib/landingContent';
+import { HOW_IT_WORKS, SHOW_AUTH_CTAS } from '@/lib/landingContent';
 import FeatureFaqAccordion from '@/components/landing/FeatureFaqAccordion';
 
 /**
@@ -45,11 +45,13 @@ export default function FeaturePageTemplate({ config }) {
           </Reveal>
           <Reveal delay={0.24}>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/signup">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 h-12 text-base">
-                  Run a free scan <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
+              {SHOW_AUTH_CTAS && (
+                <Link href="/signup">
+                  <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-7 h-12 text-base">
+                    Run a free scan <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              )}
               <Link href="/landing#pricing">
                 <Button size="lg" variant="outline" className="h-12 px-7 text-base">See pricing</Button>
               </Link>
@@ -231,13 +233,15 @@ export default function FeaturePageTemplate({ config }) {
             />
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight relative">{config.ctaTitle}</h2>
             <p className="mt-3 text-primary-foreground/85 text-lg relative">{config.ctaSub}</p>
-            <div className="mt-8 relative">
-              <Link href="/signup">
-                <Button size="lg" variant="secondary" className="h-12 px-8 text-base font-semibold">
-                  Get Started Free <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
+            {SHOW_AUTH_CTAS && (
+              <div className="mt-8 relative">
+                <Link href="/signup">
+                  <Button size="lg" variant="secondary" className="h-12 px-8 text-base font-semibold">
+                    Get Started Free <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </Reveal>
       </section>

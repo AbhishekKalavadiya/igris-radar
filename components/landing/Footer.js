@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { NAV_PLATFORM } from '@/lib/landingContent';
+import { NAV_PLATFORM, SHOW_AUTH_CTAS } from '@/lib/landingContent';
 import LogoText from '@/components/ui/LogoText';
 import LogoIcon from '@/components/ui/LogoIcon';
 
@@ -24,8 +24,10 @@ const COLUMNS = [
       { href: '/landing/about', label: 'About' },
       { href: '/landing/contact', label: 'Contact' },
       { href: '/landing#pricing', label: 'Pricing' },
-      { href: '/signup', label: 'Get started' },
-      { href: '/login', label: 'Log in' },
+      ...(SHOW_AUTH_CTAS ? [
+        { href: '/signup', label: 'Get started' },
+        { href: '/login', label: 'Log in' },
+      ] : []),
     ],
   },
   {

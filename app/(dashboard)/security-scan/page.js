@@ -118,6 +118,9 @@ export default function SecurityScanPage() {
       if (data.success) {
         setScanResult(data.data);
         fetchHistory(targetUrl);
+        // Tell the Navbar (and any other listener) a scan was consumed so the usage
+        // counter refreshes immediately instead of waiting for a page reload.
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('scan-completed'));
         toast({ title: 'Scan complete', description: `Scored ${data.data.score}/100` });
         notifyScanDone(settings.notifications.pushNotifications, 'Security scan complete', `${formattedUrl} scored ${data.data.score}/100`);
       } else if (data.upgradeRequired) {
@@ -315,6 +318,14 @@ export default function SecurityScanPage() {
       {/* Results */}
       {scanResult && !isScanning && (
         <div className="animate-in fade-in slide-in-from-bottom-4">
+          {/* Caveat note: a few checks depend on external data sources that can be
+              temporarily unavailable and are skipped safely rather than faked. */}
+          <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground/70">
+            <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <span>
+              A few checks (Certificate Transparency, subdomain discovery, domain age &amp; malware-blocklist reputation, and network port scans) rely on external data sources that are occasionally rate-limited or blocked. If any look missing, they were skipped safely — just re-run the scan to retry.
+            </span>
+          </div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-card border border-border w-full justify-start h-auto flex-wrap p-1">
               <TabsTrigger value="overview">Overview</TabsTrigger>

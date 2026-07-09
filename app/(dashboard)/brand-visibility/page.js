@@ -125,6 +125,7 @@ export default function BrandVisibilityPage() {
       
       if (data.success) {
         setScanResult(data.data);
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('scan-completed'));
         toast({ title: 'Tracking complete', description: `Brand Visibility Score: ${data.data.score}%` });
       } else if (data.upgradeRequired) {
         setUpgradeInfo({ currentPlan: data.currentPlan || 'free', reason: data.upgradeReason || 'scanLimit' });

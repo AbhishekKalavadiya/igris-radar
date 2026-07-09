@@ -100,6 +100,7 @@ export default function SiteHealthPage() {
       if (data.success) {
         setScanResult(data.data);
         fetchHistory();
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('scan-completed'));
         toast({ title: 'Health check complete', description: `Accessibility scored ${data.data.accessibilityScore}%` });
       } else if (data.upgradeRequired) {
         setUpgradeInfo({ currentPlan: data.currentPlan || 'free', reason: data.upgradeReason || 'scanLimit' });

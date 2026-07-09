@@ -47,6 +47,14 @@ export default function Navbar({ onMenuClick }) {
     fetchUsage();
   }, [pathname]);
 
+  // Refresh the usage counter as soon as any scanner reports a completed scan,
+  // so the "scans used" badge updates immediately without a page reload.
+  useEffect(() => {
+    const onScanCompleted = () => fetchUsage();
+    window.addEventListener('scan-completed', onScanCompleted);
+    return () => window.removeEventListener('scan-completed', onScanCompleted);
+  }, []);
+
   const fetchUsage = async () => {
     try {
       const res = await fetch('/api?path=usage');

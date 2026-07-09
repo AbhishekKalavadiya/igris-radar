@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, Menu, X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { NAV_PLATFORM, NAV_COMPANY } from '@/lib/landingContent';
+import { NAV_PLATFORM, NAV_COMPANY, SHOW_AUTH_CTAS } from '@/lib/landingContent';
 import LogoText from '@/components/ui/LogoText';
 import LogoIcon from '@/components/ui/LogoIcon';
 
@@ -125,16 +125,18 @@ export default function Navbar() {
         </div>
 
         {/* Desktop CTAs */}
-        <div className="hidden lg:flex items-center gap-2">
-          <Link href="/login">
-            <Button variant="ghost" className="text-sm font-medium">Log in</Button>
-          </Link>
-          <Link href="/signup">
-            <Button className="text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground">
-              Get Started Free
-            </Button>
-          </Link>
-        </div>
+        {SHOW_AUTH_CTAS && (
+          <div className="hidden lg:flex items-center gap-2">
+            <Link href="/login">
+              <Button variant="ghost" className="text-sm font-medium">Log in</Button>
+            </Link>
+            <Link href="/signup">
+              <Button className="text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground">
+                Get Started Free
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Mobile toggle */}
         <button
@@ -187,14 +189,16 @@ export default function Navbar() {
               ))}
               <Link href="/landing#pricing" className="block py-2 text-sm font-semibold">Pricing</Link>
 
-              <div className="pt-3 border-t border-border flex flex-col gap-2">
-                <Link href="/login">
-                  <Button variant="outline" className="w-full">Log in</Button>
-                </Link>
-                <Link href="/signup">
-                  <Button className="w-full bg-primary text-primary-foreground">Get Started Free</Button>
-                </Link>
-              </div>
+              {SHOW_AUTH_CTAS && (
+                <div className="pt-3 border-t border-border flex flex-col gap-2">
+                  <Link href="/login">
+                    <Button variant="outline" className="w-full">Log in</Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button className="w-full bg-primary text-primary-foreground">Get Started Free</Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

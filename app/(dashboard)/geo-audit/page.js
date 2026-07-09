@@ -140,6 +140,7 @@ export default function GeoAuditPage() {
       if (data.success) {
         setScanResult(data.data);
         fetchHistory(targetUrl);
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('scan-completed'));
         toast({ title: 'Audit complete', description: `Scored ${data.data.score}/100` });
         notifyScanDone(settings.notifications.pushNotifications, 'GEO audit complete', `${formattedUrl} scored ${data.data.score}/100`);
       } else if (data.upgradeRequired) {
