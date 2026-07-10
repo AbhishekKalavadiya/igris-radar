@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import DodoPayments from 'dodopayments';
 import { getCollection } from '@/lib/db';
 import { COLLECTIONS } from '@/lib/db/schemas';
+import { PLANS } from '@/lib/constants';
 import { env } from '@/lib/env';
 
 export async function POST(req) {
@@ -35,18 +36,25 @@ export async function POST(req) {
     // Dodo Payments typically sends payment.succeeded or subscription.active
     if (event.type === 'payment.succeeded' || event.type === 'subscription.active' || event.type === 'subscription.renewed') {
       const data = event.data;
-      
-      // Extract userId from metadata or client_reference_id
-      const userId = data.metadata?.userId || data.client_reference_id;
-      
+
+      // Resolve the user: prefer metadata (set at checkout), else fall back to
+      // the stored Dodo customer id - some subscription events don't echo the
+      // original checkout metadata.
+      const userId = await resolveUserId(data);
+
       if (!userId) {
-        console.warn('[Dodo Webhook] Received payment success but no userId in metadata.', event.id);
-        return NextResponse.json({ success: true, warning: 'No userId attached' });
+        console.warn('[Dodo Webhook] Received payment success but could not resolve a user.', event.id);
+        return NextResponse.json({ success: true, warning: 'No user resolved' });
       }
 
-      // Determine the plan based on the product_id or price paid.
-      // Alternatively, we can assume the metadata contains the target plan if we pass it:
-      const targetPlan = data.metadata?.plan || guessPlanFromAmount(data.total_amount || data.amount);
+      // Determine the target plan, most-reliable source first:
+      //  1. metadata.plan  - set explicitly at checkout / changePlan
+      //  2. product_id map - deterministic, immune to prorated amounts
+      //  3. amount guess    - last resort (NOTE: a prorated upgrade charge is a
+      //     partial amount, so this must never run before the product map or it
+      //     would misclassify an upgrade as a cheaper plan).
+      const productId = data.product_id || data.product_cart?.[0]?.product_id || data.subscription?.product_id;
+      const targetPlan = data.metadata?.plan || planFromProductId(productId) || guessPlanFromAmount(data.total_amount || data.amount);
 
       if (targetPlan) {
         // Capture the Dodo customer id so "Manage Billing" can open the
@@ -56,7 +64,17 @@ export async function POST(req) {
         const usersCol = await getCollection(COLLECTIONS.USERS);
         await usersCol.updateOne(
           { id: userId },
-          { $set: { plan: targetPlan, ...(dodoCustomerId ? { dodoCustomerId } : {}), updatedAt: new Date() } }
+          {
+            // Reset the 30-day usage cycle to start now, and clear any pending
+            // downgrade (the user is active/paid again).
+            $set: {
+              plan: targetPlan,
+              planCycleStart: new Date(),
+              ...(dodoCustomerId ? { dodoCustomerId } : {}),
+              updatedAt: new Date(),
+            },
+            $unset: { pendingDowngrade: '' },
+          }
         );
         console.log(`[Dodo Webhook] Upgraded user ${userId} to ${targetPlan}`);
       } else {
@@ -64,11 +82,71 @@ export async function POST(req) {
       }
     }
 
+    // Subscription ended for good - downgrade the user back to the free plan.
+    // Only terminal states are handled here: a scheduled cancellation keeps the
+    // subscription 'active' until the period end, and a failed payment goes to
+    // 'on_hold' (dunning/retries) rather than being terminal - so we must NOT
+    // downgrade on those, or a transient card decline would strip a paying
+    // customer's plan mid-cycle.
+    if (event.type === 'subscription.cancelled' || event.type === 'subscription.expired') {
+      const data = event.data;
+      const userId = await resolveUserId(data);
+
+      if (!userId) {
+        console.warn('[Dodo Webhook] Subscription ended but could not resolve a user.', event.id);
+        return NextResponse.json({ success: true, warning: 'No user resolved' });
+      }
+
+      const usersCol = await getCollection(COLLECTIONS.USERS);
+      await usersCol.updateOne(
+        { id: userId },
+        {
+          // Free tier begins now (this event fires at the paid period's end).
+          // Start a fresh 30-day cycle and clear the pending-downgrade banner.
+          $set: { plan: PLANS.FREE, planCycleStart: new Date(), updatedAt: new Date() },
+          $unset: { pendingDowngrade: '' },
+        }
+      );
+      console.log(`[Dodo Webhook] Downgraded user ${userId} to ${PLANS.FREE} (${event.type})`);
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[Dodo Webhook] Internal Error:', err);
     return NextResponse.json({ success: false, error: 'Webhook processing failed' }, { status: 500 });
   }
+}
+
+/**
+ * Resolve our internal user id from a Dodo event payload.
+ * Prefers the metadata set at checkout; falls back to looking the user up by
+ * the Dodo customer id we stored on first payment (covers events that don't
+ * echo the original checkout metadata).
+ * @param {any} data - event.data
+ * @returns {Promise<string|null>}
+ */
+async function resolveUserId(data) {
+  const fromMeta = data?.metadata?.userId || data?.client_reference_id;
+  if (fromMeta) return fromMeta;
+
+  const customerId = data?.customer?.customer_id || data?.customer_id;
+  if (!customerId) return null;
+
+  const usersCol = await getCollection(COLLECTIONS.USERS);
+  const user = await usersCol.findOne({ dodoCustomerId: customerId }, { projection: { id: 1 } });
+  return user?.id || null;
+}
+
+/**
+ * Deterministically map a Dodo product id back to our plan key using the
+ * configured product ids. Immune to prorated/partial amounts.
+ * @param {string|null|undefined} productId
+ * @returns {string|null}
+ */
+function planFromProductId(productId) {
+  if (!productId) return null;
+  const match = Object.entries(env.dodoProducts).find(([, id]) => id && id === productId);
+  return match ? match[0] : null;
 }
 
 function guessPlanFromAmount(amount) {

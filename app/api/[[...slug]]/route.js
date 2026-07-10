@@ -14,7 +14,7 @@ import {
   hashPassword 
 } from '@/lib/auth/password';
 import { SESSION_COOKIE, isPlanAvailable } from '@/lib/constants';
-import { assertFeatureAccess, canAccessFeature, getPlanLimits, assertScanLimit, countScansThisMonth, assertSiteTrackingLimit } from '@/lib/server-plans';
+import { assertFeatureAccess, canAccessFeature, getPlanLimits, assertScanLimit, countScansThisCycle, getScanCycle, countScansSince, assertSiteTrackingLimit } from '@/lib/server-plans';
 import { env } from '@/lib/env';
 import { audit, AUDIT_ACTIONS, clientIp } from '@/lib/audit';
 import { checkLoginAllowed, recordFailedLogin, recordSuccessfulLogin } from '@/lib/security/loginThrottle';
@@ -415,7 +415,7 @@ export async function GET(request) {
       if (sessionUser) {
         const plan = sessionUser.plan || 'free';
         const limits = await getPlanLimits(plan);
-        const scansUsed = await countScansThisMonth(sessionUser.id);
+        const scansUsed = await countScansThisCycle(sessionUser.id);
         usage = { plan, scansUsed, scansLimit: limits.scansPerMonth, limits };
       }
 
@@ -439,10 +439,17 @@ export async function GET(request) {
       }
       const plan = sessionUser.plan || 'free';
       const limits = await getPlanLimits(plan);
-      const scansUsed = await countScansThisMonth(sessionUser.id);
-      
+      const cycle = await getScanCycle(sessionUser.id);
+      const scansUsed = await countScansSince(sessionUser.id, cycle.start);
+
       const compCol = await getCollection(COLLECTIONS.COMPANIES);
       const sitesUsed = await compCol.countDocuments({ userId: sessionUser.id });
+
+      // Surface a scheduled downgrade so the Plans page can show the
+      // "cancelled - switches to free on <date>" banner. Set by the cancel
+      // route, cleared by the webhook when the change takes effect.
+      const usersCol = await getCollection(COLLECTIONS.USERS);
+      const userDoc = await usersCol.findOne({ id: sessionUser.id }, { projection: { pendingDowngrade: 1 } });
 
       return NextResponse.json({
         success: true,
@@ -452,6 +459,9 @@ export async function GET(request) {
           sitesUsed,
           scansLimit: limits.scansPerMonth,
           limits,
+          cycleStart: cycle.start,
+          cycleEnd: cycle.end,
+          pendingDowngrade: userDoc?.pendingDowngrade || null,
         },
       });
     }
@@ -862,6 +872,7 @@ export async function POST(request) {
         plan:         'free',
         onboarded:    false,
         avatar:       null,
+        planCycleStart: now,
         createdAt:    now,
         updatedAt:    now,
       };

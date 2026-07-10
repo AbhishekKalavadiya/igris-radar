@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import DodoPayments from 'dodopayments';
 import { decodeSession } from '@/lib/auth/session';
 import { SESSION_COOKIE } from '@/lib/constants';
+import { getDodoClient, getDodoCustomerId } from '@/lib/dodo';
+import { getCollection } from '@/lib/db';
+import { COLLECTIONS } from '@/lib/db/schemas';
 import { env } from '@/lib/env';
 
 export async function POST(request) {
@@ -26,13 +28,44 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Payment provider is not configured.' }, { status: 503 });
     }
 
-    // Initialize the DodoPayments SDK. env.dodoEnv is 'live_mode' only when
-    // DODO_ENV is set to exactly that string; otherwise it stays 'test_mode',
-    // so `yarn start` locally with test keys never hits the live API.
-    const client = new DodoPayments({
-      bearerToken: env.dodoApiKey,
-      environment: env.dodoEnv,
-    });
+    const client = getDodoClient();
+
+    // If the user already has an active subscription, this is a mid-cycle
+    // upgrade - change the existing subscription in place (prorated, billed
+    // immediately) rather than creating a second subscription. This restarts
+    // the billing cycle from today, giving them a fresh 30 days.
+    const customerId = await getDodoCustomerId(sessionUser.id);
+    if (customerId) {
+      const subsPage = await client.subscriptions.list({ customer_id: customerId, page_size: 20 });
+      const activeSub = (subsPage?.items || []).find((s) => s.status === 'active' || s.status === 'on_hold') || null;
+
+      if (activeSub && activeSub.product_id !== productId) {
+        await client.subscriptions.changePlan(activeSub.subscription_id, {
+          product_id: productId,
+          proration_billing_mode: 'prorated_immediately',
+          quantity: 1,
+          effective_at: 'immediately',
+          // Only apply the change if the prorated charge succeeds - never grant
+          // a higher tier on a failed payment.
+          on_payment_failure: 'prevent_change',
+          metadata: { userId: sessionUser.id, plan },
+        });
+
+        // changePlan resolved => payment succeeded. Reflect immediately: switch
+        // the plan and restart the 30-day usage cycle from now. The webhook is
+        // a backstop that sets the same fields.
+        const usersCol = await getCollection(COLLECTIONS.USERS);
+        await usersCol.updateOne(
+          { id: sessionUser.id },
+          {
+            $set: { plan, planCycleStart: new Date(), updatedAt: new Date() },
+            $unset: { pendingDowngrade: '' },
+          }
+        );
+
+        return NextResponse.json({ success: true, changed: true, plan });
+      }
+    }
 
     // Determine the base URL dynamically so local testing doesn't redirect to production
     const origin = request.headers.get('origin') || `http://${request.headers.get('host')}` || env.siteUrl;

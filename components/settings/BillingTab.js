@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, ArrowRight, Zap, Loader2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, Zap, Loader2, Receipt, ChevronDown, Download, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -51,7 +51,6 @@ const COMPARISON_ROWS = [
 export default function BillingTab({ currentPlan = 'free' }) {
   const [usage, setUsage] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [upgrading, setUpgrading] = useState(null); // plan key being processed
   const { toast } = useToast();
 
   const [fakeUpgradeModal, setFakeUpgradeModal] = useState(false);
@@ -59,17 +58,39 @@ export default function BillingTab({ currentPlan = 'free' }) {
   const [planLimits, setPlanLimits] = useState(null);
   const [redirecting, setRedirecting] = useState(null);
 
-  useEffect(() => {
+  // In-app billing management (history, receipts, cancellation).
+  const [showBilling, setShowBilling] = useState(false);
+  const [billing, setBilling] = useState(null);        // { subscription, payments }
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null); // subscription object pending cancel
+  const [cancelling, setCancelling] = useState(false);
+
+  const loadUsage = () =>
     fetch('/api?path=usage')
       .then(r => r.json())
       .then(data => { if (data.success) setUsage(data.data); })
       .catch(() => {});
-      
+
+  useEffect(() => {
+    loadUsage();
+
     fetch('/api?path=plan-limits')
       .then(r => r.json())
       .then(data => { if (data.success) setPlanLimits(data.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
+  }, []);
+
+  // When the user leaves for the Dodo checkout and returns via the browser
+  // back button, the page is restored from the bfcache with React state frozen
+  // - so the "redirecting" spinner would otherwise stay stuck forever. Reset
+  // the in-flight button states whenever the page is shown again.
+  useEffect(() => {
+    const clearPending = () => {
+      setRedirecting(null);
+    };
+    window.addEventListener('pageshow', clearPending);
+    return () => window.removeEventListener('pageshow', clearPending);
   }, []);
 
   const handleUpgrade = async (targetPlan) => {
@@ -95,8 +116,17 @@ export default function BillingTab({ currentPlan = 'free' }) {
         setRedirecting(null);
         return;
       }
-      
-      // Redirect to the newly generated Dodo checkout session URL
+
+      // In-place upgrade (existing paid subscriber): no checkout redirect - the
+      // plan changed immediately and the cycle restarted. Reload so the session
+      // cookie, plan and usage all resync from the DB.
+      if (data.changed) {
+        toast({ title: 'Plan upgraded', description: `You're now on ${PLAN_META[data.plan]?.label || data.plan}. Your 30-day cycle restarts today.` });
+        window.location.reload();
+        return;
+      }
+
+      // New subscription (free user): redirect to the Dodo checkout session URL.
       window.location.href = data.url;
     } catch (e) {
       toast({ title: 'Error', description: 'Failed to initiate checkout.', variant: 'destructive' });
@@ -104,32 +134,87 @@ export default function BillingTab({ currentPlan = 'free' }) {
     }
   };
 
-  const handleManageBilling = async () => {
-    setUpgrading('portal');
+  const loadBilling = async () => {
+    setBillingLoading(true);
     try {
-      const res = await fetch('/api/billing/dodo/portal', { method: 'POST' });
+      const res = await fetch('/api/billing/dodo/history');
       const data = await res.json();
-      if (data.success && data.data?.url) {
-        window.location.href = data.data.url;
+      if (data.success) {
+        setBilling(data.data);
       } else {
-        toast({ title: 'Portal unavailable', description: data.error || 'No active subscription found.', variant: 'destructive' });
+        toast({ title: 'Could not load billing', description: data.error || 'Try again shortly.', variant: 'destructive' });
       }
     } catch {
-      toast({ title: 'Network error', description: 'Could not open billing portal.', variant: 'destructive' });
+      toast({ title: 'Network error', description: 'Could not load billing history.', variant: 'destructive' });
     } finally {
-      setUpgrading(null);
+      setBillingLoading(false);
     }
   };
+
+  const handleManageBilling = () => {
+    const next = !showBilling;
+    setShowBilling(next);
+    if (next && !billing) loadBilling();
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    try {
+      const res = await fetch('/api/billing/dodo/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscriptionId: cancelTarget.subscriptionId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const when = data.data?.effectiveDate
+          ? new Date(data.data.effectiveDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          : null;
+        toast({
+          title: 'Subscription cancelled',
+          description: when ? `Your plan stays active until ${when}, then won't renew.` : 'Your subscription has been cancelled.',
+        });
+        setCancelTarget(null);
+        loadBilling(); // refresh panel to show cancel-scheduled state
+        loadUsage();   // refresh the Current Plan card banner
+      } else {
+        toast({ title: 'Cancellation failed', description: data.error || 'Try again shortly.', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Network error', description: 'Could not cancel subscription.', variant: 'destructive' });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const formatMoney = (amountCents, currency = 'USD') => {
+    if (amountCents == null) return '—';
+    try {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amountCents / 100);
+    } catch {
+      return `${(amountCents / 100).toFixed(2)} ${currency}`;
+    }
+  };
+
+  const formatDate = (iso) =>
+    iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
   const plan = usage?.plan || currentPlan;
   const meta = PLAN_META[plan] || PLAN_META.free;
   const currentIdx = PLANS_ORDER.indexOf(plan);
 
+  // Usage resets at the end of the current 30-day cycle (anchored to plan
+  // start), not the calendar month. Fall back to +30 days if not yet loaded.
   const resetDate = (() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 1, 1);
-    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    const end = usage?.cycleEnd ? new Date(usage.cycleEnd) : (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d; })();
+    return end.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   })();
+
+  const pendingDowngrade = usage?.pendingDowngrade || null;
+  const downgradeDate = pendingDowngrade?.effectiveDate
+    ? new Date(pendingDowngrade.effectiveDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    : null;
 
   const renderComparisonRow = ({ key, label, format }) => (
     <tr key={key} className="border-b border-border/50 hover:bg-muted/50">
@@ -161,6 +246,17 @@ export default function BillingTab({ currentPlan = 'free' }) {
           <CardDescription>Your active subscription and this month's usage</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {pendingDowngrade && downgradeDate && (
+            <div className="flex items-start gap-3 p-4 border border-warning/30 bg-warning/10 rounded-md">
+              <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+              <p className="text-sm text-foreground">
+                Plan cancelled for{' '}
+                <span className="font-semibold">{PLAN_META[pendingDowngrade.plan]?.label || pendingDowngrade.plan}</span>.
+                You'll switch to the <span className="font-semibold">Free</span> tier from{' '}
+                <span className="font-semibold">{downgradeDate}</span>. You keep full access until then.
+              </p>
+            </div>
+          )}
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold uppercase tracking-widest border ${meta.badge}`}>
@@ -194,12 +290,10 @@ export default function BillingTab({ currentPlan = 'free' }) {
                   variant="outline"
                   className="gap-2 h-9 px-4"
                   onClick={handleManageBilling}
-                  disabled={!!upgrading}
                 >
-                  {upgrading === 'portal'
-                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    : <ExternalLink className="h-3.5 w-3.5" />}
+                  <Receipt className="h-3.5 w-3.5" />
                   Manage Billing
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showBilling ? 'rotate-180' : ''}`} />
                 </Button>
               )}
             </div>
@@ -237,6 +331,106 @@ export default function BillingTab({ currentPlan = 'free' }) {
           </div>
         </CardContent>
       </Card>
+
+      {showBilling && (
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle className="text-base">Billing &amp; Invoices</CardTitle>
+            <CardDescription>Your subscription, payment history and receipts</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {billingLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading billing details...
+              </div>
+            ) : (
+              <>
+                {/* Active subscription */}
+                {billing?.subscription ? (
+                  <div className="p-4 border border-border bg-muted rounded-md space-y-3">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Active subscription</p>
+                        <p className="text-lg font-bold">
+                          {formatMoney(billing.subscription.amount, billing.subscription.currency)}
+                          <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                        </p>
+                        {billing.subscription.cancelAtNextBillingDate ? (
+                          <p className="text-xs text-warning">
+                            Cancels on {formatDate(billing.subscription.nextBillingDate)} — no further charges.
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            Renews on <span className="text-foreground font-medium">{formatDate(billing.subscription.nextBillingDate)}</span>
+                          </p>
+                        )}
+                      </div>
+                      {!billing.subscription.cancelAtNextBillingDate && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-9 px-4 gap-2 text-destructive border-destructive/40 hover:bg-destructive/10"
+                          onClick={() => setCancelTarget(billing.subscription)}
+                        >
+                          Cancel plan
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No active subscription on record.</p>
+                )}
+
+                {/* Payment history */}
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Payment history</p>
+                  {billing?.payments?.length ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm min-w-[420px]">
+                        <thead>
+                          <tr className="border-b border-border text-muted-foreground">
+                            <th className="text-left py-2 pr-4 font-medium">Date</th>
+                            <th className="text-left py-2 pr-4 font-medium">Amount</th>
+                            <th className="text-left py-2 pr-4 font-medium">Status</th>
+                            <th className="text-right py-2 font-medium">Receipt</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {billing.payments.map((p) => (
+                            <tr key={p.paymentId} className="border-b border-border/50">
+                              <td className="py-2.5 pr-4">{formatDate(p.createdAt)}</td>
+                              <td className="py-2.5 pr-4">{formatMoney(p.amount, p.currency)}</td>
+                              <td className="py-2.5 pr-4">
+                                <span className={`text-xs font-medium ${p.status === 'succeeded' ? 'text-success' : 'text-muted-foreground'}`}>
+                                  {p.status === 'succeeded' ? 'Paid' : p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                                </span>
+                              </td>
+                              <td className="py-2.5 text-right">
+                                {p.status === 'succeeded' && p.hasInvoice ? (
+                                  <a
+                                    href={`/api/billing/dodo/receipt/${p.paymentId}`}
+                                    className="inline-flex items-center gap-1.5 text-primary hover:underline"
+                                  >
+                                    <Download className="h-3.5 w-3.5" /> PDF
+                                  </a>
+                                ) : (
+                                  <span className="text-muted-foreground/40">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No payments yet.</p>
+                  )}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-border">
         <CardHeader>
@@ -306,6 +500,36 @@ export default function BillingTab({ currentPlan = 'free' }) {
           </table>
         </CardContent>
       </Card>
+
+      {/* Cancel subscription confirmation */}
+      <Dialog open={!!cancelTarget} onOpenChange={(o) => { if (!o && !cancelling) setCancelTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Cancel subscription?
+            </DialogTitle>
+            <DialogDescription>
+              Your plan stays active until{' '}
+              <span className="text-foreground font-medium">{formatDate(cancelTarget?.nextBillingDate)}</span>.
+              You keep full access until then, and you won't be charged again. You can re-subscribe anytime.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)} disabled={cancelling}>
+              Keep plan
+            </Button>
+            <Button
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+              onClick={handleConfirmCancel}
+              disabled={cancelling}
+            >
+              {cancelling && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Cancel subscription
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
