@@ -52,6 +52,10 @@ import { getAvailableAiProviders, hasAnyAiProvider, testAiProvider } from '@/lib
 import { startMonitoring } from '@/lib/monitoring';
 import { filterFindingsByPlan } from '@/lib/scanners/shared/findings';
 
+// Allow longer execution: a security/SEO scan plus bounded AI deep analysis can
+// take up to ~50s. Without this, the platform default can cut the request off.
+export const maxDuration = 60;
+
 // Boots the built-in monitoring loop (scheduled audits + weekly digest) on
 // the first API request. Node runtime only; guarded against double-starts.
 startMonitoring();
@@ -1031,6 +1035,41 @@ export async function POST(request) {
     }
 
     // Web Scanners
+    // Background AI deep analysis for an already-completed security scan. The scan
+    // endpoint returns findings immediately; the client then calls this to fill in
+    // the AI section without blocking the initial result.
+    if (pathParts[0] === 'security-scan' && pathParts[1] === 'ai') {
+      const sessionUser = getSessionUser(request);
+      if (!sessionUser) return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
+
+      const { scanId } = await request.json();
+      if (!scanId) return NextResponse.json({ success: false, error: 'scanId is required' }, { status: 400 });
+
+      const col = await getCollection(COLLECTIONS.SECURITY_SCANS);
+      const scan = await col.findOne({ id: scanId, userId: sessionUser.id });
+      if (!scan) return NextResponse.json({ success: false, error: 'Scan not found' }, { status: 404 });
+
+      // Idempotent: if AI already ran for this scan, return the stored result.
+      if (scan.ai) return NextResponse.json({ success: true, data: scan.ai });
+
+      const userPlan = sessionUser.plan || 'free';
+      if (!(await hasAnyAiProvider())) {
+        return NextResponse.json({ success: true, data: { error: 'No AI provider is configured. Add a key in Admin → API Keys.' } });
+      }
+
+      let aiResult;
+      try {
+        if (scan.isOnboarding !== true) await assertFeatureAccess(userPlan, 'deepAnalysis');
+        const { runDeepSecurityAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
+        aiResult = await runDeepSecurityAnalysis(scan.findings, scan.url, { plan: userPlan });
+      } catch (e) {
+        aiResult = { error: e.message || 'AI analysis failed' };
+      }
+
+      await col.updateOne({ id: scanId }, { $set: { ai: aiResult } });
+      return NextResponse.json({ success: true, data: aiResult });
+    }
+
     if (pathParts[0] === 'security-scan') {
       const body = parseOrThrow(scanSchema, await request.json());
       const { url } = body;
@@ -1054,19 +1093,10 @@ export async function POST(request) {
 
       const userPlan = sessionUser?.plan || 'free';
 
-      let aiResult = null;
-      if (body.deepAnalysis && await hasAnyAiProvider()) {
-        const { runDeepSecurityAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
-        // Only run deep analysis if they have access
-        try {
-          if (sessionUser && !isOnboardingScan) {
-            await assertFeatureAccess(userPlan, 'deepAnalysis');
-          }
-          aiResult = await runDeepSecurityAnalysis(scanResult.findings, url, { plan: userPlan });
-        } catch(e) {
-          console.error("Deep analysis failed or no access:", e);
-        }
-      }
+      // AI deep analysis runs SEPARATELY (POST security-scan/ai) so scan findings
+      // return to the client immediately instead of blocking on the (slow) LLM.
+      // aiPending tells the client to kick off that background request.
+      const aiPending = !!(body.deepAnalysis && await hasAnyAiProvider());
 
       const newScan = {
         id: uuidv4(),
@@ -1075,11 +1105,12 @@ export async function POST(request) {
         score: scanResult.score,
         totalChecks: scanResult.totalChecks || scanResult.findings.length,
         findings: scanResult.findings,  // Store FULL findings in DB
-        ai: aiResult,
+        ai: null,
+        aiPending,
         isOnboarding: isOnboardingScan,
         createdAt: new Date(),
       };
-      
+
       const col = await getCollection(COLLECTIONS.SECURITY_SCANS);
       await col.insertOne(newScan);
 

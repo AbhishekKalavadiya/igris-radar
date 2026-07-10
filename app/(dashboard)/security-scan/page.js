@@ -50,6 +50,7 @@ export default function SecurityScanPage() {
   const [severityFilter, setSeverityFilterState] = useState('all');
   const [activeTab, setActiveTab] = useState('overview');
   const [enableDeepAnalysis, setEnableDeepAnalysis] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
   const { settings } = useSettings();
   const { user } = useAuth();
@@ -123,6 +124,8 @@ export default function SecurityScanPage() {
         if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('scan-completed'));
         toast({ title: 'Scan complete', description: `Scored ${data.data.score}/100` });
         notifyScanDone(settings.notifications.pushNotifications, 'Security scan complete', `${formattedUrl} scored ${data.data.score}/100`);
+        // AI runs in the background so findings show immediately.
+        if (data.data.aiPending) fetchAiAnalysis(data.data.id);
       } else if (data.upgradeRequired) {
         setUpgradeInfo({ currentPlan: data.currentPlan || 'free', reason: data.upgradeReason || 'scanLimit' });
       } else {
@@ -132,6 +135,31 @@ export default function SecurityScanPage() {
       toast({ title: 'Scan failed', description: 'Network error occurred.', variant: 'destructive' });
     } finally {
       setIsScanning(false);
+    }
+  };
+
+  // Fetches AI deep analysis for an already-completed scan and merges it in.
+  // Runs separately from the scan so findings render immediately.
+  const fetchAiAnalysis = async (scanId) => {
+    if (!scanId) return;
+    setAiLoading(true);
+    try {
+      const res = await fetch('/api?path=security-scan/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScanResult((prev) => (prev && prev.id === scanId ? { ...prev, ai: data.data, aiPending: false } : prev));
+      } else {
+        toast({ title: 'AI analysis failed', description: data.error, variant: 'destructive' });
+        setScanResult((prev) => (prev && prev.id === scanId ? { ...prev, aiPending: false } : prev));
+      }
+    } catch {
+      toast({ title: 'AI analysis failed', description: 'Network error occurred.', variant: 'destructive' });
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -373,188 +401,202 @@ export default function SecurityScanPage() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 m-0">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Top row: score + findings summary. `items-start` keeps the score card
+                  at its natural height so it no longer stretches to match the right column. */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 <Card className="glass-card lg:col-span-1 flex flex-col items-center justify-center py-6 animate-slide-up delay-100">
                   <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Security Score</h3>
                   <div className="h-48 w-48 mb-4">
                     <ScoreRing score={scanResult.score} size={192} />
                   </div>
-                  <p className="text-center text-sm text-muted-foreground max-w-[200px]">
+                  <p className="text-center text-sm text-muted-foreground max-w-[200px] break-words">
                     Target: {scanResult.url}
                   </p>
                   <p className="text-center text-xs text-muted-foreground/60 mt-2 max-w-[220px]">
                     Score includes results from all {scanResult.totalChecks || scanResult.findings.length} checks
                   </p>
                 </Card>
-                <div className="lg:col-span-2 space-y-6 animate-slide-up delay-200">
-                  {/* AI Deep Analysis Section */}
-                  {(enableDeepAnalysis || scanResult.ai) && (
-                    <Card className="glass-card border-primary/20 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-                      <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
-                        <CardTitle className="text-sm font-medium flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-primary" />
-                          AI Security Analysis
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-6">
-                        {scanResult.ai ? (
-                          scanResult.ai.error ? (
-                            <AiUnavailableNotice reason={scanResult.ai.error} />
-                          ) : (
-                            <div className="space-y-6">
-                              <div className="space-y-2">
-                                <h4 className="text-sm font-semibold text-foreground">Executive Summary</h4>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{scanResult.ai.executiveSummary}</p>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                                  <AlertCircle className="h-4 w-4 text-destructive" /> Top Risks
-                                </h4>
-                                <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
-                                  {scanResult.ai.topRisks?.map((risk, i) => (
-                                    <li key={i}>{risk}</li>
-                                  ))}
-                                </ul>
-                              </div>
 
-                              {scanResult.ai.remediationSummary && (
-                                <div className="space-y-2 p-4 bg-muted/30 rounded-lg border border-border">
-                                  <h4 className="text-sm font-semibold text-foreground">Remediation Plan</h4>
-                                  <p className="text-sm text-muted-foreground">{scanResult.ai.remediationSummary}</p>
-                                </div>
-                              )}
-
-                              {scanResult.ai.threatModeling && (
-                                <div className="space-y-2">
-                                  <h4 className="text-sm font-semibold text-foreground">Threat Modeling (Attack Chains)</h4>
-                                  <p className="text-sm text-muted-foreground leading-relaxed">{scanResult.ai.threatModeling}</p>
-                                </div>
-                              )}
-
-                              {scanResult.ai.owaspMapping && (
-                                <div className="space-y-2">
-                                  <h4 className="text-sm font-semibold text-foreground">OWASP Top 10 Mapping</h4>
-                                  <div className="flex flex-wrap gap-2 mt-2">
-                                    {scanResult.ai.owaspMapping.map((cat, i) => (
-                                      <span key={i} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-md border border-border">
-                                        {cat}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {scanResult.ai.remediationCodeSnippets && scanResult.ai.remediationCodeSnippets.length > 0 && (
-                                <div className="space-y-3">
-                                  <h4 className="text-sm font-semibold text-foreground">Remediation Snippets</h4>
-                                  {scanResult.ai.remediationCodeSnippets.map((snippet, i) => (
-                                    <div key={i} className="rounded-lg overflow-hidden border border-border">
-                                      <div className="bg-muted/50 px-3 py-1.5 text-xs font-mono text-muted-foreground border-b border-border">
-                                        {snippet.title}
-                                      </div>
-                                      <pre className="p-3 bg-black/50 text-[11px] md:text-xs overflow-x-auto text-muted-foreground">
-                                        <code>{snippet.code}</code>
-                                      </pre>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-
-                              {scanResult.ai.complianceReadiness && (
-                                <div className="space-y-2">
-                                  <h4 className="text-sm font-semibold text-foreground">Compliance Readiness</h4>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {[
-                                      { label: 'GDPR', value: scanResult.ai.complianceReadiness.gdpr },
-                                      { label: 'PCI DSS', value: scanResult.ai.complianceReadiness.pci },
-                                    ].filter(({ value }) => value).map(({ label, value }) => {
-                                      const level = String(value).toLowerCase();
-                                      const riskClass = level.includes('high')
-                                        ? 'text-destructive border-destructive/30 bg-destructive/10'
-                                        : level.includes('medium')
-                                          ? 'text-warning border-warning/30 bg-warning/10'
-                                          : 'text-success border-success/30 bg-success/10';
-                                      return (
-                                        <div key={label} className={`rounded-lg border p-3 flex items-center justify-between ${riskClass}`}>
-                                          <span className="text-sm font-medium text-foreground">{label}</span>
-                                          <span className="text-xs font-semibold uppercase tracking-wide">{value}</span>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        ) : (
-                          <div className="text-center py-6">
-                            <Sparkles className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
-                            <p className="text-sm text-muted-foreground">AI Deep Analysis was not run for this scan.</p>
-                            <Button variant="outline" size="sm" className="mt-4" onClick={() => {
-                              setEnableDeepAnalysis(true);
-                              runScan(url);
-                            }}>
-                              Run Deep Analysis Now
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  <Card className="glass-card">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                        Findings Summary
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
-                        <button type="button" onClick={() => setSeverityFilter('critical')} className="p-4 rounded-lg bg-severity-critical/10 border border-severity-critical/20 text-center hover:border-severity-critical/50 transition-colors">
-                          <div className="text-3xl font-bold text-severity-critical tabular-nums">
-                            {scanResult.findings.filter(f => !f.passed && f.severity === 'critical').length}
-                          </div>
-                          <div className="text-xs text-severity-critical/80 mt-1 uppercase font-semibold">Critical</div>
-                        </button>
-                        <button type="button" onClick={() => setSeverityFilter('high')} className="p-4 rounded-lg bg-severity-high/10 border border-severity-high/20 text-center hover:border-severity-high/50 transition-colors">
-                          <div className="text-3xl font-bold text-severity-high tabular-nums">
-                            {scanResult.findings.filter(f => !f.passed && f.severity === 'high').length}
-                          </div>
-                          <div className="text-xs text-severity-high/80 mt-1 uppercase font-semibold">High</div>
-                        </button>
-                        <button type="button" onClick={() => setSeverityFilter('medium')} className="p-4 rounded-lg bg-severity-medium/10 border border-severity-medium/20 text-center hover:border-severity-medium/50 transition-colors">
-                          <div className="text-3xl font-bold text-severity-medium tabular-nums">
-                            {scanResult.findings.filter(f => !f.passed && f.severity === 'medium').length}
-                          </div>
-                          <div className="text-xs text-severity-medium/80 mt-1 uppercase font-semibold">Medium</div>
-                        </button>
-                        <button type="button" onClick={() => setSeverityFilter('low')} className="p-4 rounded-lg bg-severity-low/10 border border-severity-low/20 text-center hover:border-severity-low/50 transition-colors">
-                          <div className="text-3xl font-bold text-severity-low tabular-nums">
-                            {scanResult.findings.filter(f => !f.passed && f.severity === 'low').length}
-                          </div>
-                          <div className="text-xs text-severity-low/80 mt-1 uppercase font-semibold">Low</div>
-                        </button>
-                        <button type="button" onClick={() => setSeverityFilter('info')} className="p-4 rounded-lg bg-primary/10 border border-primary/20 text-center hover:border-primary/50 transition-colors">
-                          <div className="text-3xl font-bold text-primary tabular-nums">
-                            {scanResult.findings.filter(f => !f.passed && f.severity === 'info').length}
-                          </div>
-                          <div className="text-xs text-primary/80 mt-1 uppercase font-semibold">Info</div>
-                        </button>
-                        <button type="button" onClick={() => setSeverityFilter('passed')} className="p-4 rounded-lg bg-success/10 border border-success/20 text-center hover:border-success/50 transition-colors">
-                          <div className="text-3xl font-bold text-success tabular-nums">
-                            {scanResult.findings.filter(f => f.passed).length}
-                          </div>
-                          <div className="text-xs text-success/80 mt-1 uppercase font-semibold">Passed</div>
-                        </button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <CategoryScoreBreakdown categories={scanResult.categories} />
-                </div>
+                <Card className="glass-card lg:col-span-2 animate-slide-up delay-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      Findings Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                      <button type="button" onClick={() => setSeverityFilter('critical')} className="p-4 rounded-lg bg-severity-critical/10 border border-severity-critical/20 text-center hover:border-severity-critical/50 transition-colors">
+                        <div className="text-3xl font-bold text-severity-critical tabular-nums">
+                          {scanResult.findings.filter(f => !f.passed && f.severity === 'critical').length}
+                        </div>
+                        <div className="text-xs text-severity-critical/80 mt-1 uppercase font-semibold">Critical</div>
+                      </button>
+                      <button type="button" onClick={() => setSeverityFilter('high')} className="p-4 rounded-lg bg-severity-high/10 border border-severity-high/20 text-center hover:border-severity-high/50 transition-colors">
+                        <div className="text-3xl font-bold text-severity-high tabular-nums">
+                          {scanResult.findings.filter(f => !f.passed && f.severity === 'high').length}
+                        </div>
+                        <div className="text-xs text-severity-high/80 mt-1 uppercase font-semibold">High</div>
+                      </button>
+                      <button type="button" onClick={() => setSeverityFilter('medium')} className="p-4 rounded-lg bg-severity-medium/10 border border-severity-medium/20 text-center hover:border-severity-medium/50 transition-colors">
+                        <div className="text-3xl font-bold text-severity-medium tabular-nums">
+                          {scanResult.findings.filter(f => !f.passed && f.severity === 'medium').length}
+                        </div>
+                        <div className="text-xs text-severity-medium/80 mt-1 uppercase font-semibold">Medium</div>
+                      </button>
+                      <button type="button" onClick={() => setSeverityFilter('low')} className="p-4 rounded-lg bg-severity-low/10 border border-severity-low/20 text-center hover:border-severity-low/50 transition-colors">
+                        <div className="text-3xl font-bold text-severity-low tabular-nums">
+                          {scanResult.findings.filter(f => !f.passed && f.severity === 'low').length}
+                        </div>
+                        <div className="text-xs text-severity-low/80 mt-1 uppercase font-semibold">Low</div>
+                      </button>
+                      <button type="button" onClick={() => setSeverityFilter('info')} className="p-4 rounded-lg bg-primary/10 border border-primary/20 text-center hover:border-primary/50 transition-colors">
+                        <div className="text-3xl font-bold text-primary tabular-nums">
+                          {scanResult.findings.filter(f => !f.passed && f.severity === 'info').length}
+                        </div>
+                        <div className="text-xs text-primary/80 mt-1 uppercase font-semibold">Info</div>
+                      </button>
+                      <button type="button" onClick={() => setSeverityFilter('passed')} className="p-4 rounded-lg bg-success/10 border border-success/20 text-center hover:border-success/50 transition-colors">
+                        <div className="text-3xl font-bold text-success tabular-nums">
+                          {scanResult.findings.filter(f => f.passed).length}
+                        </div>
+                        <div className="text-xs text-success/80 mt-1 uppercase font-semibold">Passed</div>
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
+
+              {/* AI Deep Analysis — full width, loads in the background after findings render */}
+              {(enableDeepAnalysis || scanResult.ai || scanResult.aiPending || aiLoading) && (
+                <Card className="glass-card border-primary/20 relative overflow-hidden animate-slide-up delay-300">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+                  <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      AI Security Analysis
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      An AI interpretation of your findings — a plain-language summary, the risks to fix first, and how to fix them.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    {aiLoading ? (
+                      <div className="py-8 flex flex-col items-center justify-center text-center gap-3">
+                        <Loader2 className="h-6 w-6 text-primary animate-spin" />
+                        <p className="text-sm text-muted-foreground">Running AI deep analysis…</p>
+                        <p className="text-xs text-muted-foreground/60 max-w-sm">
+                          Your findings above are already complete. The AI summary will appear here in a few seconds.
+                        </p>
+                      </div>
+                    ) : scanResult.ai ? (
+                      scanResult.ai.error ? (
+                        <AiUnavailableNotice reason={scanResult.ai.error} />
+                      ) : (
+                        <div className="space-y-6">
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-semibold text-foreground">Executive Summary</h4>
+                            <p className="text-sm text-muted-foreground leading-relaxed">{scanResult.ai.executiveSummary}</p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                              <AlertCircle className="h-4 w-4 text-destructive" /> Top Risks to Fix First
+                            </h4>
+                            <ul className="list-disc pl-5 space-y-1 text-sm text-muted-foreground">
+                              {scanResult.ai.topRisks?.map((risk, i) => (
+                                <li key={i}>{risk}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {scanResult.ai.remediationSummary && (
+                            <div className="space-y-2 p-4 bg-muted/30 rounded-lg border border-border">
+                              <h4 className="text-sm font-semibold text-foreground">Remediation Plan</h4>
+                              <p className="text-sm text-muted-foreground">{scanResult.ai.remediationSummary}</p>
+                            </div>
+                          )}
+
+                          {scanResult.ai.threatModeling && (
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-semibold text-foreground">Threat Modeling (Attack Chains)</h4>
+                              <p className="text-sm text-muted-foreground leading-relaxed">{scanResult.ai.threatModeling}</p>
+                            </div>
+                          )}
+
+                          {scanResult.ai.owaspMapping && scanResult.ai.owaspMapping.length > 0 && (
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-semibold text-foreground">OWASP Top 10 — Categories You're Exposed To</h4>
+                              <p className="text-xs text-muted-foreground">
+                                Your failed findings map to these official OWASP Top 10 risk categories. Each tag is an area
+                                where this site currently has a weakness — not a checklist of all ten.
+                              </p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {scanResult.ai.owaspMapping.map((cat, i) => (
+                                  <span key={i} className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-md border border-destructive/30 font-medium">
+                                    {cat}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {scanResult.ai.remediationCodeSnippets && scanResult.ai.remediationCodeSnippets.length > 0 && (
+                            <div className="space-y-3">
+                              <h4 className="text-sm font-semibold text-foreground">Remediation Snippets</h4>
+                              {scanResult.ai.remediationCodeSnippets.map((snippet, i) => (
+                                <div key={i} className="rounded-lg overflow-hidden border border-border">
+                                  <div className="bg-muted/50 px-3 py-1.5 text-xs font-mono text-muted-foreground border-b border-border">
+                                    {snippet.title}
+                                  </div>
+                                  <pre className="p-3 bg-black/50 text-[11px] md:text-xs overflow-x-auto text-muted-foreground">
+                                    <code>{snippet.code}</code>
+                                  </pre>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {scanResult.ai.complianceReadiness && (
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-semibold text-foreground">Compliance Readiness</h4>
+                              <p className="text-xs text-muted-foreground">Estimated risk these findings pose to each standard.</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {[
+                                  { label: 'GDPR', value: scanResult.ai.complianceReadiness.gdpr },
+                                  { label: 'PCI DSS', value: scanResult.ai.complianceReadiness.pci },
+                                ].filter(({ value }) => value).map(({ label, value }) => {
+                                  const level = String(value).toLowerCase();
+                                  const riskClass = level.includes('high')
+                                    ? 'text-destructive border-destructive/30 bg-destructive/10'
+                                    : level.includes('medium')
+                                      ? 'text-warning border-warning/30 bg-warning/10'
+                                      : 'text-success border-success/30 bg-success/10';
+                                  return (
+                                    <div key={label} className={`rounded-lg border p-3 flex items-center justify-between ${riskClass}`}>
+                                      <span className="text-sm font-medium text-foreground">{label}</span>
+                                      <span className="text-xs font-semibold uppercase tracking-wide">{value}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    ) : (
+                      <div className="text-center py-6">
+                        <Sparkles className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">AI Deep Analysis was not run for this scan.</p>
+                        <Button variant="outline" size="sm" className="mt-4" onClick={() => fetchAiAnalysis(scanResult.id)}>
+                          Run Deep Analysis Now
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              <CategoryScoreBreakdown categories={scanResult.categories} />
             </TabsContent>
 
             <TabsContent value="findings" className="m-0 space-y-4">
