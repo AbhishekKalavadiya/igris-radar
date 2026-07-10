@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }) {
   }
 
   // Auth resolved but the user can't stay here (no valid session, or onboarding
-  // not finished). The effect above is already navigating away — show a brief
+  // not finished). The effect above is already navigating away - show a brief
   // "redirecting" state instead of a blank screen so a failed/expired session
   // is never a mystery blank page.
   if (!user || !isOnboarded) {

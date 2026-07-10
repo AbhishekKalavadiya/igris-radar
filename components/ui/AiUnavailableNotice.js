@@ -6,7 +6,7 @@ import { Sparkles, RefreshCw } from 'lucide-react';
 
 /**
  * Customer-facing notice shown when AI analysis couldn't be produced. It stays
- * intentionally general — no API-key/admin/infra details are exposed to end users.
+ * intentionally general - no API-key/admin/infra details are exposed to end users.
  * The real error is logged server-side for the operator. Pass `onRetry` to show a
  * retry button.
  */
@@ -20,7 +20,7 @@ export default function AiUnavailableNotice({ onRetry }) {
         <div className="text-sm">
           <p className="font-semibold text-foreground">AI analysis is temporarily unavailable</p>
           <p className="text-muted-foreground mt-1">
-            We couldn&apos;t generate the AI summary right now — this is usually a brief hiccup with the
+            We couldn&apos;t generate the AI summary right now - this is usually a brief hiccup with the
             AI service under heavy load. Your security findings above are complete and unaffected. Please
             try again in a moment.
           </p>

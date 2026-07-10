@@ -14,22 +14,24 @@ export async function POST(request) {
 
     const { plan } = await request.json();
 
-    // Map the plan to the Product ID from environment variables
-    let productId = null;
-    if (plan === 'starter') productId = process.env.NEXT_PUBLIC_DODO_PRODUCT_STARTER;
-    if (plan === 'pro') productId = process.env.NEXT_PUBLIC_DODO_PRODUCT_PRO;
-    if (plan === 'agency') productId = process.env.NEXT_PUBLIC_DODO_PRODUCT_AGENCY;
+    // Map the plan to the Product ID (env-specific: live and test products
+    // have different IDs in Dodo, so these must match the current DODO_ENV).
+    const productId = env.dodoProducts[plan] || null;
 
     if (!productId) {
       return NextResponse.json({ success: false, error: `Product ID for plan '${plan}' is not configured.` }, { status: 400 });
     }
 
-    // Initialize the DodoPayments SDK with the API key
-    // We use a specific env variable for Dodo so that running `yarn start` locally
-    // doesn't force live_mode when using test keys.
+    if (!env.dodoApiKey) {
+      return NextResponse.json({ success: false, error: 'Payment provider is not configured.' }, { status: 503 });
+    }
+
+    // Initialize the DodoPayments SDK. env.dodoEnv is 'live_mode' only when
+    // DODO_ENV is set to exactly that string; otherwise it stays 'test_mode',
+    // so `yarn start` locally with test keys never hits the live API.
     const client = new DodoPayments({
-      bearerToken: process.env.DODO_PAYMENTS_API_KEY,
-      environment: process.env.DODO_ENV === 'live_mode' ? 'live_mode' : 'test_mode',
+      bearerToken: env.dodoApiKey,
+      environment: env.dodoEnv,
     });
 
     // Determine the base URL dynamically so local testing doesn't redirect to production
@@ -56,7 +58,10 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true, url: session.checkout_url });
   } catch (error) {
-    console.error('[Dodo Checkout Error]', error);
-    return NextResponse.json({ success: false, error: 'Failed to create checkout session.' }, { status: 500 });
+    // Log the full error server-side (env, status, message) so a live/test
+    // mismatch or bad product ID is diagnosable from the Vercel logs.
+    console.error(`[Dodo Checkout Error] env=${env.dodoEnv} status=${error?.status || 'n/a'}`, error?.message || error);
+    const detail = env.isDev ? (error?.message || 'Unknown error') : 'Failed to create checkout session.';
+    return NextResponse.json({ success: false, error: detail }, { status: error?.status || 500 });
   }
 }

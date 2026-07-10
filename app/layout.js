@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: `${SITE_NAME} — ${SITE_TAGLINE}` },
+  title: { default: `${SITE_NAME} - ${SITE_TAGLINE}` },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
   robots: { index: true, follow: true },

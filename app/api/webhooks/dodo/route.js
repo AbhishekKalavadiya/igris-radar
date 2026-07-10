@@ -17,9 +17,9 @@ export async function POST(req) {
     // Note: bearerToken is required by SDK but not strictly needed for just webhook verification,
     // so we pass a placeholder if the real API key isn't set yet.
     const client = new DodoPayments({
-      bearerToken: process.env.DODO_PAYMENTS_API_KEY || 'placeholder_for_webhook',
-      webhookKey: process.env.DODO_PAYMENTS_WEBHOOK_KEY || env.DODO_PAYMENTS_WEBHOOK_KEY,
-      environment: process.env.DODO_ENV === 'live_mode' ? 'live_mode' : 'test_mode',
+      bearerToken: env.dodoApiKey || 'placeholder_for_webhook',
+      webhookKey: env.dodoWebhookKey,
+      environment: env.dodoEnv,
     });
 
     let event;
@@ -49,10 +49,14 @@ export async function POST(req) {
       const targetPlan = data.metadata?.plan || guessPlanFromAmount(data.total_amount || data.amount);
 
       if (targetPlan) {
+        // Capture the Dodo customer id so "Manage Billing" can open the
+        // customer portal for this user later.
+        const dodoCustomerId = data.customer?.customer_id || data.customer_id || null;
+
         const usersCol = await getCollection(COLLECTIONS.USERS);
         await usersCol.updateOne(
           { id: userId },
-          { $set: { plan: targetPlan, updatedAt: new Date() } }
+          { $set: { plan: targetPlan, ...(dodoCustomerId ? { dodoCustomerId } : {}), updatedAt: new Date() } }
         );
         console.log(`[Dodo Webhook] Upgraded user ${userId} to ${targetPlan}`);
       } else {

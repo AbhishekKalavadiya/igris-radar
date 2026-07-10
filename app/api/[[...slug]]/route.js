@@ -75,7 +75,7 @@ function isAdminRequest(request) {
 
 /**
  * CSRF guard for state-changing requests (moved here from middleware.js,
- * which was removed — Vercel's Edge runtime crashed on Node globals).
+ * which was removed - Vercel's Edge runtime crashed on Node globals).
  * Browsers always send an Origin header on cross-origin POST/PUT/DELETE;
  * same-origin or origin-less (curl, server-to-server) requests pass.
  * @param {Request} request
@@ -90,10 +90,15 @@ function rejectCrossOrigin(request) {
   const allowed = env.corsOrigins.split(',').map(o => o.trim()).filter(Boolean);
   
   // Always allow loopback variations if we are serving on a loopback interface
-  const host = new URL(request.url).hostname;
-  const isLoopbackHost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  const parsedUrl = new URL(request.url);
+  const host = parsedUrl.hostname;
+  const isLoopbackHost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0';
   if (isLoopbackHost || !env.isProd) {
-    allowed.push('http://127.0.0.1:4100', 'http://localhost:4100', 'http://127.0.0.1:3000', 'http://localhost:3000');
+    const p = parsedUrl.port;
+    allowed.push('http://127.0.0.1:4100', 'http://localhost:4100', 'http://127.0.0.1:3000', 'http://localhost:3000', 'http://127.0.0.1:4000', 'http://localhost:4000');
+    if (p) {
+      allowed.push(`http://127.0.0.1:${p}`, `http://localhost:${p}`);
+    }
   }
 
   if (allowed.includes(origin)) return null;
@@ -108,7 +113,7 @@ function getSessionUser(request) {
 
 /**
  * Hashes a raw password-reset token for DB storage/lookup. The raw token is
- * only ever sent in the emailed link — the DB holds just the SHA-256 hash,
+ * only ever sent in the emailed link - the DB holds just the SHA-256 hash,
  * so a database read alone can never yield a usable token (SECURITY_CHECKLIST C1).
  * @param {string} rawToken
  * @returns {string}
@@ -154,7 +159,7 @@ export async function GET(request) {
       if (!sessionUser) {
         // If a cookie was present but failed verification (tampered, expired,
         // or an old pre-signing-upgrade token), clear it so the browser stops
-        // sending it — otherwise middleware keeps treating the user as
+        // sending it - otherwise middleware keeps treating the user as
         // "logged in" and bounces them into a blank redirect loop.
         const response = NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
         if (request.cookies.get(SESSION_COOKIE)) {
@@ -198,7 +203,7 @@ export async function GET(request) {
       });
     }
 
-    // LLM provider availability (booleans only) — drives "Coming soon" labels
+    // LLM provider availability (booleans only) - drives "Coming soon" labels
     // in Brand Visibility and Audit Preferences. Reflects admin keys + .env.
     if (pathParts[0] === 'ai-providers') {
       const sessionUser = getSessionUser(request);
@@ -263,7 +268,7 @@ export async function GET(request) {
       });
     }
 
-    // Weekly SEO & visibility digest — cron-triggered, CRON_SECRET protected
+    // Weekly SEO & visibility digest - cron-triggered, CRON_SECRET protected
     // (same auth pattern as cron/run-scheduled-audits).
     if (pathParts[0] === 'cron' && pathParts[1] === 'send-weekly-digest') {
       if (env.cronSecret) {
@@ -474,7 +479,7 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: audits });
     }
 
-    // Cron execution endpoint — protected by a shared CRON_SECRET so it can't
+    // Cron execution endpoint - protected by a shared CRON_SECRET so it can't
     // be triggered by arbitrary visitors (SECURITY_CHECKLIST, D1).
     if (pathParts[0] === 'cron' && pathParts[1] === 'run-scheduled-audits') {
       if (env.cronSecret) {
@@ -644,13 +649,13 @@ export async function POST(request) {
 
       await col.updateOne({ id: sessionUser.id }, { $set: { branding, updatedAt: new Date() } });
 
-      // Never log the logo payload — just that branding changed.
+      // Never log the logo payload - just that branding changed.
       await audit({ action: AUDIT_ACTIONS.SETTINGS_UPDATE, userId: sessionUser.id, ip: clientIp(request), metadata: { section: 'branding' } });
 
       return NextResponse.json({ success: true, data: { branding } });
     }
 
-    // Save user settings (Settings page — Notifications / Security / Audit tabs)
+    // Save user settings (Settings page - Notifications / Security / Audit tabs)
     if (pathParts[0] === 'settings') {
       const sessionUser = getSessionUser(request);
       if (!sessionUser) return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
@@ -737,7 +742,7 @@ export async function POST(request) {
       }
 
       // Wipe all of the user's data across every collection, then the account.
-      // Audit logs are kept (immutable forensic trail — ISO A.8.15).
+      // Audit logs are kept (immutable forensic trail - ISO A.8.15).
       const dataCollections = [
         COLLECTIONS.COMPANIES,
         COLLECTIONS.SECURITY_SCANS,
@@ -902,7 +907,7 @@ export async function POST(request) {
       if (!user || !validPassword) {
         recordFailedLogin(email, ip);
         await audit({ action: AUDIT_ACTIONS.LOGIN_FAILURE, userId: user?.id || null, ip, metadata: { email } });
-        // Uniform message — do not reveal whether the email exists (A9).
+        // Uniform message - do not reveal whether the email exists (A9).
         return NextResponse.json({ success: false, error: 'Invalid email or password' }, { status: 401 });
       }
 
@@ -925,7 +930,7 @@ export async function POST(request) {
       return response;
     }
 
-    // Contact form (public, unauthenticated) — validated + IP rate-limited so
+    // Contact form (public, unauthenticated) - validated + IP rate-limited so
     // it can't be abused to spam the support inbox.
     if (pathParts[0] === 'contact') {
       const ip = clientIp(request);
@@ -955,9 +960,9 @@ export async function POST(request) {
       return response;
     }
 
-    // Fake Upgrade — test-mode billing. Active only while Stripe is NOT
+    // Fake Upgrade - test-mode billing. Active only while Stripe is NOT
     // configured; once STRIPE_SECRET_KEY is set, plan changes happen only via
-    // verified Stripe webhooks, and this endpoint disables itself — otherwise
+    // verified Stripe webhooks, and this endpoint disables itself - otherwise
     // any user could self-upgrade for free (SECURITY_CHECKLIST C4).
     if (pathParts[0] === 'auth' && pathParts[1] === 'update-plan') {
       if (env.stripeSecretKey) {
@@ -1059,7 +1064,7 @@ export async function POST(request) {
       const ndjson = (obj) => JSON.stringify(obj) + '\n';
 
       // Idempotent: if a SUCCESSFUL analysis already exists, replay it as NDJSON lines
-      // (a stored error is not final — retry re-runs).
+      // (a stored error is not final - retry re-runs).
       if (scan.ai && !scan.ai.error) {
         const lines = Object.entries(scan.ai).map(([field, value]) => ndjson({ field, value })).join('');
         return new Response(encoder.encode(lines), { headers: streamHeaders });
@@ -1197,7 +1202,7 @@ export async function POST(request) {
           const auditPrefs = await getAuditPrefs(sessionUser);
           const { html } = await fetchWithCheerio(url);
           deepAnalysisResult = await runDeepSeoAnalysis(html, url, auditPrefs);
-          // A provider failure returns {error} — store null so the UI shows
+          // A provider failure returns {error} - store null so the UI shows
           // its "AI unavailable" notice instead of an empty insights panel.
           if (deepAnalysisResult?.error) {
             console.error('Deep Analysis failed:', deepAnalysisResult.error);
@@ -1651,7 +1656,7 @@ export async function POST(request) {
         const { username, password } = await request.json();
 
         // Credentials come from env (SECURITY_CHECKLIST C2). Without them the
-        // admin panel is disabled — no hardcoded admin:admin fallback.
+        // admin panel is disabled - no hardcoded admin:admin fallback.
         if (!env.adminUsername || (!env.adminPassword && !env.adminPasswordHash)) {
           return NextResponse.json({ success: false, error: 'Admin access is not configured' }, { status: 503 });
         }
@@ -1690,7 +1695,7 @@ export async function POST(request) {
         const { keys } = parseOrThrow(adminKeysSchema, await request.json());
         const changed = await setKeys(keys);
 
-        // Log key NAMES only — never values (immutable audit trail, M4).
+        // Log key NAMES only - never values (immutable audit trail, M4).
         await audit({ action: AUDIT_ACTIONS.ADMIN_KEYS_EDIT, ip: clientIp(request), metadata: { changed } });
 
         const statuses = await getKeyStatuses();

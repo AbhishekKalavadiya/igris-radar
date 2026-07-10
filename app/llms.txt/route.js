@@ -3,14 +3,14 @@ import { SITE_URL, SITE_NAME } from '@/lib/seo'
 export const dynamic = 'force-static'
 
 /**
- * Serves /llms.txt — structured site instructions for AI crawlers,
+ * Serves /llms.txt - structured site instructions for AI crawlers,
  * following the llmstxt.org convention (H1 name, blockquote summary,
  * markdown link sections). HEAD requests are derived from GET by Next.js.
  */
 export async function GET() {
   const body = `# ${SITE_NAME}
 
-> ${SITE_NAME} is an AI search visibility and web audit platform. From a single URL it runs six audits — website security, SEO, AEO (answer engine optimization), GEO (generative engine optimization), live AI brand visibility tracking, and site health — and returns severity-ranked findings with AI-ready fix prompts.
+> ${SITE_NAME} is an AI search visibility and web audit platform. From a single URL it runs six audits - website security, SEO, AEO (answer engine optimization), GEO (generative engine optimization), live AI brand visibility tracking, and site health - and returns severity-ranked findings with AI-ready fix prompts.
 
 ${SITE_NAME} is built for teams that want to be cited and recommended by AI assistants (ChatGPT, Claude, Perplexity, Gemini) as well as rank in traditional search. Every audit runs from the outside against a public URL; nothing is installed on the audited site.
 

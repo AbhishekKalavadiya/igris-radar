@@ -58,7 +58,7 @@ export default function ApiKeysPanel() {
       if (data.success) {
         setStatuses(data.data);
         setEdits({});
-        toast({ title: 'API keys updated', description: 'Changes are live — no restart needed.' });
+        toast({ title: 'API keys updated', description: 'Changes are live - no restart needed.' });
       } else {
         toast({ title: 'Save failed', description: data.error, variant: 'destructive' });
       }
@@ -104,7 +104,7 @@ export default function ApiKeysPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground max-w-2xl">
-          Keys saved here are encrypted (AES-256-GCM) in the database and take effect immediately —
+          Keys saved here are encrypted (AES-256-GCM) in the database and take effect immediately -
           they override values from <span className="font-mono">.env.local</span>. Clearing a key falls
           back to the .env value if one exists.
         </p>
@@ -173,7 +173,7 @@ export default function ApiKeysPanel() {
                     type="password"
                     autoComplete="off"
                     className="max-w-xl font-mono"
-                    placeholder={masked ? `Current: ${masked} — paste a new key to replace` : 'Paste API key…'}
+                    placeholder={masked ? `Current: ${masked} - paste a new key to replace` : 'Paste API key…'}
                     value={edits[key] ?? ''}
                     onChange={(e) => setEdits(prev => {
                       const next = { ...prev };

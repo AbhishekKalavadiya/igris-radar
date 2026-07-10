@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
             <p className="text-muted-foreground mt-1">
               {section === 'plans'
                 ? 'Manage limits, features, and pricing for all tiers.'
-                : 'Manage integration API keys — changes apply instantly across the system.'}
+                : 'Manage integration API keys - changes apply instantly across the system.'}
             </p>
           </div>
           <div className="flex items-center gap-4">

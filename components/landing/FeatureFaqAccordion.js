@@ -9,7 +9,7 @@ import {
 
 /**
  * FAQ accordion. FAQPage JSON-LD is the caller's responsibility (via
- * lib/seo.js's faqPageJsonLd + <JsonLd>) — every page that renders this
+ * lib/seo.js's faqPageJsonLd + <JsonLd>) - every page that renders this
  * component already emits that schema itself, so duplicating it here would
  * ship two identical FAQPage blocks on the same page.
  * @param {{ faqs: Array<{ q: string, a: string }> }} props

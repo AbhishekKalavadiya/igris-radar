@@ -3,7 +3,7 @@ import { buildMetadata, breadcrumbJsonLd, SITE_NAME } from '@/lib/seo';
 import JsonLd from '@/components/ui/JsonLd';
 
 export const metadata = buildMetadata({
-  title: 'Terms of Service — Igris Radar',
+  title: 'Terms of Service - Igris Radar',
   description:
     'The terms governing your use of Igris Radar\'s security, SEO, AEO, GEO, brand visibility, and site health audit platform.',
   path: '/landing/terms',
@@ -79,7 +79,7 @@ const SECTIONS = [
           {SITE_NAME}'s audits (security, SEO, AEO, GEO, brand visibility, and site health) analyze
           publicly reachable pages and, where applicable, query third-party AI engines and search
           APIs. Scores, findings, and remediation guidance are provided on an informational basis
-          and represent our engines' assessment at the time of the scan — they are not a guarantee
+          and represent our engines' assessment at the time of the scan - they are not a guarantee
           of security, search ranking, or AI citation outcomes.
         </p>
         <p>

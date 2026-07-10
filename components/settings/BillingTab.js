@@ -22,7 +22,7 @@ const PLAN_META = {
   enterprise: { label: 'Enterprise', price: 'Custom', period: null,   color: 'text-yellow-400',       badge: 'bg-yellow-500/10 border-yellow-500/20' },
 };
 const PLANS_ORDER = ['free', 'starter', 'pro', 'agency'];
-// Every plan includes the full audit suite — the scanners are the core product,
+// Every plan includes the full audit suite - the scanners are the core product,
 // so gating them behind higher tiers would block free users from experiencing
 // the value. Plans are differentiated by quota + power features below, not by
 // which scanners you can run. Surfacing them here makes that explicit.
@@ -107,7 +107,7 @@ export default function BillingTab({ currentPlan = 'free' }) {
   const handleManageBilling = async () => {
     setUpgrading('portal');
     try {
-      const res = await fetch('/api?path=stripe/portal', { method: 'POST' });
+      const res = await fetch('/api/billing/dodo/portal', { method: 'POST' });
       const data = await res.json();
       if (data.success && data.data?.url) {
         window.location.href = data.data.url;
@@ -184,7 +184,7 @@ export default function BillingTab({ currentPlan = 'free' }) {
                   </Button>
                 ) : (
                   <Button size="sm" variant="outline" className="gap-2 h-9 px-4 font-semibold" disabled>
-                    {PLAN_META[PLANS_ORDER[currentIdx + 1]]?.label} — Coming soon
+                    {PLAN_META[PLANS_ORDER[currentIdx + 1]]?.label} - Coming soon
                   </Button>
                 )
               )}

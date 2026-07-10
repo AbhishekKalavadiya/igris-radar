@@ -52,6 +52,7 @@ export default function SecurityScanPage() {
   const [enableDeepAnalysis, setEnableDeepAnalysis] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiStreaming, setAiStreaming] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const { toast } = useToast();
   const { settings } = useSettings();
   const { user } = useAuth();
@@ -88,6 +89,9 @@ export default function SecurityScanPage() {
       }
     } catch (e) {
       // Silently ignore
+    } finally {
+      // Only the first load drives the skeleton; later refreshes (after a scan) don't.
+      setHistoryLoading(false);
     }
   };
 
@@ -334,8 +338,31 @@ export default function SecurityScanPage() {
         </CardContent>
       </Card>
 
+      {/* Recent Scans — loading skeleton while history is being fetched */}
+      {!url && !scanResult && historyLoading && (
+        <div className="animate-slide-up space-y-3">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <h3 className="text-sm font-medium uppercase tracking-wider">Loading your previously scanned domains…</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[0, 1, 2].map((i) => (
+              <Card key={i} className="glass-panel">
+                <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-2/3 rounded bg-muted animate-pulse" />
+                    <div className="h-3 w-1/3 rounded bg-muted/60 animate-pulse" />
+                  </div>
+                  <div className="h-10 w-10 rounded-full bg-muted animate-pulse shrink-0" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Recent Scans */}
-      {!url && !scanResult && recentScans.length > 0 && (
+      {!url && !scanResult && !historyLoading && recentScans.length > 0 && (
         <div className="animate-slide-up space-y-3">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Previously Scanned Domains</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -378,7 +405,7 @@ export default function SecurityScanPage() {
           <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground/70">
             <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>
-              A few checks (Certificate Transparency, subdomain discovery, domain age &amp; malware-blocklist reputation, and network port scans) rely on external data sources that are occasionally rate-limited or blocked. If any look missing, they were skipped safely — just re-run the scan to retry.
+              A few checks (Certificate Transparency, subdomain discovery, domain age &amp; malware-blocklist reputation, and network port scans) rely on external data sources that are occasionally rate-limited or blocked. If any look missing, they were skipped safely - just re-run the scan to retry.
             </span>
           </div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -493,7 +520,7 @@ export default function SecurityScanPage() {
                 </Card>
               </div>
 
-              {/* AI Deep Analysis — full width, loads in the background after findings render */}
+              {/* AI Deep Analysis - full width, loads in the background after findings render */}
               {(enableDeepAnalysis || scanResult.ai || scanResult.aiPending || aiLoading) && (
                 <Card className="glass-card border-primary/20 relative overflow-hidden animate-slide-up delay-300">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
@@ -509,7 +536,7 @@ export default function SecurityScanPage() {
                       )}
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
-                      An AI interpretation of your findings — a plain-language summary, the risks to fix first, and how to fix them.
+                      An AI interpretation of your findings - a plain-language summary, the risks to fix first, and how to fix them.
                     </p>
                   </CardHeader>
                   <CardContent className="pt-6">
@@ -558,10 +585,10 @@ export default function SecurityScanPage() {
 
                           {scanResult.ai.owaspMapping && scanResult.ai.owaspMapping.length > 0 && (
                             <div className="space-y-2">
-                              <h4 className="text-sm font-semibold text-foreground">OWASP Top 10 — Categories You're Exposed To</h4>
+                              <h4 className="text-sm font-semibold text-foreground">OWASP Top 10 - Categories You're Exposed To</h4>
                               <p className="text-xs text-muted-foreground">
                                 Your failed findings map to these official OWASP Top 10 risk categories. Each tag is an area
-                                where this site currently has a weakness — not a checklist of all ten.
+                                where this site currently has a weakness - not a checklist of all ten.
                               </p>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {scanResult.ai.owaspMapping.map((cat, i) => (

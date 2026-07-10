@@ -87,7 +87,7 @@ export default function UpgradePrompt({ currentPlan = 'free', reason = 'scanLimi
           </Button>
         ) : (
           <Button size="sm" variant="outline" disabled className="h-9 px-4 font-semibold text-sm whitespace-nowrap">
-            {nextLabel} — Coming soon
+            {nextLabel} - Coming soon
           </Button>
         )}
       </div>

@@ -3,7 +3,7 @@ import { buildMetadata, breadcrumbJsonLd, SITE_NAME } from '@/lib/seo';
 import JsonLd from '@/components/ui/JsonLd';
 
 export const metadata = buildMetadata({
-  title: 'Privacy Policy — Igris Radar',
+  title: 'Privacy Policy - Igris Radar',
   description:
     'How Igris Radar collects, uses, and protects your data across our security, SEO, AEO, GEO, brand visibility, and site health audit platform.',
   path: '/landing/privacy',
@@ -57,7 +57,7 @@ const SECTIONS = [
     title: '3. How we use your data',
     body: (
       <ul className="list-disc pl-6 space-y-1.5 marker:text-primary">
-        <li>To operate the Service — running audits, storing results, and rendering your dashboard.</li>
+        <li>To operate the Service - running audits, storing results, and rendering your dashboard.</li>
         <li>To authenticate you and keep your account secure via session cookies.</li>
         <li>To enforce plan limits (scan counts, tracked sites) tied to your account.</li>
         <li>To send account, security, and billing emails (e.g. login alerts, password changes, scan-complete notifications).</li>
@@ -91,11 +91,11 @@ const SECTIONS = [
       <>
         <p>Running an audit may send the target URL (never your account credentials) to third-party providers we use to power specific checks, including:</p>
         <ul className="list-disc pl-6 space-y-1.5 marker:text-primary">
-          <li>Google (Custom Search, PageSpeed) — for SEO and site-health signals.</li>
-          <li>Google Gemini, OpenAI, and Anthropic — for AI-driven deep analysis and AEO/GEO citation testing, where enabled.</li>
-          <li>Perplexity — for answer-engine citation checks.</li>
-          <li>Stripe — for billing and subscription management.</li>
-          <li>Our email delivery provider (SMTP or Resend) — for transactional email.</li>
+          <li>Google (Custom Search, PageSpeed) - for SEO and site-health signals.</li>
+          <li>Google Gemini, OpenAI, and Anthropic - for AI-driven deep analysis and AEO/GEO citation testing, where enabled.</li>
+          <li>Perplexity - for answer-engine citation checks.</li>
+          <li>Stripe - for billing and subscription management.</li>
+          <li>Our email delivery provider (SMTP or Resend) - for transactional email.</li>
         </ul>
         <p>
           Each provider processes data under its own privacy policy and only receives the minimum
@@ -121,7 +121,7 @@ const SECTIONS = [
     title: '7. How we protect your data',
     body: (
       <ul className="list-disc pl-6 space-y-1.5 marker:text-primary">
-        <li>Passwords are hashed with bcrypt (12 rounds) — never stored or logged in plaintext.</li>
+        <li>Passwords are hashed with bcrypt (12 rounds) - never stored or logged in plaintext.</li>
         <li>Sessions are carried in HttpOnly, SameSite cookies, inaccessible to page scripts.</li>
         <li>All production traffic is served over HTTPS.</li>
         <li>Access to production data is limited to personnel who need it to operate the Service.</li>

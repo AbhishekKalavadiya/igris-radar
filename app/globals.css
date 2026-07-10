@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 /*
-  Igris Design System — dark mode adaptation
+  Igris Design System - dark mode adaptation
   Brand teal: #1a5a6b (hsl 192 61% 26%)
-  Dark-mode primary: hsl(192 70% 55%) — bright teal on dark surfaces
+  Dark-mode primary: hsl(192 70% 55%) - bright teal on dark surfaces
 */
 
 @layer base {
@@ -43,7 +43,7 @@
     --input: 240 5% 65%;
     --ring: 192 70% 45%;
 
-    /* Radius scale — sm/md derive from --radius in tailwind.config */
+    /* Radius scale - sm/md derive from --radius in tailwind.config */
     --radius: 10px;
     --radius-xl: 16px;
 
@@ -51,7 +51,7 @@
     --success: 160 84% 39%;
     --warning: 38 92% 50%;
 
-    /* Scanner accents — one identity color per audit tool */
+    /* Scanner accents - one identity color per audit tool */
     --accent-security: 239 84% 67%;  /* indigo */
     --accent-seo: 217 91% 60%;       /* blue */
     --accent-aeo: 271 91% 65%;       /* purple */
@@ -101,7 +101,7 @@
     --font-mono: 'Roboto Mono', ui-monospace, monospace;
   }
 
-  /* App is always dark (html.dark) — dark vars mirror :root */
+  /* App is always dark (html.dark) - dark vars mirror :root */
   .dark {
     --background: 240 33% 2%;
     --foreground: 210 40% 98%;
@@ -152,7 +152,7 @@
   }
 }
 
-/* Light theme scope — the app shell is always dark (html.dark), but the
+/* Light theme scope - the app shell is always dark (html.dark), but the
    public marketing site renders inside .theme-light, which re-asserts
    light values for every inherited token. */
 .theme-light {
@@ -228,12 +228,12 @@
 .stagger-3 { animation-delay: 0.3s; }
 .stagger-4 { animation-delay: 0.4s; }
 
-/* Security gauge glow — Igris teal */
+/* Security gauge glow - Igris teal */
 .gauge-glow {
   filter: drop-shadow(0 0 10px hsl(192 70% 55% / 0.5));
 }
 
-/* Igris teal glow — replaces acid green */
+/* Igris teal glow - replaces acid green */
 .glow-primary {
   box-shadow: 0 0 20px hsl(192 70% 55% / 0.3);
 }
@@ -324,7 +324,7 @@
   box-shadow: 0 10px 40px -10px hsl(var(--primary) / 0.15);
 }
 
-/* Accent-tinted card hover — pair with a scanner accent, e.g. hover:border-scanner-seo/40 */
+/* Accent-tinted card hover - pair with a scanner accent, e.g. hover:border-scanner-seo/40 */
 .accent-card {
   @apply transition-all duration-300 hover:-translate-y-0.5;
 }
@@ -434,7 +434,7 @@
   animation: textGradient 4s linear infinite;
 }
 
-/* Hero ticker — scrolling AI engine name strip */
+/* Hero ticker - scrolling AI engine name strip */
 @keyframes ticker {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
@@ -446,7 +446,7 @@
   width: max-content;
 }
 
-/* Slow bounce — used on coming-soon pages */
+/* Slow bounce - used on coming-soon pages */
 @keyframes bounce-slow {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-15%); }
@@ -456,7 +456,7 @@
   animation: bounce-slow 2.5s var(--ease) infinite;
 }
 
-/* Score count-up helper — numbers keep tabular width while animating */
+/* Score count-up helper - numbers keep tabular width while animating */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }

@@ -637,7 +637,7 @@ function SettingsContent() {
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
                   Once unlocked, you'll be able to set a custom company name, upload your logo, and
-                  add your own footer text — every "Export Report → Save as PDF" will use your branding
+                  add your own footer text - every "Export Report → Save as PDF" will use your branding
                   instead of ours.
                 </CardContent>
               </Card>
@@ -682,7 +682,7 @@ function SettingsContent() {
                       )}
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">PNG, JPEG, WEBP or SVG — max 2MB.</p>
+                  <p className="text-sm text-muted-foreground">PNG, JPEG, WEBP or SVG - max 2MB.</p>
                 </div>
 
                 <div className="space-y-2 pt-4 border-t border-border">

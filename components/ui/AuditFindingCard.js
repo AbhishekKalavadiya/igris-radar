@@ -94,18 +94,18 @@ const PLAN_LABELS = {
   enterprise: 'Enterprise',
 };
 
-// "How we test this" — a plain-language description of the scan METHOD, keyed by the
+// "How we test this" - a plain-language description of the scan METHOD, keyed by the
 // finding's category. Explains WHAT the scanner actually does to produce the result,
 // complementing the per-finding "why it matters" (details) text. Categories not listed
 // simply omit this section (e.g. SEO/AEO/GEO findings render as before).
 const CATEGORY_METHODOLOGY = {
-  'Headers': 'We send a standard HTTPS request to your site and inspect the HTTP response headers your server returns — no header on the response means the protection is not active.',
+  'Headers': 'We send a standard HTTPS request to your site and inspect the HTTP response headers your server returns - no header on the response means the protection is not active.',
   'SSL/TLS': 'We open a live TLS connection to your server to read its certificate and negotiated protocol, and cross-check public Certificate Transparency logs.',
   'DNS Security': 'We perform live DNS lookups for your domain (TXT/SPF/DMARC, MX, CAA, DKIM selectors, and DNSSEC via a validating resolver).',
   'Secrets': 'We scan your page\'s raw HTML and inline scripts for text patterns that match known API-key, token, and private-key formats.',
   'Active Probing': 'We send targeted requests to commonly-exposed paths (e.g. /.env, /admin, /backup, /.git) and inspect the responses for exposure signatures.',
   'Info Disclosure': 'We inspect your response headers, a triggered error page, and linked source files for details that reveal your technology stack.',
-  'Infrastructure': 'We probe network-level properties of your host — DNS records, response timing, protocol support, and open ports.',
+  'Infrastructure': 'We probe network-level properties of your host - DNS records, response timing, protocol support, and open ports.',
   'Domain Reputation': 'We check your domain against Cloudflare\'s public threat-intelligence resolver and read your registration record via RDAP.',
   'Attack Surface': 'We enumerate your public subdomains from Certificate Transparency logs and test each for dangling-CNAME takeover risk.',
   'Auth & Session': 'We inspect login forms, password fields, and Set-Cookie attributes on the page for authentication weaknesses.',

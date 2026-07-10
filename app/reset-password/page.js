@@ -11,7 +11,7 @@ import LogoText from '@/components/ui/LogoText';
 import LogoIcon from '@/components/ui/LogoIcon';
 
 // Mirrors the server-side password policy in lib/validation/schemas.js
-// (strongPassword). Keep the two in sync — the server rejects anything that
+// (strongPassword). Keep the two in sync - the server rejects anything that
 // fails these, so surfacing them here prevents a confusing 400 on submit.
 const PASSWORD_RULES = [
   { label: 'At least 8 characters',            test: (p) => p.length >= 8 },

@@ -215,7 +215,7 @@ export default function FeaturePageTemplate({ config }) {
                       {ref.label}
                     </a>
                   </cite>
-                  <span className="ml-2 text-xs text-muted-foreground/70">— {ref.source}</span>
+                  <span className="ml-2 text-xs text-muted-foreground/70">- {ref.source}</span>
                 </li>
               ))}
             </ul>
