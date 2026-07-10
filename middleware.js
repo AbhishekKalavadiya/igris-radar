@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
  * Flip to `false` to restore access. (Pairs with SHOW_AUTH_CTAS in
  * lib/landingContent.js, which hides the buttons that point here.)
  */
-const BLOCK_AUTH_PAGES = true;
+const BLOCK_AUTH_PAGES = false;
 
 export function middleware(request) {
   if (BLOCK_AUTH_PAGES) {
