@@ -51,6 +51,7 @@ export default function SecurityScanPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [enableDeepAnalysis, setEnableDeepAnalysis] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiStreaming, setAiStreaming] = useState(false);
   const { toast } = useToast();
   const { settings } = useSettings();
   const { user } = useAuth();
@@ -138,28 +139,54 @@ export default function SecurityScanPage() {
     }
   };
 
-  // Fetches AI deep analysis for an already-completed scan and merges it in.
-  // Runs separately from the scan so findings render immediately.
+  // Streams AI deep analysis (NDJSON) for an already-completed scan and reveals each
+  // field as it arrives. Runs separately from the scan so findings render immediately.
   const fetchAiAnalysis = async (scanId) => {
     if (!scanId) return;
     setAiLoading(true);
+    setAiStreaming(true);
+    // Reset any prior AI state and mark this scan as actively analyzing.
+    setScanResult((prev) => (prev && prev.id === scanId ? { ...prev, ai: null, aiPending: true } : prev));
+    let started = false;
+    let ai = {};
+    const applyLine = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed[0] !== '{') return;
+      let obj;
+      try { obj = JSON.parse(trimmed); } catch { return; }
+      if (!obj || typeof obj.field !== 'string') return;
+      ai = obj.field === '__error__' ? { error: true } : { ...ai, [obj.field]: obj.value };
+      if (!started) { started = true; setAiLoading(false); }
+      setScanResult((prev) => (prev && prev.id === scanId ? { ...prev, ai: { ...ai }, aiPending: false } : prev));
+    };
     try {
       const res = await fetch('/api?path=security-scan/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scanId }),
       });
-      const data = await res.json();
-      if (data.success) {
-        setScanResult((prev) => (prev && prev.id === scanId ? { ...prev, ai: data.data, aiPending: false } : prev));
-      } else {
-        toast({ title: 'AI analysis failed', description: data.error, variant: 'destructive' });
-        setScanResult((prev) => (prev && prev.id === scanId ? { ...prev, aiPending: false } : prev));
+      if (!res.ok || !res.body) throw new Error('AI stream unavailable');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx;
+        while ((idx = buffer.indexOf('\n')) >= 0) {
+          applyLine(buffer.slice(0, idx));
+          buffer = buffer.slice(idx + 1);
+        }
       }
+      if (buffer.trim()) applyLine(buffer); // flush final line without trailing newline
     } catch {
-      toast({ title: 'AI analysis failed', description: 'Network error occurred.', variant: 'destructive' });
+      setScanResult((prev) => (prev && prev.id === scanId ? { ...prev, ai: { error: true }, aiPending: false } : prev));
     } finally {
       setAiLoading(false);
+      setAiStreaming(false);
     }
   };
 
@@ -474,6 +501,12 @@ export default function SecurityScanPage() {
                     <CardTitle className="text-sm font-medium flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-primary" />
                       AI Security Analysis
+                      {aiStreaming && (
+                        <span className="ml-1 inline-flex items-center gap-1 text-[10px] font-normal text-primary">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                          Generating…
+                        </span>
+                      )}
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
                       An AI interpretation of your findings — a plain-language summary, the risks to fix first, and how to fix them.
@@ -490,7 +523,7 @@ export default function SecurityScanPage() {
                       </div>
                     ) : scanResult.ai ? (
                       scanResult.ai.error ? (
-                        <AiUnavailableNotice reason={scanResult.ai.error} />
+                        <AiUnavailableNotice onRetry={() => fetchAiAnalysis(scanResult.id)} />
                       ) : (
                         <div className="space-y-6">
                           <div className="space-y-2">

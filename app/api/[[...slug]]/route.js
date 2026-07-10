@@ -1035,9 +1035,10 @@ export async function POST(request) {
     }
 
     // Web Scanners
-    // Background AI deep analysis for an already-completed security scan. The scan
-    // endpoint returns findings immediately; the client then calls this to fill in
-    // the AI section without blocking the initial result.
+    // Background AI deep analysis for an already-completed security scan. Streams the
+    // result as NDJSON (one {"field","value"} object per line) so the client reveals
+    // each section as it finishes. The scan endpoint returns findings immediately;
+    // the client calls this separately to fill in the AI section.
     if (pathParts[0] === 'security-scan' && pathParts[1] === 'ai') {
       const sessionUser = getSessionUser(request);
       if (!sessionUser) return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
@@ -1049,25 +1050,56 @@ export async function POST(request) {
       const scan = await col.findOne({ id: scanId, userId: sessionUser.id });
       if (!scan) return NextResponse.json({ success: false, error: 'Scan not found' }, { status: 404 });
 
-      // Idempotent: if AI already ran for this scan, return the stored result.
-      if (scan.ai) return NextResponse.json({ success: true, data: scan.ai });
+      const encoder = new TextEncoder();
+      const streamHeaders = {
+        'Content-Type': 'application/x-ndjson; charset=utf-8',
+        'Cache-Control': 'no-store, no-transform',
+        'X-Accel-Buffering': 'no',
+      };
+      const ndjson = (obj) => JSON.stringify(obj) + '\n';
+
+      // Idempotent: if a SUCCESSFUL analysis already exists, replay it as NDJSON lines
+      // (a stored error is not final — retry re-runs).
+      if (scan.ai && !scan.ai.error) {
+        const lines = Object.entries(scan.ai).map(([field, value]) => ndjson({ field, value })).join('');
+        return new Response(encoder.encode(lines), { headers: streamHeaders });
+      }
 
       const userPlan = sessionUser.plan || 'free';
-      if (!(await hasAnyAiProvider())) {
-        return NextResponse.json({ success: true, data: { error: 'No AI provider is configured. Add a key in Admin → API Keys.' } });
-      }
+      const emitError = () => new Response(encoder.encode(ndjson({ field: '__error__', value: true })), { headers: streamHeaders });
 
-      let aiResult;
+      if (!(await hasAnyAiProvider())) return emitError();
       try {
         if (scan.isOnboarding !== true) await assertFeatureAccess(userPlan, 'deepAnalysis');
-        const { runDeepSecurityAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
-        aiResult = await runDeepSecurityAnalysis(scan.findings, scan.url, { plan: userPlan });
       } catch (e) {
-        aiResult = { error: e.message || 'AI analysis failed' };
+        return emitError();
       }
 
-      await col.updateOne({ id: scanId }, { $set: { ai: aiResult } });
-      return NextResponse.json({ success: true, data: aiResult });
+      const { streamSecurityAnalysis, assembleNdjson } = await import('@/lib/scanners/shared/aiAnalyzer');
+      let fullText = '';
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of streamSecurityAnalysis({ findings: scan.findings, url: scan.url, plan: userPlan })) {
+              fullText += chunk;
+              controller.enqueue(encoder.encode(chunk));
+            }
+          } catch (e) {
+            console.error('[security-scan/ai] stream error:', e.message);
+            controller.enqueue(encoder.encode('\n' + ndjson({ field: '__error__', value: true })));
+          } finally {
+            controller.close();
+            try {
+              const ai = assembleNdjson(fullText);
+              const toStore = ai && Object.keys(ai).length ? ai : { error: true };
+              await col.updateOne({ id: scanId }, { $set: { ai: toStore, aiPending: false } });
+            } catch (e) {
+              console.error('[security-scan/ai] persist failed:', e.message);
+            }
+          }
+        },
+      });
+      return new Response(stream, { headers: streamHeaders });
     }
 
     if (pathParts[0] === 'security-scan') {
