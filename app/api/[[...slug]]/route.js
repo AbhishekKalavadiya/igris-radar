@@ -449,7 +449,7 @@ export async function GET(request) {
       // "cancelled - switches to free on <date>" banner. Set by the cancel
       // route, cleared by the webhook when the change takes effect.
       const usersCol = await getCollection(COLLECTIONS.USERS);
-      const userDoc = await usersCol.findOne({ id: sessionUser.id }, { projection: { pendingDowngrade: 1 } });
+      const userDoc = await usersCol.findOne({ id: sessionUser.id }, { projection: { pendingDowngrade: 1, dodoCustomerId: 1 } });
 
       return NextResponse.json({
         success: true,
@@ -462,6 +462,9 @@ export async function GET(request) {
           cycleStart: cycle.start,
           cycleEnd: cycle.end,
           pendingDowngrade: userDoc?.pendingDowngrade || null,
+          // True once the user has ever paid - lets a downgraded free user still
+          // reach their invoices/receipts via "Manage Billing".
+          hasBillingHistory: !!userDoc?.dodoCustomerId,
         },
       });
     }

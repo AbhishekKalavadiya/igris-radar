@@ -284,7 +284,7 @@ export default function BillingTab({ currentPlan = 'free' }) {
                   </Button>
                 )
               )}
-              {plan !== 'free' && (
+              {(plan !== 'free' || usage?.hasBillingHistory) && (
                 <Button
                   size="sm"
                   variant="outline"
