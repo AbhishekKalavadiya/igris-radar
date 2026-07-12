@@ -79,7 +79,22 @@ export default function Footer() {
           <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap justify-center sm:justify-start">
             <span>© <time dateTime={String(new Date().getFullYear())}>{new Date().getFullYear()}</time> Igris Radar. All rights reserved.</span>
             <span className="hidden sm:inline text-muted-foreground/50">|</span>
-            <span>A part of <a href="https://igrisecurity.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline underline-offset-2">Igris Security</a></span>
+            <span className="flex items-center gap-2">
+              A part of 
+              <a href="https://igrisecurity.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 group">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-[#1a5563] dark:text-[#45a3b9] group-hover:scale-110 transition-transform">
+                  <polygon points="12,8 16,12 12,16 8,12" />
+                  <polygon points="2,11 11,2 11,7 7,11" />
+                  <polygon points="13,2 22,11 17,11 13,7" />
+                  <polygon points="22,13 13,22 13,17 17,13" />
+                  <polygon points="11,22 2,13 7,13 11,17" />
+                </svg>
+                <span className="text-sm tracking-tight">
+                  <span className="font-bold text-foreground">Igris</span>
+                  <span className="font-normal text-muted-foreground ml-[3px]">Security</span>
+                </span>
+              </a>
+            </span>
           </p>
           <p className="text-xs text-muted-foreground">
             Built for teams optimizing for search engines <span className="text-primary">◆</span> and answer engines
