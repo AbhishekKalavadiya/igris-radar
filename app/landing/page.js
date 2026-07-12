@@ -290,7 +290,7 @@ export default function LandingPage() {
           <Stagger className="grid grid-cols-2 gap-4">
             {[
               { value: 6, suffix: '', label: 'audit engines: security, SEO, AEO, GEO, brand, health' },
-              { value: 80, suffix: '+', label: 'individual checks across a full platform run' },
+              { value: 150, suffix: '+', label: 'individual checks across a full platform run' },
               { value: 4, suffix: '', label: 'AI engines queried live for brand tracking' },
               { value: 100, suffix: '', label: 'point score per audit, tracked over time' },
             ].map((s) => (

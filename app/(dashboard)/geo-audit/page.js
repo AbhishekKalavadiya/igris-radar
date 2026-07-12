@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Globe, Loader2, Target, Sparkles, AlertCircle } from 'lucide-react';
+import { Globe, Loader2, Target, Sparkles, AlertCircle, Lock, CheckCircle2, Zap, Star, Crown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import PageHeader from '@/components/ui/PageHeader';
@@ -163,7 +163,7 @@ export default function GeoAuditPage() {
   const renderCategoryTab = (categoryName) => {
     if (!scanResult) return null;
     const findings = filterFindings(
-      scanResult.findings.filter(f => f.category === categoryName),
+      scanResult.findings.filter(f => categoryName === 'All' ? true : f.category === categoryName),
       query,
       severityFilter
     );
@@ -186,6 +186,36 @@ export default function GeoAuditPage() {
     );
   };
 
+  // Groups findings by the plan tier that unlocks them. Locked findings (returned
+  // by the API with title/category stripped) still carry `tier`, so they render
+  // here even when they'd match no category tab.
+  const renderTierTab = (tier) => {
+    if (!scanResult) return null;
+    const tierFindings = tier === 'free'
+      ? scanResult.findings.filter(f => !f.tier || f.tier === 'free')
+      : scanResult.findings.filter(f => f.tier === tier);
+    const visible = filterFindings([...tierFindings], query, severityFilter)
+      .sort((a, b) => (a.passed === b.passed ? 0 : a.passed ? 1 : -1));
+
+    return (
+      <div className="space-y-4">
+        <FindingsToolbar
+          query={query}
+          onQueryChange={setQuery}
+          severity={severityFilter}
+          onSeverityChange={setSeverityFilter}
+        />
+        {visible.length === 0 ? (
+          <div className="text-muted-foreground text-center py-8">No checks in this tier for this scan.</div>
+        ) : (
+          visible.map((f) => <AuditFindingCard key={f.id} finding={f} />)
+        )}
+      </div>
+    );
+  };
+
+  const lockedCount = scanResult?.findings.filter(f => f.locked).length || 0;
+
   const accent = SCANNERS.geo;
 
   return (
@@ -194,7 +224,7 @@ export default function GeoAuditPage() {
         icon={Globe}
         accent={accent}
         title="GEO Audit"
-        description="Generative Engine Optimization (GEO): evaluate entity authority, topical depth, and citation-worthiness for AI platforms."
+        description="Generative Engine Optimization (GEO): 33 checks across entity authority, topical depth, factual density, and AI readability — plus AI citation simulation and knowledge-graph gap analysis."
         actions={scanResult && <ExportReportButton scanResult={scanResult} scanType="geo" />}
       />
 
@@ -256,18 +286,20 @@ export default function GeoAuditPage() {
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
               <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="crawl" 
-                    checked={enableCrawl} 
-                    onCheckedChange={setEnableCrawl} 
-                    disabled={isScanning}
-                    className="data-[state=checked]:bg-scanner-geo data-[state=checked]:border-scanner-geo"
-                  />
-                  <label htmlFor="crawl" className="text-sm font-medium leading-none cursor-pointer">
-                    Multi-page Crawl (Topical Map)
-                  </label>
-                </div>
+                <FeatureGate currentPlan={userPlan} feature="multiPageCrawl" planLimits={planLimits} minPlan="pro">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="crawl"
+                      checked={enableCrawl}
+                      onCheckedChange={setEnableCrawl}
+                      disabled={isScanning}
+                      className="data-[state=checked]:bg-scanner-geo data-[state=checked]:border-scanner-geo"
+                    />
+                    <label htmlFor="crawl" className="text-sm font-medium leading-none cursor-pointer">
+                      Multi-page Crawl (Topical Map)
+                    </label>
+                  </div>
+                </FeatureGate>
                 <FeatureGate currentPlan={userPlan} feature="deepAnalysis" planLimits={planLimits} minPlan="pro">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -341,13 +373,42 @@ export default function GeoAuditPage() {
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="bg-card border border-border w-full justify-start h-auto flex-wrap p-1">
               <TabsTrigger value="overview" className="data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">Overview</TabsTrigger>
+              <TabsTrigger value="all" className="relative data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">
+                All Findings
+                {lockedCount > 0 && (
+                  <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] bg-scanner-geo/20 text-scanner-geo px-1.5 py-0.5 rounded-full">
+                    <Lock className="h-2.5 w-2.5" />{lockedCount}
+                  </span>
+                )}
+              </TabsTrigger>
+
+              <div className="w-px h-5 bg-border mx-1.5 hidden sm:block" />
+              <TabsTrigger value="tier-free" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:bg-background">
+                <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Free
+              </TabsTrigger>
+              <TabsTrigger value="tier-starter" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-geo/20 data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">
+                <Zap className="w-3.5 h-3.5 text-primary" /> Starter
+              </TabsTrigger>
+              <TabsTrigger value="tier-pro" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-geo/20 data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">
+                <Star className="w-3.5 h-3.5 text-warning" /> Pro
+              </TabsTrigger>
+              <TabsTrigger value="tier-agency" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-geo/20 data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">
+                <Crown className="w-3.5 h-3.5 text-destructive" /> Agency
+                {lockedCount > 0 && (
+                  <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] bg-scanner-geo/20 text-scanner-geo px-1.5 py-0.5 rounded-full">
+                    <Lock className="h-2.5 w-2.5" />{lockedCount}
+                  </span>
+                )}
+              </TabsTrigger>
+              <div className="w-px h-5 bg-border mx-1.5 hidden sm:block" />
+
               <TabsTrigger value="entity" className="data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">Entity Authority</TabsTrigger>
               <TabsTrigger value="topic" className="data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">Topical Depth</TabsTrigger>
               <TabsTrigger value="factual" className="data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">Factual Density</TabsTrigger>
               <TabsTrigger value="readability" className="data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">AI Readability</TabsTrigger>
-              <TabsTrigger value="trend" className="data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">Trend</TabsTrigger>
               {scanResult.promptCoverage && <TabsTrigger value="prompts" className="text-scanner-geo data-[state=active]:bg-scanner-geo/20 data-[state=active]:text-scanner-geo"><Target className="h-3 w-3 mr-1" /> Prompt Map</TabsTrigger>}
               {scanResult.deepAnalysis && <TabsTrigger value="ai" className="text-scanner-geo data-[state=active]:bg-scanner-geo/20 data-[state=active]:text-scanner-geo"><Sparkles className="h-3 w-3 mr-1" /> AI Insights</TabsTrigger>}
+              <TabsTrigger value="trend" className="data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">Trend</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 m-0">
@@ -395,6 +456,10 @@ export default function GeoAuditPage() {
               </div>
             </TabsContent>
 
+            <TabsContent value="all" className="m-0">
+              {renderCategoryTab('All')}
+            </TabsContent>
+
             <TabsContent value="entity" className="m-0">
               {renderCategoryTab('Entity Authority')}
             </TabsContent>
@@ -410,6 +475,19 @@ export default function GeoAuditPage() {
 
             <TabsContent value="readability" className="m-0">
               {renderCategoryTab('AI Readability')}
+            </TabsContent>
+
+            <TabsContent value="tier-free" className="m-0">
+              {renderTierTab('free')}
+            </TabsContent>
+            <TabsContent value="tier-starter" className="m-0">
+              {renderTierTab('starter')}
+            </TabsContent>
+            <TabsContent value="tier-pro" className="m-0">
+              {renderTierTab('pro')}
+            </TabsContent>
+            <TabsContent value="tier-agency" className="m-0">
+              {renderTierTab('agency')}
             </TabsContent>
 
             <TabsContent value="trend" className="m-0">

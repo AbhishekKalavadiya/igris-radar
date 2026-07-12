@@ -6,9 +6,10 @@ import { User, ShieldCheck, Link2, Building, Calendar, XCircle, CheckCircle2 } f
 export default function EntityAuthorityCard({ findings }) {
   if (!findings || findings.length === 0) return null;
 
-  // Map our findings to visual checklist items based on keywords in title
+  // Map our findings to visual checklist items based on keywords in title.
+  // Locked findings (redacted for the user's plan) have no title — skip them.
   const getFindingByKeyword = (keyword) => {
-    return findings.find(f => f.title.toLowerCase().includes(keyword.toLowerCase()));
+    return findings.find(f => f.title && f.title.toLowerCase().includes(keyword.toLowerCase()));
   };
 
   const authorFinding = getFindingByKeyword('Author Byline');

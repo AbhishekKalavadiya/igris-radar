@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Sparkles, Loader2, Target, AlertCircle } from 'lucide-react';
+import { Sparkles, Loader2, Target, AlertCircle, CheckCircle2, Zap, Star, Crown, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import PageHeader from '@/components/ui/PageHeader';
@@ -17,6 +17,7 @@ import { PageTransition } from '@/components/ui/motion';
 import { SCANNERS } from '@/lib/scannerAccents';
 import AuditFindingCard from '@/components/ui/AuditFindingCard';
 import CategoryScoreBreakdown from '@/components/ui/CategoryScoreBreakdown';
+import CrawlSummary from '@/components/ui/CrawlSummary';
 import SearchPreview from '@/components/ui/SearchPreview';
 import dynamic from 'next/dynamic';
 import CompetitorCompare from '@/components/ui/CompetitorCompare';
@@ -152,7 +153,7 @@ export default function AeoAuditPage() {
   const renderCategoryTab = (categoryName) => {
     if (!scanResult) return null;
     const findings = filterFindings(
-      scanResult.findings.filter(f => f.category === categoryName),
+      scanResult.findings.filter(f => categoryName === 'All' ? true : f.category === categoryName),
       query,
       severityFilter
     );
@@ -175,6 +176,36 @@ export default function AeoAuditPage() {
     );
   };
 
+  // Groups findings by the plan tier that unlocks them. Locked findings (returned
+  // by the API with category stripped) still carry `tier`, so they render here
+  // even when they'd match no category tab.
+  const renderTierTab = (tier) => {
+    if (!scanResult) return null;
+    const tierFindings = tier === 'free'
+      ? scanResult.findings.filter(f => !f.tier || f.tier === 'free')
+      : scanResult.findings.filter(f => f.tier === tier);
+    const visible = filterFindings([...tierFindings], query, severityFilter)
+      .sort((a, b) => (a.passed === b.passed ? 0 : a.passed ? 1 : -1));
+
+    return (
+      <div className="space-y-4">
+        <FindingsToolbar
+          query={query}
+          onQueryChange={setQuery}
+          severity={severityFilter}
+          onSeverityChange={setSeverityFilter}
+        />
+        {visible.length === 0 ? (
+          <div className="text-muted-foreground text-center py-8">No checks in this tier for this scan.</div>
+        ) : (
+          visible.map((f) => <AuditFindingCard key={f.id} finding={f} />)
+        )}
+      </div>
+    );
+  };
+
+  const lockedCount = scanResult?.findings.filter(f => f.locked).length || 0;
+
   const accent = SCANNERS.aeo;
 
   return (
@@ -183,7 +214,7 @@ export default function AeoAuditPage() {
         icon={Sparkles}
         accent={accent}
         title="AEO Audit"
-        description="Answer Engine Optimization: See how well ChatGPT, Claude, and Perplexity can cite your content."
+        description="Answer Engine Optimization: 28+ checks across 8 AI crawlers measuring whether ChatGPT, Claude, Perplexity, and Gemini can crawl, parse, and cite your content."
         actions={scanResult && <ExportReportButton scanResult={scanResult} scanType="aeo" />}
       />
 
@@ -229,18 +260,20 @@ export default function AeoAuditPage() {
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
               <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="crawl" 
-                    checked={enableCrawl} 
-                    onCheckedChange={setEnableCrawl} 
-                    disabled={isScanning}
-                    className="data-[state=checked]:bg-scanner-aeo data-[state=checked]:text-white"
-                  />
-                  <label htmlFor="crawl" className="text-sm font-medium leading-none cursor-pointer">
-                    Multi-page Crawl
-                  </label>
-                </div>
+                <FeatureGate currentPlan={userPlan} feature="multiPageCrawl" planLimits={planLimits} minPlan="pro">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="crawl"
+                      checked={enableCrawl}
+                      onCheckedChange={setEnableCrawl}
+                      disabled={isScanning}
+                      className="data-[state=checked]:bg-scanner-aeo data-[state=checked]:text-white"
+                    />
+                    <label htmlFor="crawl" className="text-sm font-medium leading-none cursor-pointer">
+                      Multi-page Crawl
+                    </label>
+                  </div>
+                </FeatureGate>
                 <FeatureGate currentPlan={userPlan} feature="deepAnalysis" planLimits={planLimits} minPlan="pro">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -314,11 +347,41 @@ export default function AeoAuditPage() {
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="bg-card border border-border w-full justify-start h-auto flex-wrap p-1">
               <TabsTrigger value="overview" className="data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">Overview</TabsTrigger>
+              <TabsTrigger value="all" className="relative data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">
+                All Findings
+                {lockedCount > 0 && (
+                  <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] bg-scanner-aeo/20 text-scanner-aeo px-1.5 py-0.5 rounded-full">
+                    <Lock className="h-2.5 w-2.5" />{lockedCount}
+                  </span>
+                )}
+              </TabsTrigger>
+
+              <div className="w-px h-5 bg-border mx-1.5 hidden sm:block" />
+              <TabsTrigger value="tier-free" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:bg-background">
+                <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Free
+              </TabsTrigger>
+              <TabsTrigger value="tier-starter" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-aeo/20 data-[state=active]:bg-scanner-aeo/10 data-[state=active]:text-scanner-aeo">
+                <Zap className="w-3.5 h-3.5 text-primary" /> Starter
+              </TabsTrigger>
+              <TabsTrigger value="tier-pro" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-aeo/20 data-[state=active]:bg-scanner-aeo/10 data-[state=active]:text-scanner-aeo">
+                <Star className="w-3.5 h-3.5 text-warning" /> Pro
+              </TabsTrigger>
+              <TabsTrigger value="tier-agency" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-aeo/20 data-[state=active]:bg-scanner-aeo/10 data-[state=active]:text-scanner-aeo">
+                <Crown className="w-3.5 h-3.5 text-destructive" /> Agency
+                {lockedCount > 0 && (
+                  <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] bg-scanner-aeo/20 text-scanner-aeo px-1.5 py-0.5 rounded-full">
+                    <Lock className="h-2.5 w-2.5" />{lockedCount}
+                  </span>
+                )}
+              </TabsTrigger>
+
+              <div className="w-px h-5 bg-border mx-1.5 hidden sm:block" />
               <TabsTrigger value="crawl" className="data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">Crawlability</TabsTrigger>
               <TabsTrigger value="structure" className="data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">Content Structure</TabsTrigger>
               <TabsTrigger value="citation" className="data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">Citation-Readiness</TabsTrigger>
-              <TabsTrigger value="trend" className="data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">Trend</TabsTrigger>
+              {scanResult.crawlData && <TabsTrigger value="sitecrawl" className="data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">Multi-page</TabsTrigger>}
               {scanResult.deepAnalysis && <TabsTrigger value="ai" className="text-scanner-aeo data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo"><Sparkles className="h-3 w-3 mr-1" /> AI Insights</TabsTrigger>}
+              <TabsTrigger value="trend" className="data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">Trend</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 m-0">
@@ -371,6 +434,23 @@ export default function AeoAuditPage() {
               </div>
             </TabsContent>
 
+            <TabsContent value="all" className="m-0">
+              {renderCategoryTab('All')}
+            </TabsContent>
+
+            <TabsContent value="tier-free" className="m-0">
+              {renderTierTab('free')}
+            </TabsContent>
+            <TabsContent value="tier-starter" className="m-0">
+              {renderTierTab('starter')}
+            </TabsContent>
+            <TabsContent value="tier-pro" className="m-0">
+              {renderTierTab('pro')}
+            </TabsContent>
+            <TabsContent value="tier-agency" className="m-0">
+              {renderTierTab('agency')}
+            </TabsContent>
+
             <TabsContent value="crawl" className="m-0">
               {renderCategoryTab('Crawlability')}
             </TabsContent>
@@ -386,6 +466,13 @@ export default function AeoAuditPage() {
             <TabsContent value="trend" className="m-0">
               <ScanTrendChart scans={scanHistory} scoreKey="score" strokeColor="#6366f1" />
             </TabsContent>
+
+            {scanResult.crawlData && (
+              <TabsContent value="sitecrawl" className="m-0 space-y-6">
+                <CrawlSummary crawlData={scanResult.crawlData} />
+                {scanResult.findings.some(f => f.category === 'Multi-Page Audit') && renderCategoryTab('Multi-Page Audit')}
+              </TabsContent>
+            )}
 
             {scanResult.deepAnalysis && (
               <TabsContent value="ai" className="m-0 space-y-6">
@@ -423,6 +510,43 @@ export default function AeoAuditPage() {
                         <span className="text-sm font-mono text-scanner-aeo">{scanResult.deepAnalysis.factualDensityScore || 0}/100</span>
                       </div>
                     </div>
+                    {scanResult.deepAnalysis.answerEngineSimulation && (
+                      <div className="border border-scanner-aeo/30 bg-scanner-aeo/5 rounded-md p-4">
+                        <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-scanner-aeo" /> Answer Engine Simulation
+                        </h4>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          <span className="font-medium text-foreground">Prompt:</span> {scanResult.deepAnalysis.answerEngineSimulation.question}
+                        </p>
+                        <div className={`inline-block px-3 py-1 rounded-md text-sm font-medium mb-3 ${scanResult.deepAnalysis.answerEngineSimulation.wouldCite ? 'bg-success/20 text-success' : 'bg-destructive/20 text-destructive'}`}>
+                          {scanResult.deepAnalysis.answerEngineSimulation.wouldCite ? 'Would cite this page' : 'Would NOT cite this page'}
+                        </div>
+                        {scanResult.deepAnalysis.answerEngineSimulation.extractedSnippet && (
+                          <blockquote className="text-sm text-muted-foreground border-l-2 border-scanner-aeo/50 pl-3 italic mb-2">
+                            “{scanResult.deepAnalysis.answerEngineSimulation.extractedSnippet}”
+                          </blockquote>
+                        )}
+                        <p className="text-xs text-muted-foreground">{scanResult.deepAnalysis.answerEngineSimulation.reasoning}</p>
+                      </div>
+                    )}
+                    {scanResult.deepAnalysis.contentFreshness && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-2">Content Freshness Score</h4>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="h-2 flex-1 bg-muted rounded-full overflow-hidden max-w-md">
+                            <div className="h-full bg-scanner-aeo" style={{ width: `${scanResult.deepAnalysis.contentFreshness.score || 0}%` }} />
+                          </div>
+                          <span className="text-sm font-mono text-scanner-aeo">{scanResult.deepAnalysis.contentFreshness.score || 0}/100</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{scanResult.deepAnalysis.contentFreshness.assessment}</p>
+                      </div>
+                    )}
+                    {scanResult.deepAnalysis.factualDensityAnalysis && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-2">Factual Density Analysis</h4>
+                        <p className="text-sm text-muted-foreground">{scanResult.deepAnalysis.factualDensityAnalysis}</p>
+                      </div>
+                    )}
                     <div>
                       <h4 className="text-sm font-semibold text-foreground mb-2">Overall Recommendation</h4>
                       <p className="text-sm text-muted-foreground bg-muted p-3 rounded border border-border/50">{scanResult.deepAnalysis.overallRecommendation}</p>

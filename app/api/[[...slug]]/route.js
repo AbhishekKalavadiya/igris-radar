@@ -126,16 +126,17 @@ function hashResetToken(rawToken) {
  * Resolves the user's Audit Preferences (Settings → Audit) into the options
  * consumed by Deep Analysis. Anonymous users get empty defaults.
  * @param {{id: string}|null} sessionUser
- * @returns {Promise<{provider?: string, locale?: string}>}
+ * @returns {Promise<{provider?: string, locale?: string, plan?: string}>}
  */
 async function getAuditPrefs(sessionUser) {
   if (!sessionUser) return {};
+  const plan = sessionUser.plan || 'free';
   try {
     const info = await getUserSettings(sessionUser.id);
-    if (!info) return {};
-    return { provider: info.settings.audit.defaultProvider, locale: info.settings.audit.targetLocale };
+    if (!info) return { plan };
+    return { provider: info.settings.audit.defaultProvider, locale: info.settings.audit.targetLocale, plan };
   } catch {
-    return {};
+    return { plan };
   }
 }
 
@@ -324,7 +325,12 @@ export async function GET(request) {
       
       const col = await getCollection(COLLECTIONS.SEO_SCANS);
       const scans = await col.find(filter).sort({ createdAt: -1 }).limit(20).toArray();
-      return NextResponse.json({ success: true, data: scans });
+      const userPlan = sessionUser?.plan || 'free';
+      const gatedScans = scans.map(s => ({
+        ...s,
+        findings: filterFindingsByPlan(s.findings || [], userPlan),
+      }));
+      return NextResponse.json({ success: true, data: gatedScans });
     }
 
     // AEO scans list / history
@@ -340,7 +346,12 @@ export async function GET(request) {
       
       const col = await getCollection(COLLECTIONS.AEO_SCANS);
       const scans = await col.find(filter).sort({ createdAt: -1 }).limit(20).toArray();
-      return NextResponse.json({ success: true, data: scans });
+      const userPlan = sessionUser?.plan || 'free';
+      const gatedScans = scans.map(s => ({
+        ...s,
+        findings: filterFindingsByPlan(s.findings || [], userPlan),
+      }));
+      return NextResponse.json({ success: true, data: gatedScans });
     }
 
     // GEO scans list / history
@@ -356,7 +367,12 @@ export async function GET(request) {
       
       const col = await getCollection(COLLECTIONS.GEO_SCANS);
       const scans = await col.find(filter).sort({ createdAt: -1 }).limit(20).toArray();
-      return NextResponse.json({ success: true, data: scans });
+      const userPlan = sessionUser?.plan || 'free';
+      const gatedScans = scans.map(s => ({
+        ...s,
+        findings: filterFindingsByPlan(s.findings || [], userPlan),
+      }));
+      return NextResponse.json({ success: true, data: gatedScans });
     }
 
     // Brand Visibility list / history
@@ -1194,18 +1210,20 @@ export async function POST(request) {
         await assertSiteTrackingLimit(sessionUser.id, sessionUser.plan || 'free', url);
         if (competitorUrl) await assertFeatureAccess(sessionUser.plan || 'free', 'competitorScan');
         if (deepAnalysis)  await assertFeatureAccess(sessionUser.plan || 'free', 'deepAnalysis');
+        if (crawl)         await assertFeatureAccess(sessionUser.plan || 'free', 'multiPageCrawl');
       }
 
+      const userPlan = sessionUser?.plan || 'free';
       const { runSeoScan } = await import('@/lib/scanners/seoScanner');
       let scanResult, compResult;
 
       if (competitorUrl) {
         [scanResult, compResult] = await Promise.all([
-          runSeoScan(url),
-          runSeoScan(competitorUrl)
+          runSeoScan(url, { plan: userPlan }),
+          runSeoScan(competitorUrl, { plan: userPlan })
         ]);
       } else {
-        scanResult = await runSeoScan(url);
+        scanResult = await runSeoScan(url, { plan: userPlan });
       }
 
       let deepAnalysisResult = null;
@@ -1229,12 +1247,29 @@ export async function POST(request) {
 
       let crawlData = null;
       if (crawl) {
-        const { crawlSite } = await import('@/lib/scanners/shared/crawler');
+        const { runSiteAudit } = await import('@/lib/scanners/shared/siteAudit');
+        const { calculateScore } = await import('@/lib/scanners/shared/scoring');
         try {
-          const crawlRes = await crawlSite(url, { maxPages: 5 });
+          const site = await runSiteAudit(url, { maxPages: 8 });
+          // Merge the site-wide findings into the scan and re-score so the
+          // overall score reflects the whole site, not just the entry page.
+          scanResult.findings = [...scanResult.findings, ...site.findings];
+          const rescored = calculateScore(scanResult.findings);
+          scanResult.score = rescored.overall;
+          scanResult.categories = rescored.categories;
           crawlData = {
-            pagesCrawled: crawlRes.pages.length,
-            errors: crawlRes.errors.length
+            pagesCrawled: site.crawledCount,
+            errors: site.errorCount,
+            pages: site.pages.map(p => ({
+              url: p.url,
+              statusCode: p.statusCode,
+              title: p.title,
+              wordCount: p.wordCount,
+              h1Count: p.h1Count,
+              hasMetaDescription: !!p.metaDescription,
+              imagesMissingAlt: p.imagesMissingAlt,
+            })),
+            linkGraph: site.linkGraph,
           };
         } catch (e) {
           console.error('Crawl failed:', e);
@@ -1262,7 +1297,12 @@ export async function POST(request) {
 
       await notifyScanComplete(newScan.userId, { type: 'seo', url, score: newScan.score, findings: newScan.findings });
 
-      return NextResponse.json({ success: true, data: newScan });
+      // Full findings are persisted; the client only receives findings its
+      // plan tier unlocks (locked ones are redacted by filterFindingsByPlan).
+      return NextResponse.json({ success: true, data: {
+        ...newScan,
+        findings: filterFindingsByPlan(newScan.findings, userPlan),
+      } });
     }
 
     if (pathParts[0] === 'aeo-scan') {
@@ -1272,11 +1312,13 @@ export async function POST(request) {
       if (competitorUrl) await assertSafeUrl(competitorUrl);
 
       const sessionUser = getSessionUser(request);
+      const userPlan = sessionUser?.plan || 'free';
       if (sessionUser) {
         await assertScanLimit(sessionUser.id, sessionUser.plan || 'free');
         await assertSiteTrackingLimit(sessionUser.id, sessionUser.plan || 'free', url);
         if (competitorUrl) await assertFeatureAccess(sessionUser.plan || 'free', 'competitorScan');
         if (deepAnalysis)  await assertFeatureAccess(sessionUser.plan || 'free', 'deepAnalysis');
+        if (crawl)         await assertFeatureAccess(sessionUser.plan || 'free', 'multiPageCrawl');
       }
 
       const { runAeoScan } = await import('@/lib/scanners/aeoScanner');
@@ -1284,11 +1326,11 @@ export async function POST(request) {
 
       if (competitorUrl) {
         [scanResult, compResult] = await Promise.all([
-          runAeoScan(url),
-          runAeoScan(competitorUrl)
+          runAeoScan(url, { plan: userPlan }),
+          runAeoScan(competitorUrl, { plan: userPlan })
         ]);
       } else {
-        scanResult = await runAeoScan(url);
+        scanResult = await runAeoScan(url, { plan: userPlan });
       }
 
       let deepAnalysisResult = null;
@@ -1310,12 +1352,29 @@ export async function POST(request) {
 
       let crawlData = null;
       if (crawl) {
-        const { crawlSite } = await import('@/lib/scanners/shared/crawler');
+        const { runSiteAudit } = await import('@/lib/scanners/shared/siteAudit');
+        const { calculateScore } = await import('@/lib/scanners/shared/scoring');
         try {
-          const crawlRes = await crawlSite(url, { maxPages: 5 });
+          const site = await runSiteAudit(url, { maxPages: 8 });
+          // Merge the site-wide findings into the scan and re-score so the
+          // overall score reflects the whole site, not just the entry page.
+          scanResult.findings = [...scanResult.findings, ...site.findings];
+          const rescored = calculateScore(scanResult.findings);
+          scanResult.score = rescored.overall;
+          scanResult.categories = rescored.categories;
           crawlData = {
-            pagesCrawled: crawlRes.pages.length,
-            errors: crawlRes.errors.length
+            pagesCrawled: site.crawledCount,
+            errors: site.errorCount,
+            pages: site.pages.map(p => ({
+              url: p.url,
+              statusCode: p.statusCode,
+              title: p.title,
+              wordCount: p.wordCount,
+              h1Count: p.h1Count,
+              hasMetaDescription: !!p.metaDescription,
+              imagesMissingAlt: p.imagesMissingAlt,
+            })),
+            linkGraph: site.linkGraph,
           };
         } catch (e) {
           console.error('Crawl failed:', e);
@@ -1342,7 +1401,12 @@ export async function POST(request) {
 
       await notifyScanComplete(newScan.userId, { type: 'aeo', url, score: newScan.score, findings: newScan.findings });
 
-      return NextResponse.json({ success: true, data: newScan });
+      // Full findings are persisted; the client only receives findings its
+      // plan tier unlocks (locked ones are redacted by filterFindingsByPlan).
+      return NextResponse.json({ success: true, data: {
+        ...newScan,
+        findings: filterFindingsByPlan(newScan.findings, userPlan),
+      } });
     }
 
     if (pathParts[0] === 'geo-scan') {
@@ -1352,23 +1416,25 @@ export async function POST(request) {
       if (competitorUrl) await assertSafeUrl(competitorUrl);
 
       const sessionUser = getSessionUser(request);
+      const userPlan = sessionUser?.plan || 'free';
       if (sessionUser) {
         await assertScanLimit(sessionUser.id, sessionUser.plan || 'free');
         await assertSiteTrackingLimit(sessionUser.id, sessionUser.plan || 'free', url);
         if (competitorUrl) await assertFeatureAccess(sessionUser.plan || 'free', 'competitorScan');
         if (deepAnalysis)  await assertFeatureAccess(sessionUser.plan || 'free', 'deepAnalysis');
+        if (crawl)         await assertFeatureAccess(sessionUser.plan || 'free', 'multiPageCrawl');
       }
 
       const { runGeoScan } = await import('@/lib/scanners/geoScanner');
       let scanResult, compResult;
-      
+
       if (competitorUrl) {
         [scanResult, compResult] = await Promise.all([
-          runGeoScan(url),
-          runGeoScan(competitorUrl)
+          runGeoScan(url, { plan: userPlan }),
+          runGeoScan(competitorUrl, { plan: userPlan })
         ]);
       } else {
-        scanResult = await runGeoScan(url);
+        scanResult = await runGeoScan(url, { plan: userPlan });
       }
 
       let deepAnalysisResult = null;
@@ -1400,12 +1466,29 @@ export async function POST(request) {
 
       let crawlData = null;
       if (crawl) {
-        const { crawlSite } = await import('@/lib/scanners/shared/crawler');
+        const { runSiteAudit } = await import('@/lib/scanners/shared/siteAudit');
+        const { calculateScore } = await import('@/lib/scanners/shared/scoring');
         try {
-          const crawlRes = await crawlSite(url, { maxPages: 5 });
+          const site = await runSiteAudit(url, { maxPages: 8 });
+          // Merge the site-wide findings into the scan and re-score so the
+          // overall score reflects the whole site, not just the entry page.
+          scanResult.findings = [...scanResult.findings, ...site.findings];
+          const rescored = calculateScore(scanResult.findings);
+          scanResult.score = rescored.overall;
+          scanResult.categories = rescored.categories;
           crawlData = {
-            pagesCrawled: crawlRes.pages.length,
-            errors: crawlRes.errors.length
+            pagesCrawled: site.crawledCount,
+            errors: site.errorCount,
+            pages: site.pages.map(p => ({
+              url: p.url,
+              statusCode: p.statusCode,
+              title: p.title,
+              wordCount: p.wordCount,
+              h1Count: p.h1Count,
+              hasMetaDescription: !!p.metaDescription,
+              imagesMissingAlt: p.imagesMissingAlt,
+            })),
+            linkGraph: site.linkGraph,
           };
         } catch (e) {
           console.error('Crawl failed:', e);
@@ -1433,7 +1516,12 @@ export async function POST(request) {
 
       await notifyScanComplete(newScan.userId, { type: 'geo', url, score: newScan.score, findings: newScan.findings });
 
-      return NextResponse.json({ success: true, data: newScan });
+      // Full findings are persisted; the client only receives findings its
+      // plan tier unlocks (locked ones are redacted by filterFindingsByPlan).
+      return NextResponse.json({ success: true, data: {
+        ...newScan,
+        findings: filterFindingsByPlan(newScan.findings, userPlan),
+      } });
     }
 
     if (pathParts[0] === 'brand-visibility') {
