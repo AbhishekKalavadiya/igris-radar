@@ -604,3 +604,12 @@ Seed mock data (first run or reset):
 ```
 GET http://localhost:3000/api?path=seed-mock-data
 ```
+
+---
+
+## 17. Blog & Content Guidelines
+
+When generating or editing blog articles and content for the website:
+- **Dash usage:** Do NOT use 'em dashes' (—). Use 'en dashes' (–) ONLY when absolutely required (e.g., date ranges or clear parenthetical breaks). Otherwise, reword or use commas.
+- **Tone:** Give the writing a "human touch". Keep it conversational, relatable, and less robotic. Use analogies and speak directly to the reader's pain points.
+- **Data & First-Hand Experience:** Do not write thin, generic, AI-generated fluff (e.g., "What is AEO?"). Google's helpful-content system and AI engines reward first-hand experience. Your edge is the Igris Radar audit data. Put real screenshots, real scan outputs, and real numbers in every post (e.g., "Here is what our scanner found across XX sites").
