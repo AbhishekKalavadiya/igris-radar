@@ -197,7 +197,14 @@ export default function SeoAuditPage() {
           onSeverityChange={setSeverityFilter}
         />
         {visible.length === 0 ? (
-          <div className="text-muted-foreground text-center py-8">No checks in this tier for this scan.</div>
+          tier === 'agency' ? (
+            <div className="text-muted-foreground text-center py-8 space-y-1">
+              <p>Your Agency SEO insights — Search Intent Mapping, LSI Keyword Gaps and Semantic Coverage — are delivered in the <span className="text-scanner-aeo font-medium">AI Insights</span> tab.</p>
+              <p className="text-xs">Enable <span className="text-scanner-aeo">AI Deep Analysis</span> when you run a scan to generate them.</p>
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-center py-8">No checks in this tier for this scan.</div>
+          )
         ) : (
           visible.map((f) => <AuditFindingCard key={f.id} finding={f} />)
         )}
@@ -480,6 +487,22 @@ export default function SeoAuditPage() {
 
             {scanResult.deepAnalysis && (
               <TabsContent value="ai" className="m-0 space-y-6">
+                {scanResult.deepAnalysis.error ? (
+                  <Card className="border-destructive/30 bg-destructive/5">
+                    <CardHeader>
+                      <CardTitle className="text-destructive flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5" /> AI Analysis Unavailable
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground">{scanResult.deepAnalysis.error}</p>
+                      <p className="text-sm text-muted-foreground">
+                        The site checks above completed normally — only the AI deep-analysis step failed. Re-run the scan with <span className="text-scanner-aeo font-medium">AI Deep Analysis</span> enabled to try again.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                <>
                 <Card className="border-scanner-aeo/30 bg-scanner-aeo/5">
                   <CardHeader>
                     <CardTitle className="text-scanner-aeo flex items-center gap-2">
@@ -567,6 +590,8 @@ export default function SeoAuditPage() {
                       )}
                     </CardContent>
                   </Card>
+                )}
+                </>
                 )}
               </TabsContent>
             )}

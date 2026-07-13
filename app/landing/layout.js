@@ -3,6 +3,14 @@ import Footer from '@/components/landing/Footer';
 import JsonLd from '@/components/ui/JsonLd';
 import { buildMetadata, organizationJsonLd, webSiteJsonLd, personJsonLd, SITE_DESCRIPTION } from '@/lib/seo';
 
+// The landing segment (home, about, contact, legal, and every /features page)
+// reads no cookies/headers, so pin it to static generation. Pages are
+// prerendered at build and served from the CDN edge - this is the primary
+// lever for cutting Time to First Byte (TTFB) on marketing routes. ISR
+// rebuilds daily so the JSON-LD dateModified stays fresh.
+export const dynamic = 'force-static';
+export const revalidate = 86400;
+
 export const metadata = buildMetadata({
   title: 'Igris Radar: AI Search Visibility & Web Audit Platform',
   description: SITE_DESCRIPTION,

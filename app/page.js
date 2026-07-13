@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { redirect, permanentRedirect } from 'next/navigation';
 import { decodeSession } from '@/lib/auth/session';
 import { SESSION_COOKIE } from '@/lib/constants';
 
@@ -21,7 +21,10 @@ export default async function Home() {
   const token = cookies().get(SESSION_COOKIE)?.value;
   const session = decodeSession(token);
 
-  if (!session) redirect('/landing');
+  // Anonymous visitors and crawlers get a permanent (308) redirect so search
+  // engines consolidate "/" into the canonical "/landing" URL instead of
+  // indexing both as separate pages that share the same title.
+  if (!session) permanentRedirect('/landing');
 
   const [{ getCollection }, { COLLECTIONS }] = await Promise.all([
     import('@/lib/db'),

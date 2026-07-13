@@ -206,7 +206,14 @@ export default function GeoAuditPage() {
           onSeverityChange={setSeverityFilter}
         />
         {visible.length === 0 ? (
-          <div className="text-muted-foreground text-center py-8">No checks in this tier for this scan.</div>
+          tier === 'agency' ? (
+            <div className="text-muted-foreground text-center py-8 space-y-1">
+              <p>Your Agency GEO insights — Topical Authority depth, entity confidence and citation simulation — are delivered in the <span className="text-scanner-geo font-medium">AI Insights</span> tab.</p>
+              <p className="text-xs">Enable <span className="text-scanner-geo">AI Deep Analysis</span> when you run a scan to generate them.</p>
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-center py-8">No checks in this tier for this scan.</div>
+          )
         ) : (
           visible.map((f) => <AuditFindingCard key={f.id} finding={f} />)
         )}
@@ -502,7 +509,23 @@ export default function GeoAuditPage() {
 
             {scanResult.deepAnalysis && (
               <TabsContent value="ai" className="m-0">
-                <CitationSimulator analysis={scanResult.deepAnalysis} />
+                {scanResult.deepAnalysis.error ? (
+                  <Card className="border-destructive/30 bg-destructive/5">
+                    <CardHeader>
+                      <CardTitle className="text-destructive flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5" /> AI Analysis Unavailable
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-sm text-muted-foreground">{scanResult.deepAnalysis.error}</p>
+                      <p className="text-sm text-muted-foreground">
+                        The site checks above completed normally — only the AI deep-analysis step failed. Re-run the scan with <span className="text-scanner-geo font-medium">AI Deep Analysis</span> enabled to try again.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <CitationSimulator analysis={scanResult.deepAnalysis} />
+                )}
               </TabsContent>
             )}
 

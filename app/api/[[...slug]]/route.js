@@ -140,6 +140,46 @@ async function getAuditPrefs(sessionUser) {
   }
 }
 
+/**
+ * Shared Deep Analysis runner for the SEO/AEO/GEO scan handlers (DRY).
+ *
+ * Reuses the HTML the scan already fetched (no second request), and ALWAYS
+ * returns a describable result so the UI can react:
+ *   - null            → AI not requested, or no provider configured (tab hidden)
+ *   - { error: '...' } → requested but failed / page unavailable (tab shows a
+ *                        visible "AI analysis failed - retry" state)
+ *   - { ...insights }  → success
+ *
+ * @param {'seo'|'aeo'|'geo'} kind
+ * @param {boolean} requested - the scan's deepAnalysis flag
+ * @param {string|null} html  - HTML captured by the scan (scanResult.html)
+ * @param {string} url
+ * @param {{id: string}|null} sessionUser
+ * @param {string} [topic]    - GEO prompt-coverage topic (unused for seo/aeo)
+ */
+async function runDeepAnalysisFor(kind, requested, html, url, sessionUser) {
+  if (!requested) return null;
+  if (!(await hasAnyAiProvider())) return null;
+  if (!html) {
+    return { error: 'The page could not be fetched, so AI analysis was skipped. Re-run the scan.' };
+  }
+  const analyzers = await import('@/lib/scanners/shared/aiAnalyzer');
+  const fn = kind === 'aeo' ? analyzers.runDeepAeoAnalysis
+    : kind === 'geo' ? analyzers.runDeepGeoAnalysis
+    : analyzers.runDeepSeoAnalysis;
+  try {
+    const auditPrefs = await getAuditPrefs(sessionUser);
+    const result = await fn(html, url, auditPrefs);
+    // runDeep* already returns { error } on provider failure - keep it so the
+    // UI can surface it rather than hiding the tab.
+    if (result?.error) console.error(`[Deep Analysis:${kind}] failed:`, result.error);
+    return result;
+  } catch (e) {
+    console.error(`[Deep Analysis:${kind}] failed:`, e);
+    return { error: e.message || 'AI analysis failed. Please try again.' };
+  }
+}
+
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -1226,24 +1266,14 @@ export async function POST(request) {
         scanResult = await runSeoScan(url, { plan: userPlan });
       }
 
-      let deepAnalysisResult = null;
-      if (deepAnalysis && await hasAnyAiProvider()) {
-        const { fetchWithCheerio } = await import('@/lib/scanners/shared/fetcher');
-        const { runDeepSeoAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
-        try {
-          const auditPrefs = await getAuditPrefs(sessionUser);
-          const { html } = await fetchWithCheerio(url);
-          deepAnalysisResult = await runDeepSeoAnalysis(html, url, auditPrefs);
-          // A provider failure returns {error} - store null so the UI shows
-          // its "AI unavailable" notice instead of an empty insights panel.
-          if (deepAnalysisResult?.error) {
-            console.error('Deep Analysis failed:', deepAnalysisResult.error);
-            deepAnalysisResult = null;
-          }
-        } catch (e) {
-          console.error('Deep Analysis failed:', e);
-        }
-      }
+      // Reuse the exact HTML the scan already fetched (scanResult.html) instead
+      // of a second fetch - keeps AI insights consistent with the findings and
+      // avoids a second bot-challenge exposure. The {error} shape is preserved
+      // (not nulled) so the UI can show a visible "AI failed - retry" state
+      // instead of silently hiding the tab.
+      const deepAnalysisResult = await runDeepAnalysisFor(
+        'seo', deepAnalysis, scanResult.html, url, sessionUser
+      );
 
       let crawlData = null;
       if (crawl) {
@@ -1333,22 +1363,10 @@ export async function POST(request) {
         scanResult = await runAeoScan(url, { plan: userPlan });
       }
 
-      let deepAnalysisResult = null;
-      if (deepAnalysis && await hasAnyAiProvider()) {
-        const { fetchWithCheerio } = await import('@/lib/scanners/shared/fetcher');
-        const { runDeepAeoAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
-        try {
-          const auditPrefs = await getAuditPrefs(sessionUser);
-          const { html } = await fetchWithCheerio(url);
-          deepAnalysisResult = await runDeepAeoAnalysis(html, url, auditPrefs);
-          if (deepAnalysisResult?.error) {
-            console.error('Deep Analysis failed:', deepAnalysisResult.error);
-            deepAnalysisResult = null;
-          }
-        } catch (e) {
-          console.error('Deep Analysis failed:', e);
-        }
-      }
+      // Reuse the scan's HTML (see runDeepAnalysisFor / seo-scan for rationale).
+      const deepAnalysisResult = await runDeepAnalysisFor(
+        'aeo', deepAnalysis, scanResult.html, url, sessionUser
+      );
 
       let crawlData = null;
       if (crawl) {
@@ -1437,30 +1455,24 @@ export async function POST(request) {
         scanResult = await runGeoScan(url, { plan: userPlan });
       }
 
-      let deepAnalysisResult = null;
+      // Reuse the scan's HTML (see runDeepAnalysisFor / seo-scan for rationale).
+      const deepAnalysisResult = await runDeepAnalysisFor(
+        'geo', deepAnalysis, scanResult.html, url, sessionUser
+      );
+
+      // Prompt-coverage is a GEO-only extra; reuse the same HTML snapshot.
       let promptCoverage = null;
-      
-      if (deepAnalysis && await hasAnyAiProvider()) {
-        const { fetchWithCheerio } = await import('@/lib/scanners/shared/fetcher');
-        const { runDeepGeoAnalysis, runPromptCoverageAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
+      if (deepAnalysis && promptTopic && scanResult.html && await hasAnyAiProvider()) {
+        const { runPromptCoverageAnalysis } = await import('@/lib/scanners/shared/aiAnalyzer');
         try {
           const auditPrefs = await getAuditPrefs(sessionUser);
-          const { html } = await fetchWithCheerio(url);
-          deepAnalysisResult = await runDeepGeoAnalysis(html, url, auditPrefs);
-          if (deepAnalysisResult?.error) {
-            console.error('Deep Analysis failed:', deepAnalysisResult.error);
-            deepAnalysisResult = null;
-          }
-
-          if (promptTopic) {
-            promptCoverage = await runPromptCoverageAnalysis(html, url, promptTopic, auditPrefs);
-            if (promptCoverage?.error) {
-              console.error('Prompt coverage failed:', promptCoverage.error);
-              promptCoverage = null;
-            }
+          promptCoverage = await runPromptCoverageAnalysis(scanResult.html, url, promptTopic, auditPrefs);
+          if (promptCoverage?.error) {
+            console.error('Prompt coverage failed:', promptCoverage.error);
+            promptCoverage = null;
           }
         } catch (e) {
-          console.error('Deep Analysis failed:', e);
+          console.error('Prompt coverage failed:', e);
         }
       }
 
