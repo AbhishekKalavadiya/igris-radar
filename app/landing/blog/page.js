@@ -12,6 +12,14 @@ export const metadata = {
 
 const POSTS = [
   {
+    slug: 'why-is-my-new-website-not-getting-traffic',
+    title: 'Why Is My New Website Not Getting Any Organic Traffic?',
+    excerpt: "Frustrated that your new domain isn't ranking? Learn the top 5 reasons new websites fail to get organic traffic and the exact 7-day checklist to fix it.",
+    date: 'July 15, 2026',
+    readTime: '8 min read',
+    category: 'Guide'
+  },
+  {
     slug: 'what-is-answer-engine-optimization',
     title: "What Is AEO? Here's What Our Scanner Found Across 500 Sites",
     excerpt: "Everything you need to know about AEO, why it matters in the age of AI search, and how to get started.",
