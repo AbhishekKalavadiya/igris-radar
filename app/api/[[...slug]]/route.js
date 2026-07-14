@@ -1183,6 +1183,12 @@ export async function POST(request) {
       await assertSafeUrl(url); // SSRF guard (C-I6)
 
       const sessionUser = getSessionUser(request);
+      if (!sessionUser) {
+        const ip = clientIp(request);
+        if (isRateLimited(ip, 'landing_scan')) {
+          return NextResponse.json({ success: false, error: 'Free scan limit reached. Please sign up for more scans.' }, { status: 429 });
+        }
+      }
       // Onboarding scans are exempt from limits and not counted (mirrors seo-scan).
       let isOnboardingScan = false;
       if (sessionUser && body.isOnboarding) {
@@ -1237,6 +1243,12 @@ export async function POST(request) {
       if (competitorUrl) await assertSafeUrl(competitorUrl);
 
       const sessionUser = getSessionUser(request);
+      if (!sessionUser) {
+        const ip = clientIp(request);
+        if (isRateLimited(ip, 'landing_scan')) {
+          return NextResponse.json({ success: false, error: 'Free scan limit reached. Please sign up for more scans.' }, { status: 429 });
+        }
+      }
       // The onboarding bypass is only valid for users who haven't completed
       // onboarding yet - otherwise the flag could be replayed to skip limits.
       let isOnboardingScan = false;
@@ -1342,6 +1354,12 @@ export async function POST(request) {
       if (competitorUrl) await assertSafeUrl(competitorUrl);
 
       const sessionUser = getSessionUser(request);
+      if (!sessionUser) {
+        const ip = clientIp(request);
+        if (isRateLimited(ip, 'landing_scan')) {
+          return NextResponse.json({ success: false, error: 'Free scan limit reached. Please sign up for more scans.' }, { status: 429 });
+        }
+      }
       const userPlan = sessionUser?.plan || 'free';
       if (sessionUser) {
         await assertScanLimit(sessionUser.id, sessionUser.plan || 'free');
@@ -1434,6 +1452,12 @@ export async function POST(request) {
       if (competitorUrl) await assertSafeUrl(competitorUrl);
 
       const sessionUser = getSessionUser(request);
+      if (!sessionUser) {
+        const ip = clientIp(request);
+        if (isRateLimited(ip, 'landing_scan')) {
+          return NextResponse.json({ success: false, error: 'Free scan limit reached. Please sign up for more scans.' }, { status: 429 });
+        }
+      }
       const userPlan = sessionUser?.plan || 'free';
       if (sessionUser) {
         await assertScanLimit(sessionUser.id, sessionUser.plan || 'free');

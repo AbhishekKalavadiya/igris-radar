@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Globe, Loader2, Sparkles, Building, Target, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import Link from 'next/link';
+import { Globe, Loader2, Sparkles, Building, Target, CheckCircle2, XCircle, HelpCircle, Info, Lightbulb, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import UpgradePrompt from '@/components/ui/UpgradePrompt';
@@ -158,6 +160,21 @@ export default function BrandVisibilityPage() {
         description="Track if your brand is being recommended by major AI engines across specific search prompts."
       />
 
+      <Alert className="bg-primary/5 border-primary/20">
+        <Info className="h-5 w-5 text-primary" />
+        <AlertTitle className="text-primary font-semibold text-base">How Brand Visibility Works</AlertTitle>
+        <AlertDescription className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <p className="mb-2 text-foreground/90">
+            Modern search is evolving into AI conversations (Generative Engine Optimization or GEO). When potential customers ask AI platforms for recommendations, does your brand show up?
+          </p>
+          <ul className="list-disc pl-5 space-y-1 text-foreground/80">
+            <li><strong>Target Prompts:</strong> Think like your customers. What questions would they ask an AI? (e.g., &quot;What are the best CRMs for startups?&quot;)</li>
+            <li><strong>AI Engines:</strong> We send these exact prompts to models like ChatGPT or Claude in real-time.</li>
+            <li><strong>Mention Matrix:</strong> We analyze the AI&apos;s response to see if they explicitly recommend your brand.</li>
+          </ul>
+        </AlertDescription>
+      </Alert>
+
       {upgradeInfo && (
         <UpgradePrompt currentPlan={upgradeInfo.currentPlan} reason={upgradeInfo.reason} />
       )}
@@ -195,7 +212,12 @@ export default function BrandVisibilityPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Target Prompts (One per line)</label>
+              <label className="text-sm font-medium mb-2 block">
+                Target Prompts (One per line)
+                <span className="block text-xs text-muted-foreground font-normal mt-0.5">
+                  Questions your potential customers might ask an AI.
+                </span>
+              </label>
               <Textarea
                 placeholder="What is the best SEO tool?"
                 className="font-mono text-sm min-h-[100px]"
@@ -207,7 +229,12 @@ export default function BrandVisibilityPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-3 block">LLM Providers to Query</label>
+              <label className="text-sm font-medium mb-3 block">
+                AI Engines to Query
+                <span className="block text-xs text-muted-foreground font-normal mt-0.5">
+                  Select which AI models you want to test your prompts against.
+                </span>
+              </label>
               <div className="flex flex-wrap gap-4">
                 {LLM_PROVIDERS.map((provider) => {
                   // Until availability loads, only block the known-unavailable case
@@ -392,6 +419,43 @@ export default function BrandVisibilityPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Actionable Insights */}
+          <Card className="glass-card animate-slide-up delay-300 border-primary/20 bg-primary/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2 text-primary">
+                <Lightbulb className="h-5 w-5" />
+                Improve Your Brand Visibility
+              </CardTitle>
+              <CardDescription>
+                If your brand wasn&apos;t recommended by AI engines, it means your &quot;Brand Entity&quot; isn&apos;t strong enough for those specific search queries.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-foreground/90">
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-foreground">Actionable Next Steps:</h4>
+                  <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+                    <li><strong>Consistent Messaging:</strong> Ensure you use the exact same phrasing to describe your product across your website, social media, and PR.</li>
+                    <li><strong>Digital PR:</strong> AI models heavily weight high-authority domains. Aim for citations on major news outlets, Wikipedia, or top-tier industry blogs.</li>
+                    <li><strong>Schema Markup:</strong> Implement robust <code className="text-xs bg-muted/50 px-1 py-0.5 rounded border border-border/50">Organization</code> schema on your site so crawlers explicitly understand your entity.</li>
+                    <li><strong>Co-occurrence:</strong> Create high-quality content that naturally pairs your brand name alongside the target keywords you want to rank for.</li>
+                  </ul>
+                </div>
+                <div className="flex flex-col justify-center items-start md:items-end space-y-4 bg-background/50 p-6 rounded-xl border border-primary/10">
+                  <p className="text-muted-foreground md:text-right">
+                    Want a deeper dive into how Generative Engine Optimization (GEO) works and how LLMs learn about your brand?
+                  </p>
+                  <Button asChild variant="default" className="w-full md:w-auto group">
+                    <Link href="/learn/brand-entity-recognition-in-generative-ai">
+                      Read the GEO Guide
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </PageTransition>

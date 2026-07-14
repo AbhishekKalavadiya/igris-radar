@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Reveal, Stagger, MotionItem, AnimatedNumber } from '@/components/ui/motion';
 import { NAV_PLATFORM, AI_ENGINES, HOW_IT_WORKS, SHOW_AUTH_CTAS } from '@/lib/landingContent';
 import FeatureFaqAccordion from '@/components/landing/FeatureFaqAccordion';
+import FreeScanner from '@/components/landing/FreeScanner';
 import JsonLd from '@/components/ui/JsonLd';
 import { faqPageJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd, howToJsonLd, SITE_PUBLISHED, FOUNDER } from '@/lib/seo';
 
@@ -79,63 +80,6 @@ function RotatingEngines() {
   );
 }
 
-/** Static product mockup: a stylized scan report card. */
-function ReportMockup() {
-  const rows = [
-    { name: 'Content-Security-Policy', status: 'fail', sev: 'High' },
-    { name: 'GPTBot crawler access', status: 'pass', sev: null },
-    { name: 'FAQ schema (JSON-LD)', status: 'fail', sev: 'Medium' },
-    { name: 'Largest Contentful Paint', status: 'pass', sev: null },
-    { name: 'Direct answer paragraphs', status: 'fail', sev: 'Medium' },
-  ];
-  return (
-    <div className="rounded-2xl border border-border bg-card shadow-lg overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted/60">
-        <div className="flex gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
-          <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
-          <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
-        </div>
-        <span className="text-xs font-mono text-muted-foreground ml-2">igris-radar :: audit report</span>
-      </div>
-      <div className="p-5 grid sm:grid-cols-[auto_1fr] gap-6 items-center">
-        <div className="flex flex-col items-center justify-center mx-auto">
-          <div className="relative h-28 w-28 rounded-full flex items-center justify-center">
-            <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 112 112">
-              <circle cx="56" cy="56" r="52" fill="none" stroke="currentColor" strokeWidth="8" className="text-primary/15" />
-              <circle 
-                cx="56" cy="56" r="52" fill="none" stroke="currentColor" strokeWidth="8" 
-                className="text-primary" 
-                strokeDasharray={2 * Math.PI * 52} 
-                strokeDashoffset={(2 * Math.PI * 52) * (1 - 0.72)} 
-                strokeLinecap="round" 
-              />
-            </svg>
-            <div className="text-3xl font-bold tabular-nums text-primary"><AnimatedNumber value={72} /></div>
-          </div>
-          <span className="text-xs text-muted-foreground mt-2 font-semibold uppercase tracking-wider">Overall score</span>
-        </div>
-        <div className="space-y-2">
-          {rows.map((row) => (
-            <div key={row.name} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
-              <div className="flex items-center gap-2 min-w-0">
-                {row.status === 'pass'
-                  ? <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-                  : <XCircle className="h-4 w-4 text-destructive shrink-0" />}
-                <span className="text-sm font-medium truncate">{row.name}</span>
-              </div>
-              {row.sev && (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-severity-high/10 border border-severity-high/30 text-foreground shrink-0">
-                  {row.sev}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function LandingPage() {
   return (
@@ -187,7 +131,7 @@ export default function LandingPage() {
             )}
           </Reveal>
           <Reveal delay={0.34} className="mt-14">
-            <ReportMockup />
+            <FreeScanner />
           </Reveal>
         </div>
 
