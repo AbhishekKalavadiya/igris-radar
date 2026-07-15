@@ -194,6 +194,52 @@ export async function GET(request) {
       return NextResponse.json({ status: 'healthy', db: 'connected' });
     }
 
+    // Admin Dashboard: Users List
+    if (pathParts[0] === 'admin' && pathParts[1] === 'users') {
+      if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      
+      const col = await getCollection(COLLECTIONS.USERS);
+      const users = await col.find({}, { projection: { passwordHash: 0, resetTokenHash: 0, resetTokenExpires: 0 } }).sort({ createdAt: -1 }).toArray();
+      
+      const [sec, seo, aeo, geo, perf, brand] = await Promise.all([
+        getCollection(COLLECTIONS.SECURITY_SCANS),
+        getCollection(COLLECTIONS.SEO_SCANS),
+        getCollection(COLLECTIONS.AEO_SCANS),
+        getCollection(COLLECTIONS.GEO_SCANS),
+        getCollection(COLLECTIONS.PERFORMANCE_SCANS),
+        getCollection(COLLECTIONS.BRAND_VISIBILITY),
+      ]);
+
+      const getCounts = async (collection) => {
+        const counts = await collection.aggregate([{ $group: { _id: "$userId", count: { $sum: 1 } } }]).toArray();
+        return counts.reduce((acc, curr) => { acc[curr._id] = curr.count; return acc; }, {});
+      };
+
+      const [secC, seoC, aeoC, geoC, perfC, brandC] = await Promise.all([
+        getCounts(sec), getCounts(seo), getCounts(aeo), getCounts(geo), getCounts(perf), getCounts(brand)
+      ]);
+
+      const usersWithStats = users.map(u => ({
+        ...u,
+        totalScans: (secC[u.id]||0) + (seoC[u.id]||0) + (aeoC[u.id]||0) + (geoC[u.id]||0) + (perfC[u.id]||0) + (brandC[u.id]||0)
+      }));
+
+      return NextResponse.json({ success: true, data: usersWithStats });
+    }
+
+    // Admin Dashboard: User Logs
+    if (pathParts[0] === 'admin' && pathParts[1] === 'user-logs') {
+      if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      
+      const userId = searchParams.get('userId');
+      if (!userId) return NextResponse.json({ success: false, error: 'Missing userId' }, { status: 400 });
+
+      const auditCol = await getCollection(COLLECTIONS.AUDIT_LOGS);
+      const logs = await auditCol.find({ userId }).sort({ createdAt: -1 }).limit(100).toArray();
+
+      return NextResponse.json({ success: true, data: logs });
+    }
+
     // Get current user session
     if (pathParts[0] === 'auth' && pathParts[1] === 'me') {
       const sessionUser = getSessionUser(request);
