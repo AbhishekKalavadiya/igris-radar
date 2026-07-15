@@ -199,7 +199,8 @@ export async function GET(request) {
       if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
       
       const col = await getCollection(COLLECTIONS.USERS);
-      const users = await col.find({}, { projection: { passwordHash: 0, resetTokenHash: 0, resetTokenExpires: 0 } }).sort({ createdAt: -1 }).toArray();
+      // Exclude soft-deleted/archived users
+      const users = await col.find({ isDeleted: { $ne: true } }, { projection: { passwordHash: 0, resetTokenHash: 0, resetTokenExpires: 0 } }).sort({ createdAt: -1 }).toArray();
       
       const [sec, seo, aeo, geo, perf, brand] = await Promise.all([
         getCollection(COLLECTIONS.SECURITY_SCANS),
@@ -215,13 +216,20 @@ export async function GET(request) {
         return counts.reduce((acc, curr) => { acc[curr._id] = curr.count; return acc; }, {});
       };
 
+      const compCol = await getCollection(COLLECTIONS.COMPANIES);
+      const userDomains = await compCol.aggregate([
+        { $group: { _id: "$userId", domains: { $addToSet: "$domain" } } }
+      ]).toArray();
+      const domainsMap = userDomains.reduce((acc, curr) => { acc[curr._id] = curr.domains; return acc; }, {});
+
       const [secC, seoC, aeoC, geoC, perfC, brandC] = await Promise.all([
         getCounts(sec), getCounts(seo), getCounts(aeo), getCounts(geo), getCounts(perf), getCounts(brand)
       ]);
 
       const usersWithStats = users.map(u => ({
         ...u,
-        totalScans: (secC[u.id]||0) + (seoC[u.id]||0) + (aeoC[u.id]||0) + (geoC[u.id]||0) + (perfC[u.id]||0) + (brandC[u.id]||0)
+        totalScans: (secC[u.id]||0) + (seoC[u.id]||0) + (aeoC[u.id]||0) + (geoC[u.id]||0) + (perfC[u.id]||0) + (brandC[u.id]||0),
+        companies: domainsMap[u.id] || []
       }));
 
       return NextResponse.json({ success: true, data: usersWithStats });
@@ -256,7 +264,7 @@ export async function GET(request) {
       }
       const col = await getCollection(COLLECTIONS.USERS);
       const user = await col.findOne({ id: sessionUser.id }, { projection: { passwordHash: 0, resetTokenHash: 0, resetTokenExpires: 0 } });
-      if (!user) {
+      if (!user || user.isDeleted) {
         const response = NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
         response.headers.set('Set-Cookie', clearSessionCookie());
         return response;
@@ -1020,7 +1028,7 @@ export async function POST(request) {
 
       const validPassword = user ? await verifyPassword(password, user.passwordHash) : false;
 
-      if (!user || !validPassword) {
+      if (!user || user.isDeleted || !validPassword) {
         recordFailedLogin(email, ip);
         await audit({ action: AUDIT_ACTIONS.LOGIN_FAILURE, userId: user?.id || null, ip, metadata: { email } });
         // Uniform message - do not reveal whether the email exists (A9).
@@ -1985,6 +1993,22 @@ export async function DELETE(request) {
 
       if (result.deletedCount === 0) {
         return NextResponse.json({ success: false, error: 'Audit not found' }, { status: 404 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    // Admin: Soft delete user
+    if (pathParts[0] === 'admin' && pathParts[1] === 'users' && pathParts[2]) {
+      if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      
+      const col = await getCollection(COLLECTIONS.USERS);
+      const result = await col.updateOne(
+        { id: pathParts[2] },
+        { $set: { isDeleted: true, deletedAt: new Date() } }
+      );
+      
+      if (result.matchedCount === 0) {
+        return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
       }
       return NextResponse.json({ success: true });
     }

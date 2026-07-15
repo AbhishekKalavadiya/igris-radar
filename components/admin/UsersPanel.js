@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, User, Activity, Search, Calendar, Target, ShieldAlert } from 'lucide-react';
+import { Loader2, User, Activity, Search, Calendar, Target, ShieldAlert, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,6 +28,11 @@ export default function UsersPanel() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [userLogs, setUserLogs] = useState([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  
+  // Delete user state
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,6 +69,26 @@ export default function UsersPanel() {
       toast({ title: 'Failed to load logs', variant: 'destructive' });
     } finally {
       setLogsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api?path=admin/users/${userToDelete.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: 'User deleted and archived' });
+        setUsers(users.filter(u => u.id !== userToDelete.id));
+        setUserToDelete(null);
+      } else {
+        toast({ title: 'Failed to delete user', description: data.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error deleting user', variant: 'destructive' });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -192,14 +219,43 @@ export default function UsersPanel() {
                           {user.plan || 'free'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-medium">{user.totalScans || 0}</td>
+                      <td className="px-4 py-3 font-medium">
+                        <div className="flex items-center gap-2">
+                          <span>{user.totalScans || 0}</span>
+                          {user.companies && user.companies.length > 0 && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-6 px-2 text-xs py-0">
+                                  View list
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-64 p-4 text-sm shadow-xl" align="start">
+                                <h4 className="font-semibold mb-2">Scanned Companies</h4>
+                                <ul className="space-y-1.5 max-h-[200px] overflow-y-auto">
+                                  {user.companies.map((domain, i) => (
+                                    <li key={i} className="text-muted-foreground truncate flex items-center gap-2">
+                                      <Target className="h-3 w-3 shrink-0" />
+                                      {domain}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button variant="ghost" size="sm" onClick={() => openUserLogs(user)}>
-                          View Logs
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => openUserLogs(user)}>
+                            View Logs
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => setUserToDelete(user)} className="text-red-500 hover:text-red-600 hover:bg-red-500/10">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -260,6 +316,25 @@ export default function UsersPanel() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Confirmation */}
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently revoke access for <b>{userToDelete?.email}</b> and remove them from the active directory. Their account data will be archived in the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); handleDeleteUser(); }} className="bg-red-500 hover:bg-red-600 focus:ring-red-500 text-white">
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Archive User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
