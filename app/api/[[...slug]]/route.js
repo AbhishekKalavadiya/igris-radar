@@ -243,7 +243,8 @@ export async function GET(request) {
       if (!userId) return NextResponse.json({ success: false, error: 'Missing userId' }, { status: 400 });
 
       const auditCol = await getCollection(COLLECTIONS.AUDIT_LOGS);
-      const logs = await auditCol.find({ userId }).sort({ createdAt: -1 }).limit(100).toArray();
+      // Explicitly cast to string to prevent NoSQL injection warnings from Semgrep
+      const logs = await auditCol.find({ userId: String(userId) }).sort({ createdAt: -1 }).limit(100).toArray();
 
       return NextResponse.json({ success: true, data: logs });
     }
@@ -2003,7 +2004,7 @@ export async function DELETE(request) {
       
       const col = await getCollection(COLLECTIONS.USERS);
       const result = await col.updateOne(
-        { id: pathParts[2] },
+        { id: String(pathParts[2]) },
         { $set: { isDeleted: true, deletedAt: new Date() } }
       );
       
