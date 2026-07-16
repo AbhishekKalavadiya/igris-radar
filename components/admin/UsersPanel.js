@@ -230,7 +230,7 @@ export default function UsersPanel() {
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-64 p-4 text-sm shadow-xl" align="start">
-                                <h4 className="font-semibold mb-2">Scanned Companies</h4>
+                                <h4 className="font-semibold mb-2">Tracked Domains</h4>
                                 <ul className="space-y-1.5 max-h-[200px] overflow-y-auto">
                                   {user.companies.map((domain, i) => (
                                     <li key={i} className="text-muted-foreground truncate flex items-center gap-2">
