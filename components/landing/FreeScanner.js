@@ -104,14 +104,14 @@ export default function FreeScanner() {
                   type="button"
                   disabled={isScanning}
                   onClick={() => setScanType(type.id)}
-                  className={`flex items-center justify-center gap-2 px-5 h-full rounded-xl text-sm font-semibold transition-all ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 h-full rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                     isSelected 
                       ? 'bg-background shadow-sm text-primary ring-1 ring-border' 
                       : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                   }`}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="hidden sm:inline">{type.label}</span>
+                  <Icon className="h-4 w-4 sm:h-4 sm:w-4 shrink-0" />
+                  <span>{type.label}</span>
                 </button>
               );
             })}
