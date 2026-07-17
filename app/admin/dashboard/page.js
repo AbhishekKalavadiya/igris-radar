@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
           </TabsList>
         </Tabs>
 
-        {section === 'users' && <UsersPanel />}
+        {section === 'users' && <UsersPanel plansMap={plansMap} />}
 
         {section === 'keys' && <ApiKeysPanel />}
 

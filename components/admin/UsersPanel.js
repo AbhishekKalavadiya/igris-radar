@@ -19,7 +19,7 @@ const PLAN_COLORS = {
   enterprise: '#f59e0b'
 };
 
-export default function UsersPanel() {
+export default function UsersPanel({ plansMap = {} }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -221,7 +221,9 @@ export default function UsersPanel() {
                       </td>
                       <td className="px-4 py-3 font-medium">
                         <div className="flex items-center gap-2">
-                          <span>{user.totalScans || 0}</span>
+                          <span>
+                            {user.totalScans || 0} / {plansMap[user.plan || 'free']?.scansPerMonth === null ? '∞' : (plansMap[user.plan || 'free']?.scansPerMonth ?? '?')}
+                          </span>
                           {user.companies && user.companies.length > 0 && (
                             <Popover>
                               <PopoverTrigger asChild>
