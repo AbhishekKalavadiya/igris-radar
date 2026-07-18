@@ -154,6 +154,15 @@ export default function AuditFindingCard({ finding }) {
                   {PLAN_LABELS[finding.tier] || finding.tier}
                 </Badge>
               )}
+              {finding.approximate && (
+                <Badge 
+                  variant="outline" 
+                  className="text-[10px] py-0 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 cursor-help"
+                  title="⚠️ Estimated — This data is approximate via public sources and may differ from actual store metrics."
+                >
+                  Estimated
+                </Badge>
+              )}
               {hasMoreInfo && (
                 <div className="ml-auto flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors">
                   {isExpanded ? 'Hide details' : 'More information'}

@@ -87,6 +87,7 @@ module.exports = {
     				seo:      'hsl(var(--accent-seo))',
     				aeo:      'hsl(var(--accent-aeo))',
     				geo:      'hsl(var(--accent-geo))',
+    				aso:      'hsl(var(--accent-aso))',
     				brand:    'hsl(var(--accent-brand))',
     				health:   'hsl(var(--accent-health))',
     			},

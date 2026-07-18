@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,12 +25,12 @@ import { faqPageJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd, howToJsonLd
 const PLANS = [
   {
     name: 'Free', price: '$0', period: 'forever', highlight: false,
-    features: ['10 scans / month', '2 tracked sites', 'Unlimited team members', 'All 6 audit types', 'Severity-ranked findings', 'AI-ready fix prompts'],
+    features: ['10 scans / month', '2 tracked sites', 'Unlimited team members', '6 web audit types', 'Severity-ranked findings', 'AI-ready fix prompts'],
     cta: 'Start free',
   },
   {
     name: 'Starter', price: '$5', period: '/month', highlight: false,
-    features: ['25 scans / month', '5 tracked sites', 'Unlimited team members', 'Scan history & trends', 'Everything in Free'],
+    features: ['25 scans / month', '5 tracked sites', 'Unlimited team members', 'ASO Audit included', 'Scan history & trends', 'Everything in Free'],
     cta: 'Start with Starter',
   },
   {
@@ -47,12 +47,12 @@ const PLANS = [
 ];
 
 const HOME_FAQS = [
-  { q: 'What is Igris Radar?', a: 'Igris Radar is an AI search visibility and web audit platform. It runs six audits from one URL: security, SEO, AEO, GEO, brand visibility, and site health. Every audit gives you severity-ranked findings and AI-ready fix prompts.' },
+  { q: 'What is Igris Radar?', a: 'Igris Radar is an AI search visibility and web audit platform. It runs seven purpose-built audits: security, SEO, AEO, GEO, ASO, brand visibility, and site health. Every audit gives you severity-ranked findings and AI-ready fix prompts.' },
   { q: 'What is AI search visibility?', a: 'AI search visibility means how often AI assistants like ChatGPT and Perplexity mention your brand. We measure it two ways. First, audits score whether your site is easy for AI to cite. Second, live brand tracking asks the real engines your exact prompts and checks the answers.' },
   { q: 'Do I need to install anything on my site?', a: 'No. Every audit runs from the outside, exactly the way crawlers and attackers see your site. Enter a URL and results arrive in seconds to minutes depending on the audit.' },
   { q: 'What makes the fix workflow different?', a: 'Every failed check ships with a plain-language explanation and an agent-native fix prompt. That is a ready-to-paste instruction for your AI coding assistant, with the full context of the finding built in. You go from "we have an issue" straight to a merged fix.' },
   { q: 'Can I compare my site against competitors?', a: 'Yes. Point SEO, AEO, or GEO audits at a competitor\'s URL. We run the same checks on both sites and show a gap analysis by category. Brand visibility tracking also shows whether AI engines recommend you or them.' },
-  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across all six audit types, no credit card required. Starter is $5/month for 25 scans and 5 tracked sites. Pro is $20/month and adds AI deep analysis. Agency is $399/month for unlimited scanning. Enterprise plans are not offered yet.' },
+  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across six web audit types, no credit card required. Starter is $5/month for 25 scans, 5 tracked sites, and unlocks ASO auditing. Pro is $20/month and adds AI deep analysis. Agency is $100/month for unlimited scanning. Enterprise plans are not offered yet.' },
 ];
 
 /** Rotating AI engine name in the hero headline. */
@@ -97,7 +97,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-14 text-center relative">
           <Reveal>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/25 bg-primary/5 text-primary text-xs font-semibold uppercase tracking-wider mb-7">
-              <Sparkles className="h-3.5 w-3.5" /> SEO · AEO · GEO in one platform
+              <Sparkles className="h-3.5 w-3.5" /> SEO · AEO · GEO · ASO in one platform
             </div>
           </Reveal>
           <Reveal delay={0.08}>
@@ -131,7 +131,9 @@ export default function LandingPage() {
             )}
           </Reveal>
           <Reveal delay={0.34} className="mt-14">
-            <FreeScanner />
+            <Suspense fallback={null}>
+              <FreeScanner />
+            </Suspense>
           </Reveal>
         </div>
 
@@ -233,7 +235,7 @@ export default function LandingPage() {
           </Reveal>
           <Stagger className="grid grid-cols-2 gap-4">
             {[
-              { value: 6, suffix: '', label: 'audit engines: security, SEO, AEO, GEO, brand, health' },
+              { value: 7, suffix: '', label: 'audit engines: security, SEO, AEO, GEO, ASO, brand, health' },
               { value: 150, suffix: '+', label: 'individual checks across a full platform run' },
               { value: 4, suffix: '', label: 'AI engines queried live for brand tracking' },
               { value: 100, suffix: '', label: 'point score per audit, tracked over time' },
@@ -255,22 +257,23 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
         <Reveal className="text-center max-w-2xl mx-auto mb-10">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            SEO, AEO, GEO - what&apos;s the difference?
+            SEO, AEO, GEO, ASO &mdash; what&apos;s the difference?
           </h2>
           <p className="text-muted-foreground mt-4 text-lg">
-            SEO earns rankings, AEO earns the extracted answer, and GEO earns the citation.
-            They reward different signals, so Igris Radar audits and scores each one separately.
+            SEO earns web rankings, AEO earns the extracted answer, GEO earns the AI citation,
+            and ASO earns the App Store install. Igris Radar audits and scores each one separately.
           </p>
         </Reveal>
         <Reveal>
           <div className="rounded-xl border border-border bg-card shadow-sm overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse min-w-[640px]">
+            <table className="w-full text-sm text-left border-collapse min-w-[720px]">
               <thead>
                 <tr className="border-b border-border">
                   <th scope="col" className="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground"></th>
                   <th scope="col" className="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-foreground">SEO</th>
                   <th scope="col" className="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-foreground">AEO</th>
                   <th scope="col" className="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-foreground">GEO</th>
+                  <th scope="col" className="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-foreground">ASO</th>
                 </tr>
               </thead>
               <tbody>
@@ -279,24 +282,28 @@ export default function LandingPage() {
                   <td className="px-5 py-4 text-muted-foreground">Ranking on results pages</td>
                   <td className="px-5 py-4 text-muted-foreground">Being the extracted answer</td>
                   <td className="px-5 py-4 text-muted-foreground">Being the cited authority</td>
+                  <td className="px-5 py-4 text-muted-foreground">App Store &amp; Play Store rankings</td>
                 </tr>
                 <tr className="border-b border-border">
                   <th scope="row" className="px-5 py-4 font-semibold whitespace-nowrap">Where you win</th>
                   <td className="px-5 py-4 text-muted-foreground">Google &amp; Bing search results</td>
                   <td className="px-5 py-4 text-muted-foreground">ChatGPT &amp; Perplexity answers</td>
                   <td className="px-5 py-4 text-muted-foreground">AI Overviews &amp; generative responses</td>
+                  <td className="px-5 py-4 text-muted-foreground">iOS App Store &amp; Google Play</td>
                 </tr>
                 <tr className="border-b border-border">
                   <th scope="row" className="px-5 py-4 font-semibold whitespace-nowrap">Core signals</th>
                   <td className="px-5 py-4 text-muted-foreground">Crawlability, on-page, links</td>
                   <td className="px-5 py-4 text-muted-foreground">AI crawler access, answer-shaped content, llms.txt</td>
                   <td className="px-5 py-4 text-muted-foreground">Entity authority, factual density, freshness</td>
+                  <td className="px-5 py-4 text-muted-foreground">Metadata keywords, visual assets, ratings</td>
                 </tr>
                 <tr>
                   <th scope="row" className="px-5 py-4 font-semibold whitespace-nowrap">Success metric</th>
                   <td className="px-5 py-4 text-muted-foreground">Rankings &amp; organic clicks</td>
                   <td className="px-5 py-4 text-muted-foreground">Answer inclusion &amp; citations</td>
                   <td className="px-5 py-4 text-muted-foreground">Brand mentions &amp; recommendations</td>
+                  <td className="px-5 py-4 text-muted-foreground">Installs &amp; category chart position</td>
                 </tr>
               </tbody>
             </table>
@@ -312,10 +319,10 @@ export default function LandingPage() {
               What does Igris Radar actually audit?
             </h3>
             <p className="mt-2 text-base text-foreground/90 leading-relaxed">
-              Six purpose-built engines: website security, SEO, AEO, GEO, live AI brand visibility,
+              Seven purpose-built engines: website security, SEO, AEO, GEO, ASO, live AI brand visibility,
               and site health. Each runs independently and returns its own 0–100 score.
             </p>
-            <h2 className="mt-8 text-3xl md:text-4xl font-bold tracking-tight">Six audits. One picture of your visibility.</h2>
+            <h2 className="mt-8 text-3xl md:text-4xl font-bold tracking-tight">Seven audits. One picture of your visibility.</h2>
             <p className="text-muted-foreground mt-4 text-lg">
               Each engine is purpose-built and independently scored. Run one, or run the full battery.
             </p>
@@ -330,8 +337,13 @@ export default function LandingPage() {
                       <div className={`inline-flex p-2.5 rounded-lg ${feature.bgSoft} mb-4`}>
                         <Icon className={`h-5 w-5 ${feature.accent}`} />
                       </div>
-                      <h3 className="text-lg font-bold flex items-center gap-1.5">
+                      <h3 className="text-lg font-bold flex items-center gap-1.5 flex-wrap">
                         {feature.title}
+                        {feature.planBadge && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                            {feature.planBadge}
+                          </span>
+                        )}
                         <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                       </h3>
                       <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{feature.description}</p>

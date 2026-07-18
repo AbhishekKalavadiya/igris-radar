@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Gauge,
   RotateCw,
+  Smartphone,
 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -177,8 +178,8 @@ export default function DashboardPage() {
       {/* Recent Scans */}
       <Card className="glass-card rounded-xl">
         <CardHeader>
-          <CardTitle className="text-lg">Recent SEO Scans</CardTitle>
-          <CardDescription>Your latest SEO visibility reports</CardDescription>
+          <CardTitle className="text-lg">Recent Audits</CardTitle>
+          <CardDescription>Your latest web and app visibility reports</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -186,18 +187,23 @@ export default function DashboardPage() {
           ) : stats?.recentScans?.length > 0 ? (
             <div className="space-y-3">
               {stats.recentScans.map((scan) => {
+                const isAso = !!scan.platform;
                 const issues = scan.findings?.filter(f => !f.passed)?.length || 0;
                 const scoreColor = scan.score >= 70 ? 'text-success' : scan.score >= 40 ? 'text-warning' : 'text-destructive';
+                const typeIcon = isAso ? <Smartphone className="h-5 w-5 text-scanner-aso" /> : <Search className="h-5 w-5 text-scanner-seo" />;
+                const typeBg = isAso ? 'bg-scanner-aso/10 border-scanner-aso/20' : 'bg-scanner-seo/10 border-scanner-seo/20';
+                const targetRoute = isAso ? '/aso-audit' : '/seo-audit';
+
                 return (
-                  <div key={scan.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-background/50 hover:bg-muted/50 hover:border-scanner-seo/40 transition-colors">
+                  <div key={scan.id} className={`flex items-center justify-between p-4 rounded-lg border border-border bg-background/50 hover:bg-muted/50 transition-colors hover:border-${isAso ? 'scanner-aso' : 'scanner-seo'}/40`}>
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-scanner-seo/10 border border-scanner-seo/20 shrink-0">
-                        <Search className="h-5 w-5 text-scanner-seo" />
+                      <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 border ${typeBg}`}>
+                        {typeIcon}
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-medium flex items-center gap-2 truncate">
-                          <span className="truncate font-mono text-sm">{scan.url}</span>
-                          <a href={scan.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground shrink-0" aria-label="Open site">
+                          <span className="truncate font-mono text-sm">{isAso ? scan.appName || scan.url : scan.url}</span>
+                          <a href={scan.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground shrink-0" aria-label="Open target">
                             <ExternalLink className="h-3 w-3" />
                           </a>
                         </h4>
@@ -220,16 +226,16 @@ export default function DashboardPage() {
                         size="icon"
                         title="Re-run this scan"
                         aria-label="Re-run this scan"
-                        onClick={() => router.push(`/seo-audit?url=${encodeURIComponent(scan.url)}&autorun=1`)}
+                        onClick={() => router.push(`${targetRoute}?url=${encodeURIComponent(scan.url)}&autorun=1`)}
                       >
                         <RotateCw className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Open in SEO Audit"
-                        aria-label="Open in SEO Audit"
-                        onClick={() => router.push(`/seo-audit?url=${encodeURIComponent(scan.url)}`)}
+                        title="Open in Audit"
+                        aria-label="Open in Audit"
+                        onClick={() => router.push(`${targetRoute}?url=${encodeURIComponent(scan.url)}`)}
                       >
                         <ArrowRight className="h-4 w-4" />
                       </Button>
@@ -242,7 +248,7 @@ export default function DashboardPage() {
             <EmptyState
               icon={Search}
               title="No scans yet"
-              description="Launch your first SEO scan using the quick input above."
+              description="Launch your first scan using the quick input above."
               action={<Button variant="outline" onClick={() => inputRef.current?.focus()}>Start a scan</Button>}
             />
           )}

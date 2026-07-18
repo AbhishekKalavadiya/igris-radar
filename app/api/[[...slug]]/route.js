@@ -207,6 +207,7 @@ export async function GET(request) {
         getCollection(COLLECTIONS.SEO_SCANS),
         getCollection(COLLECTIONS.AEO_SCANS),
         getCollection(COLLECTIONS.GEO_SCANS),
+        getCollection(COLLECTIONS.ASO_SCANS),
         getCollection(COLLECTIONS.PERFORMANCE_SCANS),
         getCollection(COLLECTIONS.BRAND_VISIBILITY),
       ]);
@@ -222,13 +223,13 @@ export async function GET(request) {
       ]).toArray();
       const domainsMap = userDomains.reduce((acc, curr) => { acc[curr._id] = curr.domains; return acc; }, {});
 
-      const [secC, seoC, aeoC, geoC, perfC, brandC] = await Promise.all([
-        getCounts(sec), getCounts(seo), getCounts(aeo), getCounts(geo), getCounts(perf), getCounts(brand)
+      const [secC, seoC, aeoC, geoC, asoC, perfC, brandC] = await Promise.all([
+        getCounts(sec), getCounts(seo), getCounts(aeo), getCounts(geo), getCounts(aso), getCounts(perf), getCounts(brand)
       ]);
 
       const usersWithStats = users.map(u => ({
         ...u,
-        totalScans: (secC[u.id]||0) + (seoC[u.id]||0) + (aeoC[u.id]||0) + (geoC[u.id]||0) + (perfC[u.id]||0) + (brandC[u.id]||0),
+        totalScans: (secC[u.id]||0) + (seoC[u.id]||0) + (aeoC[u.id]||0) + (geoC[u.id]||0) + (asoC[u.id]||0) + (perfC[u.id]||0) + (brandC[u.id]||0),
         companies: domainsMap[u.id] || []
       }));
 
@@ -470,6 +471,27 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: gatedScans });
     }
 
+    // ASO scans list / history
+    if (pathParts[0] === 'aso-scan') {
+      const isHistory = pathParts[1] === 'history';
+      const targetUrl = searchParams.get('url');
+      const sessionUser = getSessionUser(request);
+      
+      const filter = sessionUser ? { userId: sessionUser.id } : { userId: 'anonymous' };
+      if (isHistory && targetUrl) {
+        filter.url = targetUrl;
+      }
+      
+      const col = await getCollection(COLLECTIONS.ASO_SCANS);
+      const scans = await col.find(filter).sort({ createdAt: -1 }).limit(20).toArray();
+      const userPlan = sessionUser?.plan || 'free';
+      const gatedScans = scans.map(s => ({
+        ...s,
+        findings: filterFindingsByPlan(s.findings || [], userPlan),
+      }));
+      return NextResponse.json({ success: true, data: gatedScans });
+    }
+
     // Brand Visibility list / history
     if (pathParts[0] === 'brand-visibility') {
       const sessionUser = getSessionUser(request);
@@ -497,19 +519,22 @@ export async function GET(request) {
       const secCol = await getCollection(COLLECTIONS.SECURITY_SCANS);
       const seoCol = await getCollection(COLLECTIONS.SEO_SCANS);
       const aeoCol = await getCollection(COLLECTIONS.AEO_SCANS);
+      const asoCol = await getCollection(COLLECTIONS.ASO_SCANS);
       const perfCol = await getCollection(COLLECTIONS.PERFORMANCE_SCANS);
 
-      const [secCount, seoCount, aeoCount, perfCount, recentSecScans, recentAeoScans, recentSeoScans] = await Promise.all([
+      const [secCount, seoCount, aeoCount, asoCount, perfCount, recentSecScans, recentAeoScans, recentSeoScans, recentAsoScans] = await Promise.all([
         secCol.countDocuments(userFilter),
         seoCol.countDocuments(userFilter),
         aeoCol.countDocuments(userFilter),
+        asoCol.countDocuments(userFilter),
         perfCol.countDocuments(userFilter),
         secCol.find(userFilter).sort({ createdAt: -1 }).limit(5).toArray(),
         aeoCol.find(userFilter).sort({ createdAt: -1 }).limit(5).toArray(),
         seoCol.find(userFilter).sort({ createdAt: -1 }).limit(5).toArray(),
+        asoCol.find(userFilter).sort({ createdAt: -1 }).limit(5).toArray(),
       ]);
 
-      const totalScans = secCount + seoCount + aeoCount + perfCount;
+      const totalScans = secCount + seoCount + aeoCount + asoCount + perfCount;
 
       let avgSecurityScore = 0;
       if (recentSecScans.length > 0) {
@@ -536,7 +561,7 @@ export async function GET(request) {
           totalScans,
           avgSecurityScore,
           avgAeoScore,
-          recentScans: recentSeoScans,
+          recentScans: [...recentSeoScans, ...recentAsoScans].sort((a,b) => b.createdAt - a.createdAt).slice(0, 5),
           usage,
         },
       });
@@ -727,6 +752,48 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: limitsMap });
     }
 
+    // Public scan retrieval - serves Free+Starter findings for scans unlocked
+    // via Dodo Payments one-time purchase. No authentication required, but the
+    // scan MUST have unlockedForAnonymous:true to prevent arbitrary data leaks.
+    if (pathParts[0] === 'public-scan') {
+      const scanId   = searchParams.get('id');
+      const scanType = searchParams.get('type');
+
+      const publicScanCollections = {
+        security: COLLECTIONS.SECURITY_SCANS,
+        seo:      COLLECTIONS.SEO_SCANS,
+        aeo:      COLLECTIONS.AEO_SCANS,
+        aso:      COLLECTIONS.ASO_SCANS,
+      };
+
+      if (!scanId || !publicScanCollections[scanType]) {
+        return NextResponse.json({ success: false, error: 'Invalid id or type.' }, { status: 400 });
+      }
+
+      const col  = await getCollection(publicScanCollections[scanType]);
+      const scan = await col.findOne({ id: scanId });
+
+      if (!scan) {
+        return NextResponse.json({ success: false, error: 'Scan not found.' }, { status: 404 });
+      }
+
+      if (scan.unlockedForAnonymous !== true && !env.isDev) {
+        return NextResponse.json({ success: false, error: 'This scan has not been unlocked.' }, { status: 403 });
+      }
+
+      // Return Free + Starter findings in full; Pro/Agency remain as locked
+      // teaser cards (same blurred treatment the dashboard uses for plan-gating).
+      // This is intentional: the $2 purchase reveals starter-tier value only.
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...scan,
+          findings: filterFindingsByPlan(scan.findings || [], 'starter'),
+          reportTier: 'starter',
+        },
+      });
+    }
+
     return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
   } catch (error) {
     console.error(`[API GET] ${pathParts.join('/')}:`, error.message);
@@ -873,6 +940,7 @@ export async function POST(request) {
         COLLECTIONS.SEO_SCANS,
         COLLECTIONS.AEO_SCANS,
         COLLECTIONS.GEO_SCANS,
+        COLLECTIONS.ASO_SCANS,
         COLLECTIONS.BRAND_VISIBILITY,
         COLLECTIONS.PERFORMANCE_SCANS,
         COLLECTIONS.SCHEDULED_AUDITS,
@@ -1609,6 +1677,62 @@ export async function POST(request) {
 
       // Full findings are persisted; the client only receives findings its
       // plan tier unlocks (locked ones are redacted by filterFindingsByPlan).
+      return NextResponse.json({ success: true, data: {
+        ...newScan,
+        findings: filterFindingsByPlan(newScan.findings, userPlan),
+      } });
+    }
+
+    if (pathParts[0] === 'aso-scan') {
+      const body = parseOrThrow(scanSchema, await request.json());
+      const { url } = body;
+      await assertSafeUrl(url); // SSRF guard (C-I6)
+
+      const sessionUser = getSessionUser(request);
+      if (!sessionUser) {
+        const ip = clientIp(request);
+        if (isRateLimited(ip, 'landing_scan')) {
+          return NextResponse.json({ success: false, error: 'Free scan limit reached. Please sign up for more scans.' }, { status: 429 });
+        }
+      }
+      const userPlan = sessionUser?.plan || 'free';
+      if (sessionUser) {
+        await assertFeatureAccess(sessionUser.plan || 'free', 'asoScan');
+        await assertScanLimit(sessionUser.id, sessionUser.plan || 'free');
+        // We don't track ASO URLs in sites limit since they are app stores
+      } else {
+        // Free tier is not allowed to run ASO scans based on plan constraints
+        return NextResponse.json({ 
+          success: false, 
+          error: 'ASO scans require Starter plan or above.',
+          upgradeRequired: true,
+          currentPlan: 'free',
+          upgradeReason: 'asoScan'
+        }, { status: 403 });
+      }
+
+      const { runAsoScan } = await import('@/lib/scanners/asoScanner');
+      const scanResult = await runAsoScan(url);
+
+      const newScan = {
+        id: uuidv4(),
+        userId: sessionUser?.id || 'anonymous',
+        url,
+        platform: scanResult.platform,
+        appId: scanResult.appId,
+        appName: scanResult.appName,
+        score: scanResult.score,
+        categories: scanResult.categories,
+        findings: scanResult.findings,
+        deepAnalysis: null, // ASO currently has no deep analysis
+        createdAt: new Date(),
+      };
+
+      const col = await getCollection(COLLECTIONS.ASO_SCANS);
+      await col.insertOne(newScan);
+
+      await notifyScanComplete(newScan.userId, { type: 'aso', url, score: newScan.score, findings: newScan.findings });
+
       return NextResponse.json({ success: true, data: {
         ...newScan,
         findings: filterFindingsByPlan(newScan.findings, userPlan),

@@ -56,6 +56,7 @@
     --accent-seo: 217 91% 60%;       /* blue */
     --accent-aeo: 271 91% 65%;       /* purple */
     --accent-geo: 189 94% 43%;       /* cyan */
+    --accent-aso: 16 100% 60%;       /* orange */
     --accent-brand: 38 92% 50%;      /* amber */
     --accent-health: 160 84% 39%;    /* emerald */
 
@@ -143,6 +144,7 @@
     --accent-seo: 213 94% 68%;       /* blue-400 */
     --accent-aeo: 270 95% 75%;       /* purple-400 */
     --accent-geo: 187 92% 55%;       /* cyan-400 */
+    --accent-aso: 16 100% 66%;       /* bright orange on dark */
     --accent-brand: 43 96% 56%;      /* amber-400 */
     --accent-health: 158 64% 52%;    /* emerald-400 */
     --severity-critical: 0 91% 71%;

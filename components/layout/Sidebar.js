@@ -19,7 +19,8 @@ import {
   Sun,
   Moon,
   CreditCard,
-  Briefcase
+  Briefcase,
+  Smartphone
 } from 'lucide-react';
 import { useAuth } from '@/lib/authContext';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ const navGroups = [
       { href: '/seo-audit', icon: Search, label: 'SEO Audit', accent: 'text-scanner-seo' },
       { href: '/aeo-audit', icon: Sparkles, label: 'AEO Audit', accent: 'text-scanner-aeo' },
       { href: '/geo-audit', icon: Bot, label: 'GEO Audit', accent: 'text-scanner-geo' },
+      { href: '/aso-audit', icon: Smartphone, label: 'ASO Audit', accent: 'text-scanner-aso' },
       { href: '/brand-visibility', icon: Target, label: 'Brand Visibility', accent: 'text-scanner-brand' },
     ]
   },

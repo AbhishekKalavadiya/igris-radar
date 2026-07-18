@@ -86,9 +86,14 @@ export default function Navbar() {
                       <Icon className={`h-4 w-4 ${item.accent}`} />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold flex items-center gap-1">
+                      <div className="text-sm font-semibold flex items-center gap-1.5">
                         {item.title}
-                        <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                        {item.planBadge && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                            {item.planBadge}
+                          </span>
+                        )}
+                        <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all ml-auto" />
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{item.description}</p>
                     </div>
@@ -116,7 +121,7 @@ export default function Navbar() {
           </DesktopDropdown>
 
           <Link
-            href="/landing#pricing"
+            href="/landing/pricing"
             className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md transition-colors"
           >
             Pricing
@@ -187,7 +192,7 @@ export default function Navbar() {
                   {item.title}
                 </Link>
               ))}
-              <Link href="/landing#pricing" className="block py-2 text-sm font-semibold">Pricing</Link>
+              <Link href="/landing/pricing" className="block py-2 text-sm font-semibold">Pricing</Link>
 
               {SHOW_AUTH_CTAS && (
                 <div className="pt-3 border-t border-border flex flex-col gap-2">

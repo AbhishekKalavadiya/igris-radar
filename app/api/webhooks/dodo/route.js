@@ -37,6 +37,35 @@ export async function POST(req) {
     if (event.type === 'payment.succeeded' || event.type === 'subscription.active' || event.type === 'subscription.renewed') {
       const data = event.data;
 
+      // ── One-time report unlock (landing page $2 purchase) ─────────────────
+      // These are anonymous payments with no userId. Handle separately and
+      // return early so the plan-upgrade path below never runs on them.
+      if (data?.metadata?.action === 'unlock_report') {
+        const { scanId, scanType } = data.metadata;
+
+        const COLLECTION_BY_TYPE = {
+          security: 'security_scans',
+          seo:      'seo_scans',
+          aeo:      'aeo_scans',
+          aso:      'aso_scans',
+        };
+
+        const collectionName = COLLECTION_BY_TYPE[scanType];
+        if (scanId && collectionName) {
+          const { getCollection } = await import('@/lib/db');
+          const col = await getCollection(collectionName);
+          await col.updateOne(
+            { id: scanId },
+            { $set: { unlockedForAnonymous: true, unlockedAt: new Date() } }
+          );
+          console.log(`[Dodo Webhook] Unlocked scan ${scanId} (${scanType}) for anonymous user`);
+        } else {
+          console.warn('[Dodo Webhook] unlock_report event missing scanId or scanType', event.id);
+        }
+        return NextResponse.json({ success: true });
+      }
+      // ── End one-time unlock ───────────────────────────────────────────────
+
       // Resolve the user: prefer metadata (set at checkout), else fall back to
       // the stored Dodo customer id - some subscription events don't echo the
       // original checkout metadata.
