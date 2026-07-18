@@ -46,7 +46,9 @@ export async function POST(request) {
     }
 
     const client = getDodoClient();
-    const origin = request.headers.get('origin') || `http://${request.headers.get('host')}` || env.siteUrl;
+    const host = request.headers.get('host');
+    const protocol = host && (host.includes('localhost') || host.includes('127.0.0.1')) ? 'http' : 'https';
+    const origin = request.headers.get('origin') || (host ? `${protocol}://${host}` : env.siteUrl);
 
     const payment = await client.payments.create({
       product_cart: [{ product_id: productId, quantity: 1 }],
