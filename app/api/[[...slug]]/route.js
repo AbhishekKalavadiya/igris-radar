@@ -202,7 +202,7 @@ export async function GET(request) {
       // Exclude soft-deleted/archived users
       const users = await col.find({ isDeleted: { $ne: true } }, { projection: { passwordHash: 0, resetTokenHash: 0, resetTokenExpires: 0 } }).sort({ createdAt: -1 }).toArray();
       
-      const [sec, seo, aeo, geo, perf, brand] = await Promise.all([
+      const [sec, seo, aeo, geo, aso, perf, brand] = await Promise.all([
         getCollection(COLLECTIONS.SECURITY_SCANS),
         getCollection(COLLECTIONS.SEO_SCANS),
         getCollection(COLLECTIONS.AEO_SCANS),
