@@ -53,7 +53,7 @@
         "class-variance-authority": "0.7.1",
         "clsx": "2.1.1",
         "cmdk": "1.1.1",
-        "date-fns": "4.1.0",
+        "date-fns": "4.4.0",
         "dayjs": "1.11.13",
         "dodopayments": "^2.42.1",
         "dotenv": "^17.4.2",
