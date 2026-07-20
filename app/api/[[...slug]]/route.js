@@ -231,6 +231,15 @@ export async function GET(request) {
       const usersWithStats = users.map(u => ({
         ...u,
         totalScans: (secC[u.id]||0) + (seoC[u.id]||0) + (aeoC[u.id]||0) + (geoC[u.id]||0) + (asoC[u.id]||0) + (perfC[u.id]||0) + (brandC[u.id]||0),
+        scansByType: {
+          security: secC[u.id] || 0,
+          seo:      seoC[u.id] || 0,
+          aeo:      aeoC[u.id] || 0,
+          geo:      geoC[u.id] || 0,
+          aso:      asoC[u.id] || 0,
+          health:   perfC[u.id] || 0,
+          brand:    brandC[u.id] || 0,
+        },
         companies: domainsMap[u.id] || []
       }));
 
