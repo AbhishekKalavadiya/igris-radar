@@ -393,6 +393,46 @@ export async function GET(request) {
       });
     }
 
+    // Anonymous PDF export for a $2-unlocked public scan (no session required).
+    // Gated the same way as `public-scan`: the doc must have unlockedForAnonymous.
+    if (pathParts[0] === 'export' && pathParts[1] === 'pdf-public') {
+      const scanType = searchParams.get('scanType');
+      const scanId = searchParams.get('scanId');
+      const collectionByType = {
+        security: COLLECTIONS.SECURITY_SCANS,
+        seo: COLLECTIONS.SEO_SCANS,
+        aeo: COLLECTIONS.AEO_SCANS,
+        aso: COLLECTIONS.ASO_SCANS,
+      };
+      if (!scanId || !collectionByType[scanType]) {
+        return NextResponse.json({ success: false, error: 'Invalid scanType or missing scanId' }, { status: 400 });
+      }
+
+      const scansCol = await getCollection(collectionByType[scanType]);
+      const scan = await scansCol.findOne({ id: scanId });
+      if (!scan) return NextResponse.json({ success: false, error: 'Scan not found' }, { status: 404 });
+
+      if (scan.unlockedForAnonymous !== true && !env.isDev) {
+        return NextResponse.json({ success: false, error: 'This scan has not been unlocked.' }, { status: 403 });
+      }
+
+      // Same Free+Starter gate as public-scan - the $2 purchase reveals
+      // starter-tier value only, never Pro/Agency findings.
+      const gatedScan = { ...scan, findings: filterFindingsByPlan(scan.findings || [], 'starter') };
+
+      const { DEFAULT_BRANDING } = await import('@/lib/branding');
+      const { renderScanReportPdf } = await import('@/lib/reports/pdfReport');
+      const pdfBuffer = await renderScanReportPdf({ scan: gatedScan, scanType, branding: DEFAULT_BRANDING });
+
+      return new NextResponse(pdfBuffer, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="igris-radar-${scanType}-${scan.id.slice(0, 8)}.pdf"`,
+        },
+      });
+    }
+
     // Weekly SEO & visibility digest - cron-triggered, CRON_SECRET protected
     // (same auth pattern as cron/run-scheduled-audits).
     if (pathParts[0] === 'cron' && pathParts[1] === 'send-weekly-digest') {

@@ -12,6 +12,7 @@ import {
   Gauge,
   ShieldCheck,
   Check,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Reveal, Stagger, MotionItem, AnimatedNumber } from '@/components/ui/motion';
@@ -332,8 +333,8 @@ export default function LandingPage() {
               const Icon = feature.icon;
               return (
                 <MotionItem key={feature.href}>
-                  <Link href={feature.href} className="group block h-full">
-                    <div className="h-full rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30">
+                  <div className="group h-full rounded-xl border border-border bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30 flex flex-col">
+                    <Link href={feature.href} className="block p-6 flex-1">
                       <div className={`inline-flex p-2.5 rounded-lg ${feature.bgSoft} mb-4`}>
                         <Icon className={`h-5 w-5 ${feature.accent}`} />
                       </div>
@@ -347,8 +348,18 @@ export default function LandingPage() {
                         <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                       </h3>
                       <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{feature.description}</p>
-                    </div>
-                  </Link>
+                    </Link>
+                    {feature.sampleReportKey && (
+                      <a
+                        href={`/sample-reports/igris-radar-sample-${feature.sampleReportKey}-report.pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1.5 mx-6 mb-6 py-2.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:text-primary hover:border-primary/30 hover:bg-primary/5 transition-colors"
+                      >
+                        <FileText className="h-3.5 w-3.5" /> View sample PDF report
+                      </a>
+                    )}
+                  </div>
                 </MotionItem>
               );
             })}

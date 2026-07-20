@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import {
   CheckCircle2, XCircle, Lock, ArrowRight, Sparkles,
-  ShieldCheck, Search, Smartphone, BarChart2, Filter, X
+  ShieldCheck, Search, Smartphone, BarChart2, Filter, X, Download
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -92,6 +92,14 @@ export default function UnlockedScanModal({ open, onClose, scanData, scanType })
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/15 border border-success/30 text-success text-xs font-semibold">
                 <CheckCircle2 className="h-3.5 w-3.5" /> Report Unlocked
               </span>
+              <a
+                href={`/api?path=export/pdf-public&scanType=${scanType}&scanId=${scanData.id}`}
+                download
+              >
+                <Button size="sm" variant="outline" className="font-semibold">
+                  <Download className="h-3.5 w-3.5 mr-1.5" /> Download PDF
+                </Button>
+              </a>
               <button
                 onClick={onClose}
                 className="p-1.5 rounded-lg hover:bg-muted/60 transition-colors text-muted-foreground"
