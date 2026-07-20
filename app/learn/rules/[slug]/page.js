@@ -22,8 +22,12 @@ export async function generateMetadata({ params }) {
   const { slug } = params;
   const originalTitle = SLUG_MAP.get(slug);
 
+  // No fallback metadata needed here: the page component below calls
+  // notFound() for unknown slugs, which discards this function's return
+  // value entirely and serves a real 404 with the parent layout's
+  // metadata instead - verified via curl (404 status, inherited title).
   if (!originalTitle) {
-    return { title: 'Rule Not Found' };
+    notFound();
   }
 
   // Generate a snippet of the explanation for the meta description
