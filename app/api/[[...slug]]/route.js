@@ -256,10 +256,10 @@ export async function GET(request) {
       if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
       const daysParam = searchParams.get('days');
-      const days = daysParam === '90' ? 90 : 30;
       if (daysParam && daysParam !== '30' && daysParam !== '90') {
         return NextResponse.json({ success: false, error: 'days must be 30 or 90' }, { status: 400 });
       }
+      const days = daysParam === '90' ? 90 : 30;
 
       const analytics = await getScanAnalytics(days);
       return NextResponse.json({ success: true, data: analytics });
