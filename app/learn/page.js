@@ -5,6 +5,9 @@ import { Shield, Sparkles, Search, Globe, Activity, ArrowRight } from 'lucide-re
 export const metadata = {
   title: 'Igris Radar Knowledge Base | Igris',
   description: 'Explore our comprehensive knowledge base covering Security, AEO, GEO, and Technical SEO to optimize your digital presence.',
+  alternates: {
+    canonical: '/learn',
+  },
 };
 
 const CATEGORIES = [
