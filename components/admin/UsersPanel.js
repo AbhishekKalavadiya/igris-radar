@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, User, Activity, Search, Calendar, Target, ShieldAlert, Trash2 } from 'lucide-react';
+import { Loader2, User, Activity, Search, Calendar, Target, ShieldAlert, Trash2, BarChart2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
+import { SCANNERS } from '@/lib/scannerAccents';
 
 const PLAN_COLORS = {
   free: '#94a3b8',
@@ -18,6 +19,14 @@ const PLAN_COLORS = {
   agency: '#ec4899',
   enterprise: '#f59e0b'
 };
+
+const SCANNER_KEYS = Object.keys(SCANNERS);
+
+function rankedScanBreakdown(scansByType = {}) {
+  return [...SCANNER_KEYS]
+    .map((key) => ({ key, count: scansByType[key] || 0, scanner: SCANNERS[key] }))
+    .sort((a, b) => b.count - a.count);
+}
 
 export default function UsersPanel({ plansMap = {} }) {
   const [users, setUsers] = useState([]);
@@ -244,6 +253,34 @@ export default function UsersPanel({ plansMap = {} }) {
                               </PopoverContent>
                             </Popover>
                           )}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-6 px-2 text-xs py-0">
+                                <BarChart2 className="h-3 w-3 mr-1" /> Breakdown
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64 p-4 text-sm shadow-xl" align="start">
+                              <h4 className="font-semibold mb-2">Scans by Type</h4>
+                              <ul className="space-y-2">
+                                {rankedScanBreakdown(user.scansByType).map(({ key, count, scanner }) => {
+                                  const Icon = scanner.icon;
+                                  const used = count > 0;
+                                  return (
+                                    <li
+                                      key={key}
+                                      className={`flex items-center justify-between gap-2 ${used ? '' : 'opacity-40'}`}
+                                    >
+                                      <span className="flex items-center gap-2 truncate">
+                                        <Icon className={`h-3.5 w-3.5 shrink-0 ${used ? scanner.text : 'text-muted-foreground'}`} />
+                                        <span className={used ? '' : 'text-muted-foreground'}>{scanner.label}</span>
+                                      </span>
+                                      <span className="font-mono text-xs shrink-0">{count}</span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
