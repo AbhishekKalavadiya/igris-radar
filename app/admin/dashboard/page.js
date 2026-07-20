@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Loader2, Save, RefreshCw, LogOut, KeyRound, Layers, User } from 'lucide-react';
+import { Shield, Loader2, Save, RefreshCw, LogOut, KeyRound, Layers, User, BarChart3 } from 'lucide-react';
 import ApiKeysPanel from '@/components/admin/ApiKeysPanel';
 import UsersPanel from '@/components/admin/UsersPanel';
+import ScanAnalyticsPanel from '@/components/admin/ScanAnalyticsPanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -96,14 +97,16 @@ export default function AdminDashboardPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <Shield className="w-8 h-8 text-primary" />
-              {section === 'plans' ? 'Plan Configuration' : section === 'keys' ? 'API Keys' : 'User Management'}
+              {section === 'plans' ? 'Plan Configuration' : section === 'keys' ? 'API Keys' : section === 'analytics' ? 'Scan Analytics' : 'User Management'}
             </h1>
             <p className="text-muted-foreground mt-1">
               {section === 'plans'
                 ? 'Manage limits, features, and pricing for all tiers.'
-                : section === 'keys' 
+                : section === 'keys'
                   ? 'Manage integration API keys - changes apply instantly across the system.'
-                  : 'View registered users and monitor their platform activity.'}
+                  : section === 'analytics'
+                    ? 'Platform-wide scan volume by tool.'
+                    : 'View registered users and monitor their platform activity.'}
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -137,12 +140,17 @@ export default function AdminDashboardPage() {
             <TabsTrigger value="keys" className="gap-2 px-6">
               <KeyRound className="w-4 h-4" /> API Keys
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2 px-6">
+              <BarChart3 className="w-4 h-4" /> Analytics
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
         {section === 'users' && <UsersPanel plansMap={plansMap} />}
 
         {section === 'keys' && <ApiKeysPanel />}
+
+        {section === 'analytics' && <ScanAnalyticsPanel />}
 
         {section === 'plans' && (
         <Tabs defaultValue="free" className="w-full">
