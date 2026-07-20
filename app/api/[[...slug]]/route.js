@@ -228,10 +228,8 @@ export async function GET(request) {
         getCounts(sec), getCounts(seo), getCounts(aeo), getCounts(geo), getCounts(aso), getCounts(perf), getCounts(brand)
       ]);
 
-      const usersWithStats = users.map(u => ({
-        ...u,
-        totalScans: (secC[u.id]||0) + (seoC[u.id]||0) + (aeoC[u.id]||0) + (geoC[u.id]||0) + (asoC[u.id]||0) + (perfC[u.id]||0) + (brandC[u.id]||0),
-        scansByType: {
+      const usersWithStats = users.map(u => {
+        const scansByType = {
           security: secC[u.id] || 0,
           seo:      seoC[u.id] || 0,
           aeo:      aeoC[u.id] || 0,
@@ -239,9 +237,14 @@ export async function GET(request) {
           aso:      asoC[u.id] || 0,
           health:   perfC[u.id] || 0,
           brand:    brandC[u.id] || 0,
-        },
-        companies: domainsMap[u.id] || []
-      }));
+        };
+        return {
+          ...u,
+          totalScans: Object.values(scansByType).reduce((sum, n) => sum + n, 0),
+          scansByType,
+          companies: domainsMap[u.id] || []
+        };
+      });
 
       return NextResponse.json({ success: true, data: usersWithStats });
     }
