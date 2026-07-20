@@ -48,6 +48,7 @@ import { notifyScanComplete } from '@/lib/notifications';
 import { sendEmail, getEmailTransport } from '@/lib/email/mailer';
 import { loginAlertEmail, passwordChangedEmail, passwordResetEmail, newUserSignupEmail, contactFormEmail } from '@/lib/email/templates';
 import { getKeyStatuses, setKeys, getKeys } from '@/lib/systemConfig';
+import { getScanAnalytics } from '@/lib/scanAnalytics';
 import { getAvailableAiProviders, hasAnyAiProvider, testAiProvider } from '@/lib/scanners/shared/aiAnalyzer';
 import { startMonitoring } from '@/lib/monitoring';
 import { filterFindingsByPlan } from '@/lib/scanners/shared/findings';
@@ -250,6 +251,20 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: logs });
     }
 
+    // Admin Dashboard: Scan Analytics (which scan type is in demand)
+    if (pathParts[0] === 'admin' && pathParts[1] === 'scan-analytics') {
+      if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+      const daysParam = searchParams.get('days');
+      const days = daysParam === '90' ? 90 : 30;
+      if (daysParam && daysParam !== '30' && daysParam !== '90') {
+        return NextResponse.json({ success: false, error: 'days must be 30 or 90' }, { status: 400 });
+      }
+
+      const analytics = await getScanAnalytics(days);
+      return NextResponse.json({ success: true, data: analytics });
+    }
+
     // Get current user session
     if (pathParts[0] === 'auth' && pathParts[1] === 'me') {
       const sessionUser = getSessionUser(request);
@@ -306,11 +321,12 @@ export async function GET(request) {
       const sessionUser = getSessionUser(request);
       if (!sessionUser) return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
 
-      const keys = await getKeys(['GEMINI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PERPLEXITY_API_KEY']);
+      const keys = await getKeys(['GEMINI_API_KEY', 'Z_AI_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PERPLEXITY_API_KEY']);
       return NextResponse.json({
         success: true,
         data: {
           gemini: !!keys.GEMINI_API_KEY,
+          zai: !!keys.Z_AI_API_KEY,
           openai: !!keys.OPENAI_API_KEY,
           anthropic: !!keys.ANTHROPIC_API_KEY,
           perplexity: !!keys.PERPLEXITY_API_KEY,
@@ -2024,7 +2040,7 @@ export async function POST(request) {
         if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
         const { provider } = await request.json();
-        if (!['gemini', 'openai', 'anthropic'].includes(provider)) {
+        if (!['gemini', 'zai', 'openai', 'anthropic'].includes(provider)) {
           return NextResponse.json({ success: false, error: 'Invalid provider' }, { status: 400 });
         }
         const result = await testAiProvider(provider);
