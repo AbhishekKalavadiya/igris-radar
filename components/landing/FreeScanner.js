@@ -13,10 +13,10 @@ import UnlockedScanModal from '@/components/landing/UnlockedScanModal';
 import { SCANNERS } from '@/lib/scannerAccents';
 
 const SCAN_TYPES = [
-  { id: 'security', label: 'Security', icon: ShieldCheck, description: 'Check headers, config & exposure' },
-  { id: 'seo',      label: 'SEO',      icon: Search,      description: 'Check classic ranking signals'  },
-  { id: 'aeo',      label: 'AEO',      icon: Sparkles,    description: 'Check AI assistant readiness'   },
-  { id: 'aso',      label: 'ASO',      icon: Smartphone,  description: 'Check App Store Optimization'   },
+  { id: 'security', label: 'Security', icon: ShieldCheck, description: 'Check headers, config & exposure', sampleReportKey: 'security' },
+  { id: 'seo',      label: 'SEO',      icon: Search,      description: 'Check classic ranking signals',     sampleReportKey: 'seo' },
+  { id: 'aeo',      label: 'AEO',      icon: Sparkles,    description: 'Check AI assistant readiness',      sampleReportKey: 'aeo' },
+  { id: 'aso',      label: 'ASO',      icon: Smartphone,  description: 'Check App Store Optimization',      sampleReportKey: 'aso' },
 ];
 
 // Poll the public-scan endpoint until the webhook has fired (max 10 retries × 2s)
@@ -174,29 +174,38 @@ export default function FreeScanner() {
               />
             </div>
 
-            <div className="flex flex-col gap-1.5 shrink-0">
+            <div className="flex flex-col gap-1.5 w-full lg:w-auto lg:shrink-0">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground ml-2">
                 Type of Scan
               </label>
-              <div className="flex gap-2 p-1.5 bg-muted/40 rounded-2xl border border-border/50 h-16 items-center">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex gap-2 p-1.5 bg-muted/40 rounded-2xl border border-border/50">
                 {SCAN_TYPES.map(type => {
                   const Icon = type.icon;
                   const isSelected = scanType === type.id;
                   return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      disabled={isScanning}
-                      onClick={() => setScanType(type.id)}
-                      className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 h-full rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-                        isSelected
-                          ? 'bg-background shadow-sm text-primary ring-1 ring-border'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span>{type.label}</span>
-                    </button>
+                    <div key={type.id} className="flex flex-col items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={isScanning}
+                        onClick={() => setScanType(type.id)}
+                        className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 h-11 w-full lg:w-auto rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                          isSelected
+                            ? 'bg-background shadow-sm text-primary ring-1 ring-border'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <span>{type.label}</span>
+                      </button>
+                      <a
+                        href={`/sample-reports/igris-radar-sample-${type.sampleReportKey}-report.pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors underline underline-offset-2 decoration-dotted whitespace-nowrap"
+                      >
+                        Sample PDF
+                      </a>
+                    </div>
                   );
                 })}
               </div>
