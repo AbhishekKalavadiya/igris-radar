@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const TESTABLE_PROVIDERS = {
   GEMINI_API_KEY: 'gemini',
+  Z_AI_API_KEY: 'zai',
   OPENAI_API_KEY: 'openai',
   ANTHROPIC_API_KEY: 'anthropic',
 };

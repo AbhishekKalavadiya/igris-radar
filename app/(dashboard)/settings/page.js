@@ -36,7 +36,7 @@ import { requestNotificationPermission } from '@/lib/browserNotify';
 const VALID_TABS = ['profile', 'notifications', 'security', 'audit', 'branding'];
 const MAX_LOGO_BYTES = 2_000_000;
 
-const PROVIDERS = ['gemini', 'openai', 'anthropic'];
+const PROVIDERS = ['gemini', 'zai', 'openai', 'anthropic'];
 const LOCALES = ['global', 'us', 'uk', 'eu'];
 
 function SettingsContent() {
@@ -48,7 +48,7 @@ function SettingsContent() {
   const [profile, setProfile] = useState({ name: '', email: '' });
   const [settings, setSettings] = useState(null);
   const [emailTransport, setEmailTransport] = useState('console');
-  const [aiProviders, setAiProviders] = useState({ gemini: false, openai: false, anthropic: false });
+  const [aiProviders, setAiProviders] = useState({ gemini: false, zai: false, openai: false, anthropic: false });
   const [saving, setSaving] = useState(false);
 
   // Change-password dialog state

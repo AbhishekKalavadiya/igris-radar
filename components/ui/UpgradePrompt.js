@@ -3,13 +3,12 @@
 /**
  * components/ui/UpgradePrompt.js
  * Shown when an API call returns 429 (scan limit) or 403 (feature gate).
- * Clicking "Upgrade" initiates a Stripe Checkout session directly.
+ * Clicking "Upgrade" initiates a real Dodo Checkout session.
  */
 
 import { useState } from 'react';
 import { ArrowRight, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { getUpgradeMessage } from '@/lib/plans';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 import { useToast } from '@/hooks/use-toast';
@@ -29,38 +28,39 @@ export default function UpgradePrompt({ currentPlan = 'free', reason = 'scanLimi
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const [fakeUpgradeModal, setFakeUpgradeModal] = useState(false);
-
   const planAvailable = isPlanAvailable(nextPlan);
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
     if (!planAvailable) {
       toast({ title: 'Not available yet', description: `We do not offer the ${nextLabel} plan yet.`, variant: 'destructive' });
       return;
     }
-    setFakeUpgradeModal(true);
-  };
 
-  const confirmFakeUpgrade = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api?path=auth/update-plan', {
+      const res = await fetch('/api/billing/dodo/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan: nextPlan }),
       });
       const data = await res.json();
-      if (data.success) {
-        toast({ title: 'Plan Upgraded (Test Mode)', description: `You are now on the ${nextPlan} plan.` });
-        window.location.reload();
-      } else {
-        toast({ title: 'Upgrade Failed', description: data.error, variant: 'destructive' });
+
+      if (!data.success) {
+        toast({ title: 'Checkout Failed', description: data.error || 'Could not start checkout', variant: 'destructive' });
+        setLoading(false);
+        return;
       }
+
+      if (data.changed) {
+        toast({ title: 'Plan upgraded', description: `You're now on ${nextLabel}. Your 30-day cycle restarts today.` });
+        window.location.reload();
+        return;
+      }
+
+      window.location.href = data.url;
     } catch {
-      toast({ title: 'Network error', description: 'Could not upgrade.', variant: 'destructive' });
-    } finally {
+      toast({ title: 'Network error', description: 'Could not initiate checkout.', variant: 'destructive' });
       setLoading(false);
-      setFakeUpgradeModal(false);
     }
   };
 
@@ -91,30 +91,6 @@ export default function UpgradePrompt({ currentPlan = 'free', reason = 'scanLimi
           </Button>
         )}
       </div>
-
-      {/* Fake Upgrade Modal (TESTING ONLY) */}
-      <Dialog open={fakeUpgradeModal} onOpenChange={setFakeUpgradeModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Test Environment Upgrade</DialogTitle>
-            <DialogDescription>
-              Stripe checkout is bypassed for testing. Would you like to mock an upgrade to the <strong className="uppercase">{nextPlan}</strong> plan?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              This will update your account in the database and reload the application to apply the new limits.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFakeUpgradeModal(false)} disabled={loading}>Cancel</Button>
-            <Button onClick={confirmFakeUpgrade} disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Confirm Fake Upgrade
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

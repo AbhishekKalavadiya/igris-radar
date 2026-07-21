@@ -1221,12 +1221,13 @@ export async function POST(request) {
       return response;
     }
 
-    // Fake Upgrade - test-mode billing. Active only while Stripe is NOT
-    // configured; once STRIPE_SECRET_KEY is set, plan changes happen only via
-    // verified Stripe webhooks, and this endpoint disables itself - otherwise
-    // any user could self-upgrade for free (SECURITY_CHECKLIST C4).
+    // Fake Upgrade - test-mode billing. Active only while NO real payment
+    // provider is configured; once Stripe or Dodo is set up, plan changes
+    // happen only via verified payment webhooks, and this endpoint disables
+    // itself - otherwise any user could self-upgrade for free
+    // (SECURITY_CHECKLIST C4).
     if (pathParts[0] === 'auth' && pathParts[1] === 'update-plan') {
-      if (env.stripeSecretKey) {
+      if (env.stripeSecretKey || env.dodoApiKey) {
         return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
       }
 
