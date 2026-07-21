@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { getUpgradeMessage } from '@/lib/plans';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 import { useToast } from '@/hooks/use-toast';
+import { useBfcacheReload } from '@/hooks/use-bfcache-reload';
 import { isPlanAvailable } from '@/lib/constants';
 
 /**
@@ -27,6 +28,11 @@ export default function UpgradePrompt({ currentPlan = 'free', reason = 'scanLimi
   const nextLabel = nextPlan.charAt(0).toUpperCase() + nextPlan.slice(1);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  // If the user goes to Dodo checkout and hits back without paying, force a
+  // fresh reload instead of a stale/frozen bfcache snapshot - this also
+  // resets the "loading" spinner, which a fresh load never had set.
+  useBfcacheReload();
 
   const planAvailable = isPlanAvailable(nextPlan);
 

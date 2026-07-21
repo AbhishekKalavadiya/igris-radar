@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import UsageMeter from '@/components/ui/UsageMeter';
 import { useToast } from '@/hooks/use-toast';
+import { useBfcacheReload } from '@/hooks/use-bfcache-reload';
 import { isPlanAvailable, PLAN_PROMOTIONS } from '@/lib/constants';
 
 const PLAN_META = {
@@ -80,16 +81,11 @@ export default function BillingTab({ currentPlan = 'free' }) {
   }, []);
 
   // When the user leaves for the Dodo checkout and returns via the browser
-  // back button, the page is restored from the bfcache with React state frozen
-  // - so the "redirecting" spinner would otherwise stay stuck forever. Reset
-  // the in-flight button states whenever the page is shown again.
-  useEffect(() => {
-    const clearPending = () => {
-      setRedirecting(null);
-    };
-    window.addEventListener('pageshow', clearPending);
-    return () => window.removeEventListener('pageshow', clearPending);
-  }, []);
+  // back button without paying, force a fresh reload instead of trusting a
+  // bfcache-restored (frozen, possibly stale) snapshot of this page. This
+  // also naturally resets the "redirecting" spinner, since a fresh load never
+  // had it set to begin with.
+  useBfcacheReload();
 
   const handleUpgrade = async (targetPlan) => {
     if (!isPlanAvailable(targetPlan)) {
