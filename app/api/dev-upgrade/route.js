@@ -13,7 +13,7 @@ export async function GET(request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const plan = searchParams.get('plan') || 'starter'; // free, starter, pro, agency
+  const plan = searchParams.get('plan') || 'starter'; // free, starter, pro
 
   const cookie = request.cookies.get(SESSION_COOKIE);
   if (!cookie) {

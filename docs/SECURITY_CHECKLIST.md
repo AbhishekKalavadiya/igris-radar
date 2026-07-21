@@ -130,7 +130,7 @@ These are **real vulnerabilities and weaknesses** identified in the current code
 | F1 | Race condition on scan limits | Send 10 concurrent scan requests when only 1 scan remains in quota | `[ ]` |
 | F2 | Stripe webhook replay | Replay a legitimate Stripe webhook event — verify idempotency | `[ ]` |
 | F3 | Stripe webhook without signature | Send a fake Stripe event without a valid `stripe-signature` header | `[ ]` |
-| F4 | Plan downgrade data handling | Downgrade from Agency to Free — verify premium data isn't deleted but features are locked | `[ ]` |
+| F4 | Plan downgrade data handling | Downgrade from Pro to Free — verify premium data isn't deleted but features are locked | `[ ]` |
 | F5 | Onboarding bypass replay | Set `isOnboarding: true` in scan request after already completing onboarding | `[ ]` |
 | F6 | Negative number inputs | Send `{"scansPerMonth": -1}` via admin plan update | `[ ]` |
 

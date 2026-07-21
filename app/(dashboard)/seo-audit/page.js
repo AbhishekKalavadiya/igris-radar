@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Search, Loader2, Target, Sparkles, AlertCircle, CheckCircle2, Zap, Star, Crown, Lock } from 'lucide-react';
+import { Search, Loader2, Target, Sparkles, AlertCircle, CheckCircle2, Zap, Star, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import PageHeader from '@/components/ui/PageHeader';
@@ -197,9 +197,9 @@ export default function SeoAuditPage() {
           onSeverityChange={setSeverityFilter}
         />
         {visible.length === 0 ? (
-          tier === 'agency' ? (
+          tier === 'pro' ? (
             <div className="text-muted-foreground text-center py-8 space-y-1">
-              <p>Your Agency SEO insights — Search Intent Mapping, LSI Keyword Gaps and Semantic Coverage — are delivered in the <span className="text-scanner-aeo font-medium">AI Insights</span> tab.</p>
+              <p>Your Pro SEO insights — Search Intent Mapping, LSI Keyword Gaps and Semantic Coverage — are delivered in the <span className="text-scanner-aeo font-medium">AI Insights</span> tab.</p>
               <p className="text-xs">Enable <span className="text-scanner-aeo">AI Deep Analysis</span> when you run a scan to generate them.</p>
             </div>
           ) : (
@@ -371,9 +371,6 @@ export default function SeoAuditPage() {
               </TabsTrigger>
               <TabsTrigger value="tier-pro" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
                 <Star className="w-3.5 h-3.5 text-warning" /> Pro
-              </TabsTrigger>
-              <TabsTrigger value="tier-agency" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-primary/20 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-                <Crown className="w-3.5 h-3.5 text-destructive" /> Agency
                 {lockedCount > 0 && (
                   <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
                     <Lock className="h-2.5 w-2.5" />{lockedCount}
@@ -453,9 +450,6 @@ export default function SeoAuditPage() {
             </TabsContent>
             <TabsContent value="tier-pro" className="m-0">
               {renderTierTab('pro')}
-            </TabsContent>
-            <TabsContent value="tier-agency" className="m-0">
-              {renderTierTab('agency')}
             </TabsContent>
 
             <TabsContent value="tech" className="m-0">
@@ -544,13 +538,13 @@ export default function SeoAuditPage() {
                   </CardContent>
                 </Card>
 
-                {/* Agency-only: Search Intent Mapping + LSI / keyword-gap analysis */}
+                {/* Pro-only: Search Intent Mapping + LSI / keyword-gap analysis */}
                 {(scanResult.deepAnalysis.searchIntent || scanResult.deepAnalysis.lsiKeywordGaps) && (
                   <Card className="border-scanner-aeo/30 bg-scanner-aeo/5">
                     <CardHeader>
                       <CardTitle className="text-scanner-aeo flex items-center gap-2">
                         <Sparkles className="h-5 w-5" /> Semantic Insights
-                        <span className="ml-1 text-[10px] uppercase tracking-wide font-semibold bg-scanner-aeo/20 text-scanner-aeo px-2 py-0.5 rounded-md">Agency</span>
+                        <span className="ml-1 text-[10px] uppercase tracking-wide font-semibold bg-scanner-aeo/20 text-scanner-aeo px-2 py-0.5 rounded-md">Pro</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">

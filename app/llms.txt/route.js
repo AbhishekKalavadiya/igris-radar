@@ -27,7 +27,7 @@ ${SITE_NAME} is built for teams that want to be cited and recommended by AI assi
 ## Company
 
 - [About](${SITE_URL}/landing/about): Why we built the platform and how we work
-- [Contact](${SITE_URL}/landing/contact): Sales, support, enterprise, and partnerships
+- [Contact](${SITE_URL}/landing/contact): Sales, support, and partnerships
 
 ## Crawling preferences
 

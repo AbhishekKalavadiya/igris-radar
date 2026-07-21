@@ -6,7 +6,7 @@
  * Shown on SEO and AEO audit pages for authenticated users on Starter+ plans.
  *
  * Backend: POST/GET /api?path=scheduled-audit
- * Plan gate: monitoring feature flag (Starter = monthly, Pro = weekly, Agency = daily)
+ * Plan gate: monitoring feature flag (Starter = monthly, Pro = daily)
  */
 
 import { useState, useEffect } from 'react';
@@ -17,8 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const FREQUENCY_OPTIONS = [
   { value: 'monthly', label: 'Monthly',  planRequired: 'starter' },
-  { value: 'weekly',  label: 'Weekly',   planRequired: 'pro' },
-  { value: 'daily',   label: 'Daily',    planRequired: 'agency' },
+  { value: 'daily',   label: 'Daily',    planRequired: 'pro' },
 ];
 
 const THRESHOLD_OPTIONS = [50, 60, 70, 80];
@@ -40,10 +39,9 @@ export default function ScheduledAuditManager({ url, scanType, userPlan = 'free'
   const { toast } = useToast();
 
   // Plan monitoring capability
-  const monitoringAllowed = ['starter', 'pro', 'agency', 'enterprise'].includes(userPlan);
+  const monitoringAllowed = ['starter', 'pro'].includes(userPlan);
   const allowedFrequencies = FREQUENCY_OPTIONS.filter(f => {
-    if (userPlan === 'agency' || userPlan === 'enterprise') return true;
-    if (userPlan === 'pro') return f.value !== 'daily';
+    if (userPlan === 'pro') return true;
     if (userPlan === 'starter') return f.value === 'monthly';
     return false;
   });

@@ -17,8 +17,6 @@ const FALLBACK_DETAILS = FINDING_EXPLANATIONS;
 const PLAN_LABELS = {
   starter: 'Starter',
   pro: 'Pro',
-  agency: 'Agency',
-  enterprise: 'Enterprise',
 };
 
 // "How we test this" - a plain-language description of the scan METHOD, keyed by the

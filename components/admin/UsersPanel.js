@@ -16,8 +16,6 @@ const PLAN_COLORS = {
   free: '#94a3b8',
   starter: '#3b82f6',
   pro: '#8b5cf6',
-  agency: '#ec4899',
-  enterprise: '#f59e0b'
 };
 
 const SCANNER_KEYS = Object.keys(SCANNERS);

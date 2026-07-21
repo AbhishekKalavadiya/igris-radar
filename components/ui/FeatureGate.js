@@ -18,7 +18,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Lock } from 'lucide-react';
 
-const PLAN_ORDER = ['free', 'starter', 'pro', 'agency', 'enterprise'];
+const PLAN_ORDER = ['free', 'starter', 'pro'];
 
 /** Cheapest plan (in PLAN_ORDER) whose limits have `feature` truthy. */
 function cheapestPlanWithFeature(planLimits, feature) {

@@ -1,8 +1,8 @@
 # Igris Radar — GEO Scanner Improvements Roadmap
 
 > **Last Updated:** July 2026
-> **Plan Tiers:** Free → Starter → Pro → Agency
-> **Principle:** Maximum value in Free/Starter/Pro. Only premium AI-powered intelligence in Agency.
+> **Plan Tiers:** Free → Starter → Pro
+> **Principle:** Maximum value in Free/Starter. Only premium AI-powered intelligence in Pro.
 
 ---
 
@@ -59,7 +59,7 @@ The GEO (Generative Engine Optimization) scanner currently checks **4 categories
 
 ---
 
-## 👑 Agency Tier — Premium AI Intelligence
+## 👑 Pro Tier — Premium AI Intelligence
 
 | Check | Category | What It Does | Implementation |
 |---|---|---|---|
@@ -72,29 +72,29 @@ The GEO (Generative Engine Optimization) scanner currently checks **4 categories
 
 ## Summary Table
 
-| Feature | Free | Starter | Pro | Agency |
-|---|:---:|:---:|:---:|:---:|
-| Author/org schema, sameAs, logo, dates | ✅ | ✅ | ✅ | ✅ |
-| Word count, breadcrumbs, FAQ, link density | ✅ | ✅ | ✅ | ✅ |
-| External citations, data points, quotes | ✅ | ✅ | ✅ | ✅ |
-| Paragraph chunking, tables, lists, pronouns | ✅ | ✅ | ✅ | ✅ |
-| Knowledge Graph entity signals (`@id`) | ✅ | ✅ | ✅ | ✅ |
-| Contact/trust signals, definition detection | ✅ | ✅ | ✅ | ✅ |
-| Semantic HTML landmarks, image captions | ✅ | ✅ | ✅ | ✅ |
-| Wikipedia-style inline citations | — | ✅ | ✅ | ✅ |
-| Statistic freshness heuristic | — | ✅ | ✅ | ✅ |
-| Content uniqueness indicators | — | ✅ | ✅ | ✅ |
-| Multi-format content scoring | — | ✅ | ✅ | ✅ |
-| Heading completeness check | — | ✅ | ✅ | ✅ |
-| Entity disambiguation scoring | — | — | ✅ | ✅ |
-| Topical cluster detection | — | — | ✅ | ✅ |
-| Comparison/Best-Of optimization | — | — | ✅ | ✅ |
-| Structured summary (TL;DR) detection | — | — | ✅ | ✅ |
-| Soft AI analysis + competitor compare | — | — | ✅ | ✅ |
-| Citation simulation (AI role-play) | — | — | — | ✅ |
-| Knowledge Graph gap analysis (AI) | — | — | — | ✅ |
-| Topical authority depth map (AI) | — | — | — | ✅ |
-| Competitive positioning report (AI) | — | — | — | ✅ |
+| Feature | Free | Starter | Pro |
+|---|:---:|:---:|:---:|
+| Author/org schema, sameAs, logo, dates | ✅ | ✅ | ✅ |
+| Word count, breadcrumbs, FAQ, link density | ✅ | ✅ | ✅ |
+| External citations, data points, quotes | ✅ | ✅ | ✅ |
+| Paragraph chunking, tables, lists, pronouns | ✅ | ✅ | ✅ |
+| Knowledge Graph entity signals (`@id`) | ✅ | ✅ | ✅ |
+| Contact/trust signals, definition detection | ✅ | ✅ | ✅ |
+| Semantic HTML landmarks, image captions | ✅ | ✅ | ✅ |
+| Wikipedia-style inline citations | — | ✅ | ✅ |
+| Statistic freshness heuristic | — | ✅ | ✅ |
+| Content uniqueness indicators | — | ✅ | ✅ |
+| Multi-format content scoring | — | ✅ | ✅ |
+| Heading completeness check | — | ✅ | ✅ |
+| Entity disambiguation scoring | — | — | ✅ |
+| Topical cluster detection | — | — | ✅ |
+| Comparison/Best-Of optimization | — | — | ✅ |
+| Structured summary (TL;DR) detection | — | — | ✅ |
+| Soft AI analysis + competitor compare | — | — | ✅ |
+| Citation simulation (AI role-play) | — | — | ✅ |
+| Knowledge Graph gap analysis (AI) | — | — | ✅ |
+| Topical authority depth map (AI) | — | — | ✅ |
+| Competitive positioning report (AI) | — | — | ✅ |
 
 ---
 
@@ -103,4 +103,4 @@ The GEO (Generative Engine Optimization) scanner currently checks **4 categories
 1. **Phase 1:** All Free tier additions (6 new checks — pure HTML, no cost)
 2. **Phase 2:** All Starter tier additions (5 new checks — slightly more processing, still no APIs)
 3. **Phase 3:** Pro tier (6 new checks — Soft AI + Competitor comparison)
-4. **Phase 4:** Agency tier (4 new checks — Deep AI prompts and simulation)
+4. **Phase 4:** Pro tier AI intelligence (4 new checks — Deep AI prompts and simulation)

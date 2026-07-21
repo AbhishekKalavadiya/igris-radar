@@ -36,14 +36,8 @@ const PLANS = [
   },
   {
     name: 'Pro', price: '$20', period: '/month', highlight: true,
-    features: ['100 scans / month', '10 tracked sites', 'Unlimited team members', 'Weekly scheduled monitoring', 'AI deep analysis', 'Competitor comparison scans'],
+    features: ['Unlimited scans', 'Unlimited tracked sites', 'Unlimited team members', 'Daily scheduled monitoring', 'AI deep analysis', 'Competitor comparison scans', 'White-label PDF reports', 'API access'],
     cta: 'Go Pro',
-  },
-  {
-    name: 'Agency', price: '$100', period: '/month', highlight: false,
-    features: ['Unlimited scans', 'Unlimited tracked sites', 'Unlimited team members', 'Daily scheduled monitoring', 'White-label PDF reports', 'API access'],
-    cta: 'Coming soon',
-    comingSoon: true,
   },
 ];
 
@@ -53,7 +47,7 @@ const HOME_FAQS = [
   { q: 'Do I need to install anything on my site?', a: 'No. Every audit runs from the outside, exactly the way crawlers and attackers see your site. Enter a URL and results arrive in seconds to minutes depending on the audit.' },
   { q: 'What makes the fix workflow different?', a: 'Every failed check ships with a plain-language explanation and an agent-native fix prompt. That is a ready-to-paste instruction for your AI coding assistant, with the full context of the finding built in. You go from "we have an issue" straight to a merged fix.' },
   { q: 'Can I compare my site against competitors?', a: 'Yes. Point SEO, AEO, or GEO audits at a competitor\'s URL. We run the same checks on both sites and show a gap analysis by category. Brand visibility tracking also shows whether AI engines recommend you or them.' },
-  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across six web audit types, no credit card required. Starter is $5/month for 25 scans, 5 tracked sites, and unlocks ASO auditing. Pro is $20/month and adds AI deep analysis. Agency is $100/month for unlimited scanning. Enterprise plans are not offered yet.' },
+  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across six web audit types, no credit card required. Starter is $5/month for 25 scans, 5 tracked sites, and unlocks ASO auditing. Pro is $20/month for unlimited scans and sites, AI deep analysis, daily monitoring, white-label PDF reports, and API access.' },
 ];
 
 /** Rotating AI engine name in the hero headline. */
@@ -461,7 +455,7 @@ headers() and verify on /.`}
             Start free. Upgrade when you need more scans, monitoring, or AI analysis.
           </p>
         </Reveal>
-        <Stagger className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <Stagger className="grid sm:grid-cols-3 gap-5">
           {PLANS.map((plan) => (
             <MotionItem key={plan.name}>
               <div className={`h-full rounded-2xl border p-6 flex flex-col ${
@@ -506,7 +500,7 @@ headers() and verify on /.`}
         </Stagger>
         <Reveal className="text-center mt-8">
           <p className="text-sm text-muted-foreground">
-            Enterprise plans are not offered yet. Start on Free, Starter, Pro, or Agency today.
+            Start on Free, Starter, or Pro today.
           </p>
         </Reveal>
       </section>

@@ -16,12 +16,10 @@ import { isPlanAvailable } from '@/lib/constants';
 
 const PLAN_META = {
   free:       { label: 'Free',       price: '$0',    period: null,    color: 'text-muted-foreground', badge: 'bg-white/10' },
-  starter:    { label: 'Starter',    price: '$49',   period: '/mo',   color: 'text-blue-400',         badge: 'bg-blue-500/10 border-blue-500/20' },
-  pro:        { label: 'Pro',        price: '$149',  period: '/mo',   color: 'text-primary',          badge: 'bg-primary/10 border-primary/30' },
-  agency:     { label: 'Agency',     price: '$399',  period: '/mo',   color: 'text-purple-400',       badge: 'bg-purple-500/10 border-purple-500/20' },
-  enterprise: { label: 'Enterprise', price: 'Custom', period: null,   color: 'text-yellow-400',       badge: 'bg-yellow-500/10 border-yellow-500/20' },
+  starter:    { label: 'Starter',    price: '$5',    period: '/mo',   color: 'text-blue-400',         badge: 'bg-blue-500/10 border-blue-500/20' },
+  pro:        { label: 'Pro',        price: '$20',   period: '/mo',   color: 'text-primary',          badge: 'bg-primary/10 border-primary/30' },
 };
-const PLANS_ORDER = ['free', 'starter', 'pro', 'agency'];
+const PLANS_ORDER = ['free', 'starter', 'pro'];
 // Every plan includes the full audit suite - the scanners are the core product,
 // so gating them behind higher tiers would block free users from experiencing
 // the value. Plans are differentiated by quota + power features below, not by
@@ -265,7 +263,7 @@ export default function BillingTab({ currentPlan = 'free' }) {
               <div className="text-2xl font-bold">{planLimits?.[plan]?.price || meta.price}<span className="text-sm font-normal text-muted-foreground">{meta.period}</span></div>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {plan !== 'enterprise' && currentIdx < PLANS_ORDER.indexOf('enterprise') && (
+              {currentIdx < PLANS_ORDER.length - 1 && (
                 isPlanAvailable(PLANS_ORDER[currentIdx + 1]) ? (
                   <Button
                     size="sm"

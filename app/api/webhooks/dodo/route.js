@@ -174,17 +174,19 @@ async function resolveUserId(data) {
  */
 function planFromProductId(productId) {
   if (!productId) return null;
-  const match = Object.entries(env.dodoProducts).find(([, id]) => id && id === productId);
+  // Exclude unlockReport - it's a one-time purchase product, never a subscription plan.
+  const match = Object.entries(env.dodoProducts).find(
+    ([key, id]) => key !== 'unlockReport' && id && id === productId
+  );
   return match ? match[0] : null;
 }
 
 function guessPlanFromAmount(amount) {
   if (!amount) return null;
   // Fallback heuristic if metadata doesn't contain the plan
-  // Starter = $49 (4900 cents), Pro = $149, Agency = $399
+  // Starter = $5 (500 cents), Pro = $20 (2000 cents)
   // (adjust these values to match your exact Dodo product prices in cents)
-  if (amount >= 39900) return 'agency';
-  if (amount >= 14900) return 'pro';
-  if (amount >= 4900) return 'starter';
+  if (amount >= 2000) return 'pro';
+  if (amount >= 500) return 'starter';
   return null;
 }

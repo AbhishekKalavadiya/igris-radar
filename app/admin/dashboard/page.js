@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { PageTransition } from '@/components/ui/motion';
 
-const PLANS_ORDER = ['free', 'starter', 'pro', 'agency', 'enterprise'];
+const PLANS_ORDER = ['free', 'starter', 'pro'];
 
 export default function AdminDashboardPage() {
   const [section, setSection] = useState('plans');
@@ -154,7 +154,7 @@ export default function AdminDashboardPage() {
 
         {section === 'plans' && (
         <Tabs defaultValue="free" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-14">
+          <TabsList className="grid w-full grid-cols-3 h-14">
             {PLANS_ORDER.map(plan => (
               <TabsTrigger key={plan} value={plan} className="capitalize text-lg">
                 {plan}

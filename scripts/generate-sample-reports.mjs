@@ -22,7 +22,7 @@ const SURFACE = '#f8fafc';
 const REDACT = '#cbd5e1';
 const REDACT_LIGHT = '#e2e8f0';
 const SEVERITY_COLORS = { critical: '#dc2626', high: '#ea580c', medium: '#d97706', low: '#2563eb', passed: '#16a34a' };
-const TIER_LABELS = { starter: 'Starter', pro: 'Pro', agency: 'Agency' };
+const TIER_LABELS = { starter: 'Starter', pro: 'Pro' };
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: INK },

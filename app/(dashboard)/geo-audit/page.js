@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Globe, Loader2, Target, Sparkles, AlertCircle, Lock, CheckCircle2, Zap, Star, Crown } from 'lucide-react';
+import { Globe, Loader2, Target, Sparkles, AlertCircle, Lock, CheckCircle2, Zap, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import PageHeader from '@/components/ui/PageHeader';
@@ -206,9 +206,9 @@ export default function GeoAuditPage() {
           onSeverityChange={setSeverityFilter}
         />
         {visible.length === 0 ? (
-          tier === 'agency' ? (
+          tier === 'pro' ? (
             <div className="text-muted-foreground text-center py-8 space-y-1">
-              <p>Your Agency GEO insights — Topical Authority depth, entity confidence and citation simulation — are delivered in the <span className="text-scanner-geo font-medium">AI Insights</span> tab.</p>
+              <p>Your Pro GEO insights — Topical Authority depth, entity confidence and citation simulation — are delivered in the <span className="text-scanner-geo font-medium">AI Insights</span> tab.</p>
               <p className="text-xs">Enable <span className="text-scanner-geo">AI Deep Analysis</span> when you run a scan to generate them.</p>
             </div>
           ) : (
@@ -398,9 +398,6 @@ export default function GeoAuditPage() {
               </TabsTrigger>
               <TabsTrigger value="tier-pro" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-geo/20 data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">
                 <Star className="w-3.5 h-3.5 text-warning" /> Pro
-              </TabsTrigger>
-              <TabsTrigger value="tier-agency" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-geo/20 data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">
-                <Crown className="w-3.5 h-3.5 text-destructive" /> Agency
                 {lockedCount > 0 && (
                   <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] bg-scanner-geo/20 text-scanner-geo px-1.5 py-0.5 rounded-full">
                     <Lock className="h-2.5 w-2.5" />{lockedCount}
@@ -492,9 +489,6 @@ export default function GeoAuditPage() {
             </TabsContent>
             <TabsContent value="tier-pro" className="m-0">
               {renderTierTab('pro')}
-            </TabsContent>
-            <TabsContent value="tier-agency" className="m-0">
-              {renderTierTab('agency')}
             </TabsContent>
 
             <TabsContent value="trend" className="m-0">

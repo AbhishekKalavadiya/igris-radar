@@ -2,7 +2,7 @@
 
 /**
  * components/settings/ApiKeysTab.js
- * API key management for Agency+ plan users.
+ * API key management for Pro plan users.
  * Keys are SHA-256 hashed server-side - the raw key is shown only on creation.
  */
 
@@ -22,7 +22,7 @@ export default function ApiKeysTab({ userPlan = 'free' }) {
   const [showKey, setShowKey] = useState(false);
   const { toast } = useToast();
 
-  const hasAccess = ['agency', 'enterprise'].includes(userPlan);
+  const hasAccess = ['pro'].includes(userPlan);
 
   useEffect(() => {
     if (!hasAccess) { setLoading(false); return; }
@@ -81,10 +81,10 @@ export default function ApiKeysTab({ userPlan = 'free' }) {
         <CardContent className="pt-6 flex items-start gap-4">
           <ShieldAlert className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-white text-sm mb-1">API Access is an Agency feature</p>
+            <p className="font-medium text-white text-sm mb-1">API Access is a Pro feature</p>
             <p className="text-sm text-muted-foreground">
               Integrate Igris Radar scan results directly into your own tools and pipelines with a full REST API.
-              The Agency plan is not offered yet, so this isn't available to upgrade into right now.
+              Upgrade to Pro to unlock API access.
             </p>
           </div>
         </CardContent>

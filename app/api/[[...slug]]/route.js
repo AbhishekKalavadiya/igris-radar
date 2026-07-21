@@ -417,7 +417,7 @@ export async function GET(request) {
       }
 
       // Same Free+Starter gate as public-scan - the $2 purchase reveals
-      // starter-tier value only, never Pro/Agency findings.
+      // starter-tier value only, never Pro findings.
       const gatedScan = { ...scan, findings: filterFindingsByPlan(scan.findings || [], 'starter') };
 
       const { DEFAULT_BRANDING } = await import('@/lib/branding');
@@ -849,7 +849,7 @@ export async function GET(request) {
         return NextResponse.json({ success: false, error: 'This scan has not been unlocked.' }, { status: 403 });
       }
 
-      // Return Free + Starter findings in full; Pro/Agency remain as locked
+      // Return Free + Starter findings in full; Pro remains as locked
       // teaser cards (same blurred treatment the dashboard uses for plan-gating).
       // This is intentional: the $2 purchase reveals starter-tier value only.
       return NextResponse.json({
@@ -894,7 +894,7 @@ export async function POST(request) {
       return NextResponse.json({ success: true });
     }
 
-    // Save white-label branding config (Settings → Branding; Agency/Enterprise)
+    // Save white-label branding config (Settings → Branding; Pro)
     if (pathParts[0] === 'branding') {
       const sessionUser = getSessionUser(request);
       if (!sessionUser) return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
@@ -2106,7 +2106,7 @@ export async function POST(request) {
         const updates = await request.json(); // array of plan limit objects
         if (!Array.isArray(updates)) return NextResponse.json({ success: false, error: 'Expected an array of plans' }, { status: 400 });
 
-        const validPlans = new Set(['free', 'starter', 'pro', 'agency', 'enterprise']);
+        const validPlans = new Set(['free', 'starter', 'pro']);
         const nonNegativeFields = ['scansPerMonth', 'sites', 'teamMembers'];
 
         const col = await getCollection(COLLECTIONS.PLAN_LIMITS);

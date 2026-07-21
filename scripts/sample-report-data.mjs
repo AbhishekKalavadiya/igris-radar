@@ -29,7 +29,7 @@ export const SECURITY_REPORT = {
     locked('Cookies', 'medium', 'starter'),
     locked('Transport', 'high', 'pro'),
     locked('Exposure', 'medium', 'pro'),
-    locked('Headers', 'low', 'agency'),
+    locked('Headers', 'low', 'pro'),
   ],
 };
 
@@ -49,7 +49,7 @@ export const SEO_REPORT = {
     locked('Content', 'low', 'starter'),
     locked('Links', 'medium', 'pro'),
     locked('Technical SEO', 'critical', 'pro'),
-    locked('Content', 'medium', 'agency'),
+    locked('Content', 'medium', 'pro'),
   ],
 };
 
@@ -69,7 +69,7 @@ export const AEO_REPORT = {
     locked('Citations', 'critical', 'starter'),
     locked('Structure', 'medium', 'pro'),
     locked('Answer Readiness', 'low', 'pro'),
-    locked('Citations', 'high', 'agency'),
+    locked('Citations', 'high', 'pro'),
   ],
 };
 
@@ -89,7 +89,7 @@ export const GEO_REPORT = {
     locked('Freshness', 'low', 'starter'),
     locked('Crawler Access', 'medium', 'pro'),
     locked('AI Visibility', 'critical', 'pro'),
-    locked('Content Depth', 'high', 'agency'),
+    locked('Content Depth', 'high', 'pro'),
   ],
 };
 
@@ -109,8 +109,8 @@ export const ASO_REPORT = {
     locked('Keywords', 'medium', 'starter'),
     locked('Visuals', 'medium', 'pro'),
     locked('Metadata', 'medium', 'pro'),
-    locked('Ratings', 'high', 'agency'),
-    locked('Keywords', 'high', 'agency'),
+    locked('Ratings', 'high', 'pro'),
+    locked('Keywords', 'high', 'pro'),
   ],
 };
 

@@ -5,14 +5,14 @@ import { buildMetadata, breadcrumbJsonLd } from '@/lib/seo';
 import JsonLd from '@/components/ui/JsonLd';
 
 export const metadata = buildMetadata({
-  title: 'Contact Igris Radar: Sales, Support & Enterprise',
+  title: 'Contact Igris Radar: Sales & Support',
   description:
-    'Talk to the Igris Radar team about enterprise plans, agency partnerships, product support, or anything about AI search visibility, AEO, and GEO.',
+    'Talk to the Igris Radar team about agency partnerships, product support, or anything about AI search visibility, AEO, and GEO.',
   path: '/landing/contact',
 });
 
 const REASONS = [
-  { icon: CreditCard, title: 'Enterprise & custom plans', text: 'Unlimited sites, custom terms, procurement and security reviews. Tell us what your rollout needs.' },
+  { icon: CreditCard, title: 'Billing & plans', text: 'Questions about pricing, upgrades, or your current plan. Tell us what you need.' },
   { icon: Handshake, title: 'Agencies & partners', text: 'White-label reports, API access and multi-client workflows are built for agencies. Let\'s talk volume.' },
   { icon: MessageSquare, title: 'Product questions', text: 'Not sure whether AEO or GEO is your bottleneck? Describe your situation and we\'ll point you at the right audit.' },
 ];
@@ -32,7 +32,7 @@ export default function ContactPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-20 pb-12 text-center relative">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Get in touch</h1>
           <p className="mt-5 text-lg md:text-xl text-muted-foreground leading-relaxed">
-            Whether you need a custom enterprise plan or have a question about our AEO metrics,
+            Whether you have a billing question or want to talk about our AEO metrics,
             the team reads everything.
           </p>
         </div>

@@ -183,20 +183,20 @@ export default function UnlockedScanModal({ open, onClose, scanData, scanType })
               ))
             )}
 
-            {/* Pro/Agency upsell CTA — always shown when there are locked findings */}
+            {/* Pro upsell CTA — always shown when there are locked findings */}
             {lockedCount > 0 && (
               <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 via-card to-primary/5 p-7 text-center mt-4 shadow-[0_0_32px_hsl(var(--primary)/0.08)]">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-4">
                   <Lock className="h-3 w-3" />
-                  {lockedCount} Pro &amp; Agency findings locked
+                  {lockedCount} Pro findings locked
                 </div>
                 <h4 className="text-xl font-bold text-foreground mb-2">
                   Unlock everything — free for 10 scans
                 </h4>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6 leading-relaxed">
                   You&apos;re seeing <strong>Free + Starter</strong> tier findings. Create a free account to unlock
-                  all <strong>{lockedCount} Pro &amp; Agency-level insights</strong>, AI deep analysis,
+                  all <strong>{lockedCount} Pro-level insights</strong>, AI deep analysis,
                   competitor comparisons, and fix prompts — 10 full scans/month, then from{' '}
                   <strong>$20/month</strong>.
                 </p>

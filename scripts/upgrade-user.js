@@ -6,7 +6,7 @@ async function main() {
 
   const result = await db.collection('users').updateOne(
     { email: 'alex@gma.com' },
-    { $set: { plan: 'agency', updatedAt: new Date() } }
+    { $set: { plan: 'pro', updatedAt: new Date() } }
   );
 
   console.log('Matched:', result.matchedCount, '| Modified:', result.modifiedCount);
@@ -14,9 +14,9 @@ async function main() {
   if (result.matchedCount === 0) {
     console.log('No user found with that email.');
   } else if (result.modifiedCount === 1) {
-    console.log('Successfully upgraded alex@gma.com to AGENCY plan!');
+    console.log('Successfully upgraded alex@gma.com to PRO plan!');
   } else {
-    console.log('User was already on the agency plan.');
+    console.log('User was already on the pro plan.');
   }
 
   await client.close();

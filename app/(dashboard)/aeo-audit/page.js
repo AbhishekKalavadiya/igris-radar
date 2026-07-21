@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Sparkles, Loader2, Target, AlertCircle, CheckCircle2, Zap, Star, Crown, Lock } from 'lucide-react';
+import { Sparkles, Loader2, Target, AlertCircle, CheckCircle2, Zap, Star, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import PageHeader from '@/components/ui/PageHeader';
@@ -196,9 +196,9 @@ export default function AeoAuditPage() {
           onSeverityChange={setSeverityFilter}
         />
         {visible.length === 0 ? (
-          tier === 'agency' ? (
+          tier === 'pro' ? (
             <div className="text-muted-foreground text-center py-8 space-y-1">
-              <p>Your Agency AEO insights — Answer Engine Simulation, Question Coverage Gaps and Content Freshness scoring — are delivered in the <span className="text-scanner-aeo font-medium">AI Insights</span> tab.</p>
+              <p>Your Pro AEO insights — Answer Engine Simulation, Question Coverage Gaps and Content Freshness scoring — are delivered in the <span className="text-scanner-aeo font-medium">AI Insights</span> tab.</p>
               <p className="text-xs">Enable <span className="text-scanner-aeo">AI Deep Analysis</span> when you run a scan to generate them.</p>
             </div>
           ) : (
@@ -372,9 +372,6 @@ export default function AeoAuditPage() {
               </TabsTrigger>
               <TabsTrigger value="tier-pro" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-aeo/20 data-[state=active]:bg-scanner-aeo/10 data-[state=active]:text-scanner-aeo">
                 <Star className="w-3.5 h-3.5 text-warning" /> Pro
-              </TabsTrigger>
-              <TabsTrigger value="tier-agency" className="gap-1.5 bg-muted/30 hover:bg-muted/50 data-[state=active]:border-scanner-aeo/20 data-[state=active]:bg-scanner-aeo/10 data-[state=active]:text-scanner-aeo">
-                <Crown className="w-3.5 h-3.5 text-destructive" /> Agency
                 {lockedCount > 0 && (
                   <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] bg-scanner-aeo/20 text-scanner-aeo px-1.5 py-0.5 rounded-full">
                     <Lock className="h-2.5 w-2.5" />{lockedCount}
@@ -453,9 +450,6 @@ export default function AeoAuditPage() {
             </TabsContent>
             <TabsContent value="tier-pro" className="m-0">
               {renderTierTab('pro')}
-            </TabsContent>
-            <TabsContent value="tier-agency" className="m-0">
-              {renderTierTab('agency')}
             </TabsContent>
 
             <TabsContent value="crawl" className="m-0">
