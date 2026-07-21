@@ -198,7 +198,8 @@ export default function UnlockedScanModal({ open, onClose, scanData, scanType })
                   You&apos;re seeing <strong>Free + Starter</strong> tier findings. Create a free account to unlock
                   all <strong>{lockedCount} Pro-level insights</strong>, AI deep analysis,
                   competitor comparisons, and fix prompts — 10 full scans/month, then from{' '}
-                  <strong>$20/month</strong>.
+                  <strong className="line-through text-muted-foreground">$20/month</strong>{' '}
+                  <strong className="text-success">$10/month (50% off, limited time)</strong>.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <Link href="/signup">

@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import UsageMeter from '@/components/ui/UsageMeter';
 import { useToast } from '@/hooks/use-toast';
-import { isPlanAvailable } from '@/lib/constants';
+import { isPlanAvailable, PLAN_PROMOTIONS } from '@/lib/constants';
 
 const PLAN_META = {
   free:       { label: 'Free',       price: '$0',    period: null,    color: 'text-muted-foreground', badge: 'bg-white/10' },
@@ -200,6 +200,7 @@ export default function BillingTab({ currentPlan = 'free' }) {
 
   const plan = usage?.plan || currentPlan;
   const meta = PLAN_META[plan] || PLAN_META.free;
+  const promo = PLAN_PROMOTIONS[plan];
   const currentIdx = PLANS_ORDER.indexOf(plan);
 
   // Usage resets at the end of the current 30-day cycle (anchored to plan
@@ -221,10 +222,16 @@ export default function BillingTab({ currentPlan = 'free' }) {
         const val = planLimits?.[p]?.[key];
         const formatted = format(val);
         const isCurrent = p === plan;
+        const promo = key === 'price' ? PLAN_PROMOTIONS[p] : null;
         return (
           <td key={p} className={`text-center py-3 px-3 ${isCurrent ? 'bg-muted/50' : ''}`}>
             {formatted === null ? (
               <XCircle className="h-4 w-4 text-muted-foreground/30 mx-auto" />
+            ) : promo ? (
+              <span className="inline-flex flex-col items-center gap-0.5">
+                <span className="text-xs text-muted-foreground line-through">{formatted}</span>
+                <span className="font-semibold text-success">{promo.discountedPrice}</span>
+              </span>
             ) : (
               <span className={`font-medium ${isCurrent ? PLAN_META[p].color : 'text-foreground/80'}`}>
                 {formatted === 'Included' ? <CheckCircle2 className="h-4 w-4 mx-auto text-primary" /> : formatted}
@@ -260,7 +267,16 @@ export default function BillingTab({ currentPlan = 'free' }) {
               <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold uppercase tracking-widest border ${meta.badge}`}>
                 ◆ {meta.label}
               </span>
-              <div className="text-2xl font-bold">{planLimits?.[plan]?.price || meta.price}<span className="text-sm font-normal text-muted-foreground">{meta.period}</span></div>
+              {promo ? (
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="text-sm text-muted-foreground line-through">{planLimits?.[plan]?.price || meta.price}</span>
+                  <span className="text-2xl font-bold text-success">{promo.discountedPrice}</span>
+                  <span className="text-sm font-normal text-muted-foreground">{meta.period}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-bold uppercase tracking-wide">{promo.badge}</span>
+                </div>
+              ) : (
+                <div className="text-2xl font-bold">{planLimits?.[plan]?.price || meta.price}<span className="text-sm font-normal text-muted-foreground">{meta.period}</span></div>
+              )}
             </div>
             <div className="flex gap-2 flex-wrap">
               {currentIdx < PLANS_ORDER.length - 1 && (

@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Reveal, Stagger, MotionItem } from '@/components/ui/motion';
 import { SHOW_AUTH_CTAS } from '@/lib/landingContent';
+import { PLAN_PROMOTIONS } from '@/lib/constants';
 import { useState } from 'react';
 import FeatureFaqAccordion from '@/components/landing/FeatureFaqAccordion';
 
@@ -328,7 +329,7 @@ const PRICING_FAQS = [
   { q: 'What counts as one scan?', a: 'One scan = one audit run on one URL. Running a Security scan and an SEO scan on the same URL counts as two scans. Competitor comparison adds one additional scan per competitor URL.' },
   { q: 'Do unused scans roll over to the next month?', a: 'No. Scan limits reset at the start of each billing calendar month. Unused scans do not carry forward.' },
   { q: 'Can I switch plans at any time?', a: 'Yes. You can upgrade or downgrade at any time. Upgrades take effect immediately; downgrades take effect at the next billing cycle.' },
-  { q: 'Why is ASO not on the Free plan?', a: 'ASO audits require live calls to App Store and Google Play APIs, which carry higher infrastructure costs than web-only scans. Starter plan ($5/month) includes full ASO access with no separate feature gate.' },
+  { q: 'Why is ASO not on the Free plan?', a: 'ASO audits require live calls to App Store and Google Play APIs, which carry higher infrastructure costs than web-only scans. Starter plan (currently $0/month for a limited time, normally $5/month) includes full ASO access with no separate feature gate.' },
   { q: 'What does "unlimited team members" mean?', a: 'Every plan allows you to invite as many teammates as you want to your workspace. Scan limits are per workspace, not per seat.' },
   { q: 'What is included in AI deep analysis?', a: 'On the Pro plan, Gemini-powered AI analysis reviews your scan results and produces an executive summary, risk prioritization, keyword and intent mapping, E-E-A-T scoring, and copyable remediation snippets — depending on the audit type.' },
 ];
@@ -492,7 +493,9 @@ export default function PricingPage() {
       {/* ── Plan cards ───────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
         <Stagger className="grid sm:grid-cols-3 gap-5">
-          {PLANS.map((plan) => (
+          {PLANS.map((plan) => {
+            const promo = PLAN_PROMOTIONS[plan.key];
+            return (
             <MotionItem key={plan.name}>
               <div
                 className={`h-full rounded-2xl border p-6 flex flex-col ${
@@ -509,10 +512,24 @@ export default function PricingPage() {
                 <div>
                   <h2 className="font-bold text-lg">{plan.name}</h2>
                   <p className="text-xs text-muted-foreground mt-1 leading-snug">{plan.tagline}</p>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-sm text-muted-foreground">{plan.period}</span>
-                  </div>
+                  {promo ? (
+                    <>
+                      <div className="mt-4 flex items-baseline gap-2 flex-wrap">
+                        <span className="text-xl text-muted-foreground line-through">{plan.price}</span>
+                        <span className="text-4xl font-bold text-success">{promo.discountedPrice}</span>
+                        <span className="text-sm text-muted-foreground">{plan.period}</span>
+                      </div>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-bold uppercase tracking-wide">{promo.badge}</span>
+                        <span className="text-[11px] text-muted-foreground">Limited period offer</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-4 flex items-baseline gap-1">
+                      <span className="text-4xl font-bold">{plan.price}</span>
+                      <span className="text-sm text-muted-foreground">{plan.period}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1" />
                 {plan.comingSoon ? (
@@ -531,7 +548,8 @@ export default function PricingPage() {
                 ) : null}
               </div>
             </MotionItem>
-          ))}
+            );
+          })}
         </Stagger>
 
         {/* Anchor links to scan tables */}

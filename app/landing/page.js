@@ -17,8 +17,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Reveal, Stagger, MotionItem, AnimatedNumber } from '@/components/ui/motion';
 import { NAV_PLATFORM, AI_ENGINES, HOW_IT_WORKS, SHOW_AUTH_CTAS } from '@/lib/landingContent';
+import { PLAN_PROMOTIONS } from '@/lib/constants';
 import FeatureFaqAccordion from '@/components/landing/FeatureFaqAccordion';
 import FreeScanner from '@/components/landing/FreeScanner';
+import PromoPopup from '@/components/landing/PromoPopup';
 import JsonLd from '@/components/ui/JsonLd';
 import { faqPageJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd, howToJsonLd, SITE_PUBLISHED, FOUNDER } from '@/lib/seo';
 
@@ -47,7 +49,7 @@ const HOME_FAQS = [
   { q: 'Do I need to install anything on my site?', a: 'No. Every audit runs from the outside, exactly the way crawlers and attackers see your site. Enter a URL and results arrive in seconds to minutes depending on the audit.' },
   { q: 'What makes the fix workflow different?', a: 'Every failed check ships with a plain-language explanation and an agent-native fix prompt. That is a ready-to-paste instruction for your AI coding assistant, with the full context of the finding built in. You go from "we have an issue" straight to a merged fix.' },
   { q: 'Can I compare my site against competitors?', a: 'Yes. Point SEO, AEO, or GEO audits at a competitor\'s URL. We run the same checks on both sites and show a gap analysis by category. Brand visibility tracking also shows whether AI engines recommend you or them.' },
-  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across six web audit types, no credit card required. Starter is $5/month for 25 scans, 5 tracked sites, and unlocks ASO auditing. Pro is $20/month for unlimited scans and sites, AI deep analysis, daily monitoring, white-label PDF reports, and API access.' },
+  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across six web audit types, no credit card required. Starter is normally $5/month (currently $0/month, 100% off for a limited time) for 25 scans, 5 tracked sites, and unlocks ASO auditing. Pro is normally $20/month (currently $10/month, 50% off for a limited time) for unlimited scans and sites, AI deep analysis, daily monitoring, white-label PDF reports, and API access.' },
 ];
 
 /** Rotating AI engine name in the hero headline. */
@@ -79,6 +81,7 @@ function RotatingEngines() {
 export default function LandingPage() {
   return (
     <div>
+      <PromoPopup />
       <JsonLd data={softwareApplicationJsonLd()} />
       <JsonLd data={faqPageJsonLd(HOME_FAQS)} />
       <JsonLd data={breadcrumbJsonLd([{ name: 'Home', path: '/landing' }])} />
@@ -456,7 +459,9 @@ headers() and verify on /.`}
           </p>
         </Reveal>
         <Stagger className="grid sm:grid-cols-3 gap-5">
-          {PLANS.map((plan) => (
+          {PLANS.map((plan) => {
+            const promo = PLAN_PROMOTIONS[plan.name.toLowerCase()];
+            return (
             <MotionItem key={plan.name}>
               <div className={`h-full rounded-2xl border p-6 flex flex-col ${
                 plan.highlight
@@ -469,10 +474,24 @@ headers() and verify on /.`}
                   </span>
                 )}
                 <h3 className="font-bold text-lg">{plan.name}</h3>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  <span className="text-sm text-muted-foreground">{plan.period}</span>
-                </div>
+                {promo ? (
+                  <>
+                    <div className="mt-2 flex items-baseline gap-2 flex-wrap">
+                      <span className="text-lg text-muted-foreground line-through">{plan.price}</span>
+                      <span className="text-3xl font-bold text-success">{promo.discountedPrice}</span>
+                      <span className="text-sm text-muted-foreground">{plan.period}</span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-bold uppercase tracking-wide">{promo.badge}</span>
+                      <span className="text-[11px] text-muted-foreground">Limited period offer</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-2 flex items-baseline gap-1">
+                    <span className="text-3xl font-bold">{plan.price}</span>
+                    <span className="text-sm text-muted-foreground">{plan.period}</span>
+                  </div>
+                )}
                 <ul className="mt-5 space-y-2.5 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm">
@@ -496,7 +515,8 @@ headers() and verify on /.`}
                 ) : null}
               </div>
             </MotionItem>
-          ))}
+            );
+          })}
         </Stagger>
         <Reveal className="text-center mt-8">
           <p className="text-sm text-muted-foreground">
