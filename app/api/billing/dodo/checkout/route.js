@@ -51,19 +51,44 @@ export async function POST(request) {
           metadata: { userId: sessionUser.id, plan },
         });
 
-        // changePlan resolved => payment succeeded. Reflect immediately: switch
-        // the plan and restart the 30-day usage cycle from now. The webhook is
-        // a backstop that sets the same fields.
-        const usersCol = await getCollection(COLLECTIONS.USERS);
-        await usersCol.updateOne(
-          { id: sessionUser.id },
-          {
-            $set: { plan, planCycleStart: new Date(), updatedAt: new Date() },
-            $unset: { pendingDowngrade: '' },
-          }
-        );
+        // FAIL-SAFE, NOT FAIL-OPEN: changePlan resolving is NOT proof of payment.
+        // The charge can settle asynchronously, and a cancelled/declined 3-D
+        // Secure step leaves the subscription on its OLD product (on_payment_
+        // failure: 'prevent_change'). Trusting the resolved promise here is what
+        // let a user who cancelled checkout end up on Pro. So re-read the
+        // subscription from Dodo and grant the higher tier locally ONLY if Dodo
+        // now reports the new product as genuinely active.
+        let paymentApplied = false;
+        try {
+          const verifyPage = await client.subscriptions.list({ customer_id: customerId, page_size: 20 });
+          paymentApplied = (verifyPage?.items || []).some(
+            (s) => s.subscription_id === activeSub.subscription_id
+              && s.product_id === productId
+              && s.status === 'active'
+          );
+        } catch (e) {
+          // If we cannot confirm, treat it as unconfirmed and defer to the
+          // webhook rather than optimistically upgrading.
+          console.error('[Dodo Checkout] Could not verify plan change:', e?.message || e);
+        }
 
-        return NextResponse.json({ success: true, changed: true, plan });
+        if (paymentApplied) {
+          // Confirmed paid: reflect immediately and restart the 30-day cycle.
+          const usersCol = await getCollection(COLLECTIONS.USERS);
+          await usersCol.updateOne(
+            { id: sessionUser.id },
+            {
+              $set: { plan, planCycleStart: new Date(), updatedAt: new Date() },
+              $unset: { pendingDowngrade: '' },
+            }
+          );
+          return NextResponse.json({ success: true, changed: true, plan });
+        }
+
+        // Not yet confirmed. Do NOT write the plan. The payment.succeeded
+        // webhook is the source of truth and will upgrade the moment the charge
+        // clears; if the user cancelled, it never fires and they stay put.
+        return NextResponse.json({ success: true, changed: true, processing: true, plan });
       }
     }
 

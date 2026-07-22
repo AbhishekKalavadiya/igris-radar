@@ -111,10 +111,20 @@ export default function BillingTab({ currentPlan = 'free' }) {
         return;
       }
 
-      // In-place upgrade (existing paid subscriber): no checkout redirect - the
-      // plan changed immediately and the cycle restarted. Reload so the session
-      // cookie, plan and usage all resync from the DB.
+      // In-place upgrade (existing paid subscriber): no checkout redirect.
       if (data.changed) {
+        if (data.processing) {
+          // Payment not yet confirmed by Dodo - the plan is granted by the
+          // webhook once the charge clears, so don't claim the upgrade yet.
+          toast({
+            title: 'Payment processing',
+            description: `Finalizing your upgrade to ${PLAN_META[data.plan]?.label || data.plan}. Your plan updates automatically once payment clears — this can take a few seconds.`,
+          });
+          setRedirecting(null);
+          return;
+        }
+        // Confirmed paid: plan changed and the cycle restarted. Reload so the
+        // session cookie, plan and usage all resync from the DB.
         toast({ title: 'Plan upgraded', description: `You're now on ${PLAN_META[data.plan]?.label || data.plan}. Your 30-day cycle restarts today.` });
         window.location.reload();
         return;

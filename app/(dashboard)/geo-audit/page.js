@@ -18,6 +18,7 @@ import AiUnavailableNotice from '@/components/ui/AiUnavailableNotice';
 import { PageTransition } from '@/components/ui/motion';
 import { SCANNERS } from '@/lib/scannerAccents';
 import AuditFindingCard from '@/components/ui/AuditFindingCard';
+import InfoHint from '@/components/ui/InfoHint';
 import CategoryScoreBreakdown from '@/components/ui/CategoryScoreBreakdown';
 import dynamic from 'next/dynamic';
 import CompetitorCompare from '@/components/ui/CompetitorCompare';
@@ -277,16 +278,32 @@ export default function GeoAuditPage() {
               </div>
 
               {enableDeepAnalysis && (
-                <div className="relative w-full md:w-1/2">
-                  <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-scanner-geo" />
-                  <Input
-                    placeholder="Target Topic (e.g., 'Project Management Software')"
-                    className="pl-10 focus-visible:ring-scanner-geo border-scanner-geo/30 bg-scanner-geo/5"
-                    value={promptTopic}
-                    onChange={(e) => setPromptTopic(e.target.value)}
-                    disabled={isScanning}
-                    required={enableDeepAnalysis}
-                  />
+                <div className="w-full md:w-1/2 space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <label htmlFor="targetTopic" className="text-sm font-medium">Target Topic</label>
+                    <InfoHint label="What is a Target Topic?">
+                      The subject you want AI assistants to recommend you for — the thing a
+                      buyer would ask ChatGPT or Perplexity about (e.g. &ldquo;project management
+                      software&rdquo;). We turn it into the real questions people ask AI on that
+                      topic and check whether your page would be cited in the answer.
+                    </InfoHint>
+                  </div>
+                  <div className="relative">
+                    <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-scanner-geo" />
+                    <Input
+                      id="targetTopic"
+                      placeholder="e.g., 'Project Management Software'"
+                      className="pl-10 focus-visible:ring-scanner-geo border-scanner-geo/30 bg-scanner-geo/5"
+                      value={promptTopic}
+                      onChange={(e) => setPromptTopic(e.target.value)}
+                      disabled={isScanning}
+                      required={enableDeepAnalysis}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    The topic you want to win AI recommendations for. We generate the questions
+                    buyers ask AI about it and score how well your page answers each one.
+                  </p>
                 </div>
               )}
             </div>
@@ -496,7 +513,25 @@ export default function GeoAuditPage() {
             </TabsContent>
 
             {scanResult.promptCoverage && (
-              <TabsContent value="prompts" className="m-0">
+              <TabsContent value="prompts" className="m-0 space-y-4">
+                <div className="rounded-lg border border-scanner-geo/20 bg-scanner-geo/5 p-4">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Target className="h-4 w-4 text-scanner-geo" />
+                    <h3 className="text-sm font-semibold text-foreground">What the Prompt Map shows</h3>
+                    <InfoHint label="What is the Prompt Map?">
+                      A &ldquo;prompt&rdquo; is a question someone types into an AI assistant. For your
+                      Target Topic we generate the prompts real buyers ask, then check your page against
+                      each one — so you can see the exact questions where AI would (or would not) cite you.
+                    </InfoHint>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Each row is a question buyers actually ask AI assistants about your Target Topic.
+                    The status shows whether your page answers it well enough to be cited:{' '}
+                    <span className="text-scanner-geo font-medium">Covered</span> (you answer it),{' '}
+                    <span className="text-warning font-medium">Partial</span> (weak or incomplete), and{' '}
+                    <span className="text-destructive font-medium">Missing</span> (a gap to fill with new content).
+                  </p>
+                </div>
                 <PromptCoverageHeatmap coverageData={scanResult.promptCoverage} />
               </TabsContent>
             )}
