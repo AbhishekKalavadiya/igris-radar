@@ -5,6 +5,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 
 export const metadata = {
   title: 'How to make your site show up in Perplexity and AI Overviews | Igris Radar',
+  alternates: { canonical: '/landing/blog/how-to-show-up-in-perplexity-ai-overviews' },
   description: 'The strategies and technical changes you need to get your content sourced in Perplexity AI and Google AI Overviews.',
 };
 

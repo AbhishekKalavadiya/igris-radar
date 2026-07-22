@@ -5,6 +5,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 
 export const metadata = {
   title: "AEO vs GEO vs SEO, what's the difference? | Igris Radar",
+  alternates: { canonical: '/landing/blog/aeo-vs-geo-vs-seo-difference' },
   description: 'SEO earns rankings, AEO earns the extracted answer, and GEO earns the citation. We break down the differences and signals for each.',
 };
 

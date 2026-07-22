@@ -155,7 +155,7 @@ export default function FreeScanner() {
         <div className="p-4 md:p-6">
           <div className="flex items-center gap-2 mb-4 ml-1">
             <Target className="h-5 w-5 text-primary" />
-            <h3 className="text-base md:text-lg font-bold">Try Igris Radar Free</h3>
+            <h2 className="text-base md:text-lg font-bold">Try Igris Radar Free</h2>
           </div>
 
           <form onSubmit={handleScan} className="flex flex-col lg:flex-row gap-4 items-end">

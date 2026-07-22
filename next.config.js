@@ -71,6 +71,15 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // HSTS with includeSubDomains + preload so the domain qualifies for the
+          // browser preload list (2-year max-age is the preload-list minimum).
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+          // COOP isolates our browsing context from cross-origin windows. Only
+          // COOP is set (not COEP/CORP): those restrict cross-origin resource
+          // loading and would break social og:image embedding and GTM.
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          // Declare a reporting endpoint so browsers can POST CSP/network reports.
+          { key: "Reporting-Endpoints", value: 'default="https://igrisradar.com/api?path=csp-report"' },
           { key: "Access-Control-Allow-Origin", value: process.env.CORS_ORIGINS || "https://igrisradar.com" },
           { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, DELETE, OPTIONS" },
           { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization, X-Tenant-Id" },

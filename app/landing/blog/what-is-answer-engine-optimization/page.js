@@ -5,6 +5,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 
 export const metadata = {
   title: "What Is AEO? Here's What Our Scanner Found Across 500 Sites | Igris Radar",
+  alternates: { canonical: '/landing/blog/what-is-answer-engine-optimization' },
   description: 'A beginner guide to Answer Engine Optimization, backed by real data from the Igris Radar AEO scanner.',
 };
 

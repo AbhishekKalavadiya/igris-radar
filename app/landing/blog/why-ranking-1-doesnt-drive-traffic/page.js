@@ -5,6 +5,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 
 export const metadata = {
   title: "Why Your Site Ranks #1 on Google but Gets Zero AI Traffic | Igris Radar",
+  alternates: { canonical: '/landing/blog/why-ranking-1-doesnt-drive-traffic' },
   description: "Search didn't die. It stopped sending clicks. Learn why winning in AI search means optimizing for citations, not just rankings.",
 };
 

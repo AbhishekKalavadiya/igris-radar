@@ -106,9 +106,9 @@ export default function LandingPage() {
           </Reveal>
           <Reveal delay={0.16}>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              Your buyers ask AI assistants for recommendations. Igris Radar checks everything that
-              decides if you're the answer. We audit security, SEO, AI answer readiness, brand
-              visibility, and site health.
+              Your buyers now ask AI assistants for recommendations. Igris Radar is the only platform
+              that audits every signal deciding whether you're the answer — security, SEO, AEO, GEO,
+              brand visibility, and site health — in one scan.
             </p>
           </Reveal>
           <Reveal delay={0.24}>
@@ -148,6 +148,39 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* ── Key takeaways (extractable summary block for AI engines) ── */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-16">
+        <Reveal>
+          <div className="rounded-xl border border-border bg-muted/30 p-6 md:p-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-primary">
+                Key Takeaways: What Igris Radar Does
+              </h2>
+            </div>
+            <p className="text-base text-foreground/90 leading-relaxed mb-5">
+              Igris Radar is a web-audit platform that measures whether AI assistants and search
+              engines will find, trust, and recommend your website. It runs six independent audits and
+              returns a 0–100 score for each.
+            </p>
+            <ul className="space-y-3">
+              {[
+                'Answer Engine Optimization (AEO) is the practice of structuring content so ChatGPT and Perplexity cite you directly in their answers.',
+                'Generative Engine Optimization (GEO) is the work of becoming the source large language models pull from when they generate recommendations.',
+                'A security scan inspects HTTP headers, exposed secrets, and email authentication so buyers and bots can trust your domain.',
+                'An SEO audit covers technical health, on-page signals, structured data, and link quality in a single pass.',
+                'Brand visibility tracking shows which AI engines recommend you today, and which recommend your competitors instead.',
+              ].map((point) => (
+                <li key={point} className="flex items-start gap-2.5 text-base text-muted-foreground leading-relaxed">
+                  <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
       </section>
 
       {/* ── The shift ────────────────────────────────────────── */}

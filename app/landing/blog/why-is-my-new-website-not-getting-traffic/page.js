@@ -5,6 +5,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 
 export const metadata = {
   title: 'Why Is My New Website Not Getting Any Organic Traffic? | Igris Radar',
+  alternates: { canonical: '/landing/blog/why-is-my-new-website-not-getting-traffic' },
   description: "Frustrated that your new domain isn't ranking? Learn the top 5 reasons new websites fail to get organic traffic and the exact 7-day checklist to fix it.",
 };
 

@@ -8,6 +8,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 export const metadata = {
   title: 'Blog | Igris Radar',
   description: 'Insights on AI search visibility, Answer Engine Optimization (AEO), and website security.',
+  alternates: { canonical: '/landing/blog' },
 };
 
 const POSTS = [

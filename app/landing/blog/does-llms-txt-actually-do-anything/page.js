@@ -5,6 +5,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 
 export const metadata = {
   title: 'Does llms.txt Actually Do Anything? What We Found | Igris Radar',
+  alternates: { canonical: '/landing/blog/does-llms-txt-actually-do-anything' },
   description: 'We analyzed the impact of publishing an llms.txt file on AI crawler ingestion rates and visibility. Here is what the data says.',
 };
 

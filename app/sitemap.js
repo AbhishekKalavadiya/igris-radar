@@ -12,6 +12,17 @@ const FEATURE_SLUGS = [
   'site-health',
 ]
 
+const BLOG_SLUGS = [
+  'why-is-my-new-website-not-getting-traffic',
+  'what-is-answer-engine-optimization',
+  'aeo-vs-geo-vs-seo-difference',
+  'how-to-show-up-in-perplexity-ai-overviews',
+  'does-llms-txt-actually-do-anything',
+  'how-ai-crawlers-read-your-site',
+  'why-ranking-1-doesnt-drive-traffic',
+  'how-to-check-if-chatgpt-cites-you',
+]
+
 const LEARN_PAGES = [
   '/learn',
   '/learn/understanding-domain-reputation-for-email-security',
@@ -70,6 +81,13 @@ export default function sitemap() {
       priority: 0.8,
     })),
     ...learnPages,
+    { url: `${SITE_URL}/landing/blog`, lastModified: getLastModified('app/landing/blog/page.js'), changeFrequency: 'weekly', priority: 0.7 },
+    ...BLOG_SLUGS.map((slug) => ({
+      url: `${SITE_URL}/landing/blog/${slug}`,
+      lastModified: getLastModified(`app/landing/blog/${slug}/page.js`),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    })),
     ...rulePages,
     { url: `${SITE_URL}/landing/about`, lastModified: aboutModified, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/landing/contact`, lastModified: contactModified, changeFrequency: 'monthly', priority: 0.5 },

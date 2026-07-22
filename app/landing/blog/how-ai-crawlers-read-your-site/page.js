@@ -5,6 +5,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 
 export const metadata = {
   title: 'How AI Crawlers Read Your Site (GPTBot, ClaudeBot, PerplexityBot) | Igris Radar',
+  alternates: { canonical: '/landing/blog/how-ai-crawlers-read-your-site' },
   description: 'An inside look at how AI agents parse your HTML, what they ignore, and how to structure your code for maximum extraction.',
 };
 

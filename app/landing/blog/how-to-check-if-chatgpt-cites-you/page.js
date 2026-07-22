@@ -5,6 +5,7 @@ import { breadcrumbJsonLd } from '@/lib/seo';
 
 export const metadata = {
   title: 'How to Check If ChatGPT Recommends Your Business | Igris Radar',
+  alternates: { canonical: '/landing/blog/how-to-check-if-chatgpt-cites-you' },
   description: "Does ChatGPT recommend your brand? Learn the manual way to check AI citations, the limits of manual testing, and how to automate your AI visibility tracking.",
 };
 
