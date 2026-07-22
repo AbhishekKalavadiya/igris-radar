@@ -18,7 +18,7 @@ import { PageTransition } from '@/components/ui/motion';
 const PLANS_ORDER = ['free', 'starter', 'pro'];
 
 export default function AdminDashboardPage() {
-  const [section, setSection] = useState('plans');
+  const [section, setSection] = useState('users');
   const [plansMap, setPlansMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -92,7 +92,7 @@ export default function AdminDashboardPage() {
 
   return (
     <PageTransition className="min-h-screen p-8 bg-muted/20">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
@@ -131,11 +131,11 @@ export default function AdminDashboardPage() {
 
         <Tabs value={section} onValueChange={setSection} className="w-full">
           <TabsList className="h-12">
-            <TabsTrigger value="plans" className="gap-2 px-6">
-              <Layers className="w-4 h-4" /> Plans
-            </TabsTrigger>
             <TabsTrigger value="users" className="gap-2 px-6">
               <User className="w-4 h-4" /> Users
+            </TabsTrigger>
+            <TabsTrigger value="plans" className="gap-2 px-6">
+              <Layers className="w-4 h-4" /> Plans
             </TabsTrigger>
             <TabsTrigger value="keys" className="gap-2 px-6">
               <KeyRound className="w-4 h-4" /> API Keys

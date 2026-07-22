@@ -26,6 +26,15 @@ function rankedScanBreakdown(scansByType = {}) {
     .sort((a, b) => b.count - a.count);
 }
 
+const shortDate = (d) =>
+  new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+/** "Jul 7 – Aug 6, 2026" style current plan/billing window. */
+function formatPeriod(period) {
+  if (!period?.start || !period?.end) return '—';
+  return `${shortDate(period.start)} – ${shortDate(period.end)}`;
+}
+
 export default function UsersPanel({ plansMap = {} }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -202,6 +211,7 @@ export default function UsersPanel({ plansMap = {} }) {
                 <tr>
                   <th className="px-4 py-3 font-medium">User</th>
                   <th className="px-4 py-3 font-medium">Plan</th>
+                  <th className="px-4 py-3 font-medium whitespace-nowrap">Plan Period</th>
                   <th className="px-4 py-3 font-medium">Scans</th>
                   <th className="px-4 py-3 font-medium">Joined</th>
                   <th className="px-4 py-3 font-medium text-right">Actions</th>
@@ -210,7 +220,7 @@ export default function UsersPanel({ plansMap = {} }) {
               <tbody className="divide-y">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">
                       No users found.
                     </td>
                   </tr>
@@ -226,28 +236,53 @@ export default function UsersPanel({ plansMap = {} }) {
                           {user.plan || 'free'}
                         </span>
                       </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3 w-3 shrink-0" />
+                          <span title={`Renews / resets ${user.planPeriod?.end ? shortDate(user.planPeriod.end) : ''}`}>
+                            {formatPeriod(user.planPeriod)}
+                          </span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 font-medium">
                         <div className="flex items-center gap-2">
                           <span>
                             {user.totalScans || 0} / {plansMap[user.plan || 'free']?.scansPerMonth === null ? '∞' : (plansMap[user.plan || 'free']?.scansPerMonth ?? '?')}
                           </span>
-                          {user.companies && user.companies.length > 0 && (
+                          {((user.scannedUrls && user.scannedUrls.length > 0) || (user.companies && user.companies.length > 0)) && (
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button variant="outline" size="sm" className="h-6 px-2 text-xs py-0">
                                   View list
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-64 p-4 text-sm shadow-xl" align="start">
-                                <h4 className="font-semibold mb-2">Tracked Domains</h4>
-                                <ul className="space-y-1.5 max-h-[200px] overflow-y-auto">
-                                  {user.companies.map((domain, i) => (
-                                    <li key={i} className="text-muted-foreground truncate flex items-center gap-2">
-                                      <Target className="h-3 w-3 shrink-0" />
-                                      {domain}
-                                    </li>
-                                  ))}
-                                </ul>
+                              <PopoverContent className="w-72 p-4 text-sm shadow-xl" align="start">
+                                {user.scannedUrls && user.scannedUrls.length > 0 && (
+                                  <>
+                                    <h4 className="font-semibold mb-2">Scanned sites ({user.scannedUrls.length})</h4>
+                                    <ul className="space-y-1.5 max-h-[220px] overflow-y-auto">
+                                      {user.scannedUrls.map((site, i) => (
+                                        <li key={i} className="text-muted-foreground truncate flex items-center gap-2">
+                                          <Target className="h-3 w-3 shrink-0" />
+                                          <a href={site} target="_blank" rel="noreferrer" className="truncate hover:text-foreground hover:underline" title={site}>{site}</a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </>
+                                )}
+                                {user.companies && user.companies.length > 0 && (
+                                  <>
+                                    <h4 className={`font-semibold mb-2 ${user.scannedUrls?.length ? 'mt-4 pt-3 border-t' : ''}`}>Tracked domains</h4>
+                                    <ul className="space-y-1.5 max-h-[160px] overflow-y-auto">
+                                      {user.companies.map((domain, i) => (
+                                        <li key={i} className="text-muted-foreground truncate flex items-center gap-2">
+                                          <Target className="h-3 w-3 shrink-0" />
+                                          {domain}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </>
+                                )}
                               </PopoverContent>
                             </Popover>
                           )}
@@ -343,7 +378,20 @@ export default function UsersPanel({ plansMap = {} }) {
                         </time>
                       </div>
                       <div className="text-xs text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">
-                        {log.metadata ? JSON.stringify(log.metadata) : 'No additional metadata'}
+                        {log.metadata?.url ? (
+                          <span className="flex items-center gap-2">
+                            <a href={log.metadata.url} target="_blank" rel="noreferrer" className="truncate hover:text-foreground hover:underline" title={log.metadata.url}>
+                              {log.metadata.url}
+                            </a>
+                            {log.metadata.score != null && (
+                              <span className="font-mono shrink-0 text-foreground/70">· {log.metadata.score}/100</span>
+                            )}
+                          </span>
+                        ) : log.metadata && Object.keys(log.metadata).length > 0 ? (
+                          JSON.stringify(log.metadata)
+                        ) : (
+                          'No additional metadata'
+                        )}
                       </div>
                     </div>
                   </div>

@@ -14,7 +14,7 @@ import {
   hashPassword 
 } from '@/lib/auth/password';
 import { SESSION_COOKIE, isPlanAvailable } from '@/lib/constants';
-import { assertFeatureAccess, canAccessFeature, getPlanLimits, assertScanLimit, countScansThisCycle, getScanCycle, countScansSince, assertSiteTrackingLimit } from '@/lib/server-plans';
+import { assertFeatureAccess, canAccessFeature, getPlanLimits, assertScanLimit, countScansThisCycle, getScanCycle, countScansSince, assertSiteTrackingLimit, cycleBounds } from '@/lib/server-plans';
 import { env } from '@/lib/env';
 import { audit, AUDIT_ACTIONS, clientIp } from '@/lib/audit';
 import { checkLoginAllowed, recordFailedLogin, recordSuccessfulLogin } from '@/lib/security/loginThrottle';
@@ -213,9 +213,19 @@ export async function GET(request) {
         getCollection(COLLECTIONS.BRAND_VISIBILITY),
       ]);
 
-      const getCounts = async (collection) => {
-        const counts = await collection.aggregate([{ $group: { _id: "$userId", count: { $sum: 1 } } }]).toArray();
-        return counts.reduce((acc, curr) => { acc[curr._id] = curr.count; return acc; }, {});
+      // Count scans AND collect the distinct URLs actually scanned per user, in
+      // one pass. The admin needs to see WHICH sites a user scanned - these live
+      // on the scan documents themselves, not in the COMPANIES (tracked-domains)
+      // collection, so a user who scans ad-hoc URLs without tracking them still
+      // shows up here.
+      const getStats = async (collection) => {
+        const rows = await collection.aggregate([
+          { $group: { _id: "$userId", count: { $sum: 1 }, urls: { $addToSet: "$url" } } }
+        ]).toArray();
+        return rows.reduce((acc, curr) => {
+          acc[curr._id] = { count: curr.count, urls: (curr.urls || []).filter(Boolean) };
+          return acc;
+        }, {});
       };
 
       const compCol = await getCollection(COLLECTIONS.COMPANIES);
@@ -225,24 +235,39 @@ export async function GET(request) {
       const domainsMap = userDomains.reduce((acc, curr) => { acc[curr._id] = curr.domains; return acc; }, {});
 
       const [secC, seoC, aeoC, geoC, asoC, perfC, brandC] = await Promise.all([
-        getCounts(sec), getCounts(seo), getCounts(aeo), getCounts(geo), getCounts(aso), getCounts(perf), getCounts(brand)
+        getStats(sec), getStats(seo), getStats(aeo), getStats(geo), getStats(aso), getStats(perf), getStats(brand)
       ]);
 
       const usersWithStats = users.map(u => {
         const scansByType = {
-          security: secC[u.id] || 0,
-          seo:      seoC[u.id] || 0,
-          aeo:      aeoC[u.id] || 0,
-          geo:      geoC[u.id] || 0,
-          aso:      asoC[u.id] || 0,
-          health:   perfC[u.id] || 0,
-          brand:    brandC[u.id] || 0,
+          security: secC[u.id]?.count || 0,
+          seo:      seoC[u.id]?.count || 0,
+          aeo:      aeoC[u.id]?.count || 0,
+          geo:      geoC[u.id]?.count || 0,
+          aso:      asoC[u.id]?.count || 0,
+          health:   perfC[u.id]?.count || 0,
+          brand:    brandC[u.id]?.count || 0,
         };
+        const scannedUrls = [...new Set([
+          ...(secC[u.id]?.urls || []),
+          ...(seoC[u.id]?.urls || []),
+          ...(aeoC[u.id]?.urls || []),
+          ...(geoC[u.id]?.urls || []),
+          ...(asoC[u.id]?.urls || []),
+          ...(perfC[u.id]?.urls || []),
+          ...(brandC[u.id]?.urls || []),
+        ])];
+        // Current plan/billing period: the 30-day window anchored to
+        // planCycleStart (reset on signup and every upgrade/downgrade/renewal),
+        // so `end` is when the plan next renews or the usage cycle resets.
+        const period = cycleBounds(new Date(u.planCycleStart || u.createdAt || Date.now()));
         return {
           ...u,
           totalScans: Object.values(scansByType).reduce((sum, n) => sum + n, 0),
           scansByType,
-          companies: domainsMap[u.id] || []
+          companies: domainsMap[u.id] || [],
+          scannedUrls,
+          planPeriod: { start: period.start, end: period.end },
         };
       });
 
@@ -258,7 +283,40 @@ export async function GET(request) {
 
       const auditCol = await getCollection(COLLECTIONS.AUDIT_LOGS);
       // Explicitly cast to string to prevent NoSQL injection warnings from Semgrep
-      const logs = await auditCol.find({ userId: String(userId) }).sort({ createdAt: -1 }).limit(100).toArray();
+      const safeUserId = String(userId);
+      const auditLogs = await auditCol.find({ userId: safeUserId }).sort({ createdAt: -1 }).limit(100).toArray();
+
+      // Scans are NOT written to the audit-log collection, so for a user who only
+      // runs scans the log looked empty. Pull their actual scan records too and
+      // present each as a log entry - crucially including the scanned URL - then
+      // merge with the audit trail so "View Logs" shows real activity.
+      const SCAN_SOURCES = [
+        [COLLECTIONS.SECURITY_SCANS, 'security'],
+        [COLLECTIONS.SEO_SCANS, 'seo'],
+        [COLLECTIONS.AEO_SCANS, 'aeo'],
+        [COLLECTIONS.GEO_SCANS, 'geo'],
+        [COLLECTIONS.ASO_SCANS, 'aso'],
+        [COLLECTIONS.PERFORMANCE_SCANS, 'health'],
+        [COLLECTIONS.BRAND_VISIBILITY, 'brand'],
+      ];
+      const scanLogGroups = await Promise.all(SCAN_SOURCES.map(async ([name, type]) => {
+        const col = await getCollection(name);
+        const rows = await col
+          .find({ userId: safeUserId }, { projection: { id: 1, url: 1, domain: 1, score: 1, createdAt: 1 } })
+          .sort({ createdAt: -1 })
+          .limit(50)
+          .toArray();
+        return rows.map((r) => ({
+          id: r.id || String(r._id),
+          action: `${type} scan`,
+          createdAt: r.createdAt,
+          metadata: { url: r.url || r.domain || null, score: r.score ?? null },
+        }));
+      }));
+
+      const logs = [...auditLogs, ...scanLogGroups.flat()]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 100);
 
       return NextResponse.json({ success: true, data: logs });
     }
