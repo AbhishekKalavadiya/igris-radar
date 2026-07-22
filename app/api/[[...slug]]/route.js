@@ -2097,6 +2097,14 @@ export async function POST(request) {
     if (pathParts[0] === 'admin') {
       if (pathParts[1] === 'login') {
         const ip = clientIp(request);
+
+        // Throttle admin credential guessing by IP (the public user login has
+        // loginThrottle; the admin login previously had none). Namespaced
+        // identifier so it uses its own counter, not the shared global bucket.
+        if (isRateLimited(`admin-login:${ip}`, 'reset')) {
+          return NextResponse.json({ success: false, error: 'Too many attempts. Try again later.' }, { status: 429 });
+        }
+
         const { username, password } = await request.json();
 
         // Credentials come from env (SECURITY_CHECKLIST C2). Without them the
