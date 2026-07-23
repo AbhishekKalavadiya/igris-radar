@@ -209,6 +209,16 @@ generate handler is passed as a callback. The page owns the data.
 - **Endpoint integration:** non-Pro → 403; Pro cache-miss → generates + persists (mock AI); Pro cache-hit → returns stored doc with **zero** AI calls; passed finding → 400; `regenerate` → overwrites `updatedAt`.
 - **Card render:** failed + Pro shows Generate button; loading/rendered/error states render; non-Pro shows locked variant and fires **no** fetch.
 
+### Security review addendum (2026-07-23)
+
+Verified against the codebase; these are binding requirements:
+
+1. **Rate limit generation.** Cache-first only protects the first generation; `regenerate:true` is otherwise unbounded token spend. Add a `fix_gen` type to `lib/rateLimit.js` (10 requests / 10 min, keyed by `userId`) and check it in the POST handler before calling the AI. 429 on breach. (Known caveat: the store is in-memory per-instance — acceptable at current scale, same as all other limits.)
+2. **Prompt-injection hardening.** Finding descriptions contain text scraped from the scanned site, which is attacker-controlled. The prompt must instruct the model to treat finding text strictly as data, and the handler must validate the parsed response: exactly the 5 known fields, all strings, `language` clamped to the allowlist (`html|json|nginx|apache|javascript|text|markdown`; anything else → `text`). The UI renders `fixContent` as plain text only — never `dangerouslySetInnerHTML`.
+3. **Plan-flag plumbing.** Add `autonomousFix: false/false/true` (free/starter/pro) to `PLAN_LIMITS` defaults in `lib/constants.js` — `canAccessFeature` reads DB-backed limits seeded from there, and `getPlanLimits` backfills the new key into existing DB rows automatically. Use the existing `assertFeatureAccess(plan, 'autonomousFix')` (adds the consistent 403 + `upgradeRequired` envelope) and add an `autonomousFix` label to its `labels` map.
+4. **Output size caps.** Before upsert: `fixContent` ≤ 20 KB, every other fix field ≤ 2 KB. Over-limit responses are treated as generation failures (not cached), same as parse failures.
+5. **Input allowlisting.** `scanType` must match one of the 6 known scan types before any collection lookup; `scanId`/`findingId` must be non-empty strings. 400 otherwise.
+
 ### Out of scope (YAGNI)
 Auto-deploy / connectors, bulk "fix all", metered quotas, non-Pro access, and fix version
 history beyond the single latest doc. All deferred by scope decisions above; the collection
