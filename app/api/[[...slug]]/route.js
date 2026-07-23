@@ -335,6 +335,15 @@ export async function GET(request) {
       return NextResponse.json({ success: true, data: analytics });
     }
 
+    // Admin Dashboard: Scanned Websites & Landing Page Scanner Analytics
+    if (pathParts[0] === 'admin' && pathParts[1] === 'scanned-websites') {
+      if (!isAdminRequest(request)) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+      const { getScannedWebsitesData } = await import('@/lib/adminScans');
+      const data = await getScannedWebsitesData();
+      return NextResponse.json({ success: true, data });
+    }
+
     // Get current user session
     if (pathParts[0] === 'auth' && pathParts[1] === 'me') {
       const sessionUser = getSessionUser(request);
@@ -1827,15 +1836,6 @@ export async function POST(request) {
         await assertFeatureAccess(sessionUser.plan || 'free', 'asoScan');
         await assertScanLimit(sessionUser.id, sessionUser.plan || 'free');
         // We don't track ASO URLs in sites limit since they are app stores
-      } else {
-        // Free tier is not allowed to run ASO scans based on plan constraints
-        return NextResponse.json({ 
-          success: false, 
-          error: 'ASO scans require Starter plan or above.',
-          upgradeRequired: true,
-          currentPlan: 'free',
-          upgradeReason: 'asoScan'
-        }, { status: 403 });
       }
 
       const { runAsoScan } = await import('@/lib/scanners/asoScanner');

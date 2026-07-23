@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Loader2, Save, RefreshCw, LogOut, KeyRound, Layers, User, BarChart3 } from 'lucide-react';
+import { Shield, Loader2, Save, RefreshCw, LogOut, KeyRound, Layers, User, BarChart3, Globe } from 'lucide-react';
 import ApiKeysPanel from '@/components/admin/ApiKeysPanel';
 import UsersPanel from '@/components/admin/UsersPanel';
 import ScanAnalyticsPanel from '@/components/admin/ScanAnalyticsPanel';
+import ScannedWebsitesPanel from '@/components/admin/ScannedWebsitesPanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -97,16 +98,18 @@ export default function AdminDashboardPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <Shield className="w-8 h-8 text-primary" />
-              {section === 'plans' ? 'Plan Configuration' : section === 'keys' ? 'API Keys' : section === 'analytics' ? 'Scan Analytics' : 'User Management'}
+              {section === 'plans' ? 'Plan Configuration' : section === 'keys' ? 'API Keys' : section === 'scans' ? 'Scanned Websites' : section === 'analytics' ? 'Scan Analytics' : 'User Management'}
             </h1>
             <p className="text-muted-foreground mt-1">
               {section === 'plans'
                 ? 'Manage limits, features, and pricing for all tiers.'
                 : section === 'keys'
                   ? 'Manage integration API keys - changes apply instantly across the system.'
-                  : section === 'analytics'
-                    ? 'Platform-wide scan volume by tool.'
-                    : 'View registered users and monitor their platform activity.'}
+                  : section === 'scans'
+                    ? 'Track landing page scanner usage and all scanned websites.'
+                    : section === 'analytics'
+                      ? 'Platform-wide scan volume by tool.'
+                      : 'View registered users and monitor their platform activity.'}
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -134,6 +137,9 @@ export default function AdminDashboardPage() {
             <TabsTrigger value="users" className="gap-2 px-6">
               <User className="w-4 h-4" /> Users
             </TabsTrigger>
+            <TabsTrigger value="scans" className="gap-2 px-6">
+              <Globe className="w-4 h-4" /> Scanned Websites
+            </TabsTrigger>
             <TabsTrigger value="plans" className="gap-2 px-6">
               <Layers className="w-4 h-4" /> Plans
             </TabsTrigger>
@@ -147,6 +153,8 @@ export default function AdminDashboardPage() {
         </Tabs>
 
         {section === 'users' && <UsersPanel plansMap={plansMap} />}
+
+        {section === 'scans' && <ScannedWebsitesPanel />}
 
         {section === 'keys' && <ApiKeysPanel />}
 
