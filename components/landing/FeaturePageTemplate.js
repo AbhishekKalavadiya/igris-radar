@@ -69,6 +69,9 @@ export default function FeaturePageTemplate({ config }) {
         </div>
       </section>
 
+      {/* Custom embedded components (e.g. interactive tools right after Hero) */}
+      {children}
+
       {/* Stats band */}
       <section className="border-y border-border bg-muted/40">
         <Stagger className="max-w-5xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
