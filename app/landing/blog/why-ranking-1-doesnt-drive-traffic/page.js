@@ -259,8 +259,8 @@ export default function BlogPost() {
         </div>
 
         <p className="text-center font-medium mt-8">
-          <Link href="/tools/ai-visibility-check" className="text-primary hover:underline inline-flex items-center group">
-            See whether AI engines can cite your site — free, no signup → run the check.
+          <Link href="/landing/features/brand-visibility" className="text-primary hover:underline inline-flex items-center group">
+            See whether AI engines can cite your site — check your AI Brand Radar score →
           </Link>
         </p>
 
@@ -276,7 +276,7 @@ export default function BlogPost() {
             <strong>Audit your Web Application Firewall (WAF):</strong> Stop blocking the bots that feed the answer engines. Whitelist <code>GPTBot</code>, <code>ClaudeBot</code>, <code>PerplexityBot</code>, and <code>Google-Extended</code>.
           </li>
           <li>
-            <strong>Publish an <code>llms.txt</code> file:</strong> Roll out the red carpet for LLMs by putting a clean, markdown-formatted summary of your site in your root directory. (<Link href="/landing/features/aeo-audit" className="text-primary hover:underline">Learn how our AEO scanner checks this</Link>).
+            <strong>Publish an <code>llms.txt</code> file:</strong> Roll out the red carpet for LLMs by putting a clean, markdown-formatted summary of your site in your root directory. (<Link href="/landing/blog/does-llms-txt-actually-do-anything" className="text-primary hover:underline">Read our 90-day study on llms.txt impact</Link>).
           </li>
           <li>
             <strong>Implement robust JSON-LD Schema:</strong> Build your entity authority. Ensure every page has strict, validated schema connecting your content to your brand's Knowledge Graph identity. (<Link href="/landing/features/geo-audit" className="text-primary hover:underline">See how our GEO scanner validates entity trust</Link>).
@@ -294,8 +294,8 @@ export default function BlogPost() {
           <p className="text-muted-foreground max-w-lg mb-8">
             Traditional SEO tools won't tell you if ChatGPT recommends you. Igris Radar will.
           </p>
-          <Link href="/tools/ai-visibility-check" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 shadow-igris-md hover:shadow-igris-lg hover:-translate-y-0.5">
-            See whether AI engines can cite your site — free, no signup → run the check.
+          <Link href="/landing/features/brand-visibility" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-8 shadow-igris-md hover:shadow-igris-lg hover:-translate-y-0.5">
+            Track your brand with AI Brand Radar →
           </Link>
         </div>
 

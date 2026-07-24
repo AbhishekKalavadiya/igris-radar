@@ -141,8 +141,38 @@ export default function LearnIndexPage() {
         ))}
       </div>
 
-      {/* Rules Dictionary Link */}
+      {/* Platform Features & Research Cluster Links */}
       <div className="pt-8">
+        <Card className="bg-muted/30 border-border shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl">Audit Engine Deep Dives & Platform Features</CardTitle>
+            <CardDescription className="text-base">Explore the primary audit engines powering Igris Radar and our latest empirical research.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <Link href="/landing/features/brand-visibility" className="p-4 border border-border rounded-lg bg-card hover:border-primary/50 transition-colors block">
+                <span className="font-bold text-sm text-foreground block mb-1">Brand Radar & AI Visibility</span>
+                <span className="text-xs text-muted-foreground">Track ChatGPT, Claude, Perplexity & Gemini citations</span>
+              </Link>
+              <Link href="/landing/features/security-scanner" className="p-4 border border-border rounded-lg bg-card hover:border-primary/50 transition-colors block">
+                <span className="font-bold text-sm text-foreground block mb-1">Web Risk & Subdomain Radar</span>
+                <span className="text-xs text-muted-foreground">90+ check DAST scanner & takeover detection</span>
+              </Link>
+              <Link href="/landing/features/seo-audit" className="p-4 border border-border rounded-lg bg-card hover:border-primary/50 transition-colors block">
+                <span className="font-bold text-sm text-foreground block mb-1">Technical SEO Audit</span>
+                <span className="text-xs text-muted-foreground">Crawlability, canonicals, & sitemap health</span>
+              </Link>
+              <Link href="/landing/blog/does-llms-txt-actually-do-anything" className="p-4 border border-border rounded-lg bg-card hover:border-primary/50 transition-colors block">
+                <span className="font-bold text-sm text-foreground block mb-1">llms.txt Research Study</span>
+                <span className="text-xs text-muted-foreground">90-day empirical test across 50 B2B SaaS sites</span>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Rules Dictionary Link */}
+      <div className="pt-6">
         <Card className="bg-primary/5 border-primary/20 hover:border-primary/50 transition-colors shadow-sm">
           <CardContent className="p-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
             <div>

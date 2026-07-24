@@ -1,17 +1,24 @@
 import Link from 'next/link';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import JsonLd from '@/components/ui/JsonLd';
-import { breadcrumbJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, articleJsonLd, buildMetadata } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = buildMetadata({
   title: 'How AI Crawlers Read Your Site (GPTBot, ClaudeBot, PerplexityBot) | Igris Radar',
-  alternates: { canonical: '/landing/blog/how-ai-crawlers-read-your-site' },
   description: 'An inside look at how AI agents parse your HTML, what they ignore, and how to structure your code for maximum extraction.',
-};
+  path: '/landing/blog/how-ai-crawlers-read-your-site',
+  keywords: ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'AI crawlers', 'AEO', 'LLM indexing'],
+});
 
 export default function BlogPost() {
   return (
     <div className="pb-24">
+      <JsonLd data={articleJsonLd({
+        headline: 'How AI Crawlers Read Your Site (GPTBot, ClaudeBot, PerplexityBot)',
+        description: 'An inside look at how AI agents parse your HTML, what they ignore, and how to structure your code for maximum extraction.',
+        path: '/landing/blog/how-ai-crawlers-read-your-site',
+        datePublished: '2026-07-13',
+      })} />
       <JsonLd data={breadcrumbJsonLd([
         { name: 'Home', path: '/landing' }, 
         { name: 'Blog', path: '/landing/blog' },

@@ -10,6 +10,7 @@ const FEATURE_SLUGS = [
   'geo-audit',
   'brand-visibility',
   'site-health',
+  'aso-audit',
 ]
 
 const BLOG_SLUGS = [
@@ -54,6 +55,7 @@ export default function sitemap() {
   const contactModified = getLastModified('app/landing/contact/page.js')
   const termsModified = getLastModified('app/landing/terms/page.js')
   const privacyModified = getLastModified('app/landing/privacy/page.js')
+  const pricingModified = getLastModified('app/landing/pricing/page.js')
 
   // Generate sitemap entries for all 100+ scanner rules - all share the
   // same source file (lib/scannerExplanations.js), so the git lookup runs
@@ -73,7 +75,8 @@ export default function sitemap() {
   }))
 
   return [
-    { url: `${SITE_URL}/landing`, lastModified: landingModified, changeFrequency: 'weekly', priority: 1 },
+    { url: SITE_URL, lastModified: landingModified, changeFrequency: 'daily', priority: 1.0 },
+    { url: `${SITE_URL}/landing`, lastModified: landingModified, changeFrequency: 'weekly', priority: 0.9 },
     ...FEATURE_SLUGS.map((slug) => ({
       url: `${SITE_URL}/landing/features/${slug}`,
       lastModified: featuresModified,
@@ -89,8 +92,11 @@ export default function sitemap() {
       priority: 0.7,
     })),
     ...rulePages,
+    { url: `${SITE_URL}/landing/pricing`, lastModified: pricingModified, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${SITE_URL}/landing/about`, lastModified: aboutModified, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/landing/contact`, lastModified: contactModified, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/tools`, lastModified: getLastModified('app/tools/page.js'), changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${SITE_URL}/tools/llms-txt-generator`, lastModified: getLastModified('app/tools/llms-txt-generator/page.js'), changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE_URL}/landing/terms`, lastModified: termsModified, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE_URL}/landing/privacy`, lastModified: privacyModified, changeFrequency: 'yearly', priority: 0.3 },
   ]

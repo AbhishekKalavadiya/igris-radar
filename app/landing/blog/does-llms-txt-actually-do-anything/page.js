@@ -1,17 +1,24 @@
 import Link from 'next/link';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import JsonLd from '@/components/ui/JsonLd';
-import { breadcrumbJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, articleJsonLd, buildMetadata } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = buildMetadata({
   title: 'Does llms.txt Actually Do Anything? What We Found | Igris Radar',
-  alternates: { canonical: '/landing/blog/does-llms-txt-actually-do-anything' },
   description: 'We analyzed the impact of publishing an llms.txt file on AI crawler ingestion rates and visibility. Here is what the data says.',
-};
+  path: '/landing/blog/does-llms-txt-actually-do-anything',
+  keywords: ['llms.txt', 'AI search optimization', 'GPTBot crawl rate', 'AEO research', 'LLM markdown'],
+});
 
 export default function BlogPost() {
   return (
     <div className="pb-24">
+      <JsonLd data={articleJsonLd({
+        headline: 'Does llms.txt Actually Do Anything? What We Found',
+        description: 'We analyzed the impact of publishing an llms.txt file on AI crawler ingestion rates and visibility. Here is what the data says.',
+        path: '/landing/blog/does-llms-txt-actually-do-anything',
+        datePublished: '2026-07-14',
+      })} />
       <JsonLd data={breadcrumbJsonLd([
         { name: 'Home', path: '/landing' }, 
         { name: 'Blog', path: '/landing/blog' },

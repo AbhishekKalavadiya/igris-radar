@@ -3,8 +3,8 @@ import { buildMetadata, faqPageJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 import { FEATURE_PAGES } from '@/lib/landingContent';
 
 export const metadata = buildMetadata({
-  title: 'AI Brand Visibility Tracker: ChatGPT, Claude & More | Igris Radar',
-  description: 'Send your real customer prompts to live AI engines and see whether your brand is recommended. Mention detection, sentiment analysis and an AI share-of-voice visibility score.',
+  title: 'Brand Radar & AI Visibility Tracker (Surveillance Visibilité IA) | Igris Radar',
+  description: 'AI Brand Radar & visibility surveillance (surveillance visibilité IA). Send real customer prompts to ChatGPT, Claude, Perplexity & Gemini to measure AI brand mentions, sentiment analysis, and share of voice.',
   path: '/landing/features/brand-visibility',
 });
 
