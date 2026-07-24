@@ -12,7 +12,7 @@ import FeatureFaqAccordion from '@/components/landing/FeatureFaqAccordion';
  * Structure mirrors modern SaaS feature pages: hero → stats → capability
  * deep-dives → report contents → how it works → FAQ (with JSON-LD) → CTA.
  */
-export default function FeaturePageTemplate({ config }) {
+export default function FeaturePageTemplate({ config, children }) {
   const Icon = config.icon;
 
   return (
