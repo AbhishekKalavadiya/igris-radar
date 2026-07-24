@@ -9,6 +9,7 @@ const FEATURE_SLUGS = [
   'aeo-audit',
   'geo-audit',
   'brand-visibility',
+  'llms-txt-generator',
   'site-health',
   'aso-audit',
 ]
