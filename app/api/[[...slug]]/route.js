@@ -929,6 +929,29 @@ export async function GET(request) {
       });
     }
 
+    // List cached fixes for a scan (prefetch for the report page)
+    if (pathParts[0] === 'generated-fixes') {
+      const sessionUser = getSessionUser(request);
+      if (!sessionUser) return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
+
+      const hasAccess = await canAccessFeature(sessionUser.plan || 'free', 'autonomousFix');
+      if (!hasAccess) return NextResponse.json({ success: true, data: [] });
+
+      const scanType = searchParams.get('scanType');
+      const scanId = searchParams.get('scanId');
+      if (!scanType || !scanId) {
+        return NextResponse.json({ success: false, error: 'Missing scanType or scanId' }, { status: 400 });
+      }
+
+      const fixesCol = await getCollection(COLLECTIONS.GENERATED_FIXES);
+      const docs = await fixesCol
+        .find({ userId: sessionUser.id, scanType, scanId })
+        .project({ _id: 0, findingId: 1, fix: 1 })
+        .toArray();
+
+      return NextResponse.json({ success: true, data: docs });
+    }
+
     return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
   } catch (error) {
     console.error(`[API GET] ${pathParts.join('/')}:`, error.message);
@@ -944,6 +967,84 @@ export async function POST(request) {
   const pathParts = path.split('/').filter(Boolean);
 
   try {
+    // ── Autonomous Fix Generation (Pro-only): generate or return a cached fix ──
+    if (pathParts[0] === 'generate-fix') {
+      const sessionUser = getSessionUser(request);
+      if (!sessionUser) return NextResponse.json({ success: false, error: 'Not authenticated' }, { status: 401 });
+
+      try {
+        await assertFeatureAccess(sessionUser.plan || 'free', 'autonomousFix');
+      } catch (e) {
+        return NextResponse.json(
+          { success: false, error: e.message, upgradeRequired: true },
+          { status: e.status || 403 }
+        );
+      }
+
+      if (isRateLimited(`fixgen:${sessionUser.id}`, 'fix_gen')) {
+        return NextResponse.json({ success: false, error: 'Too many fix generations. Try again in a few minutes.' }, { status: 429 });
+      }
+
+      const body = await request.json().catch(() => ({}));
+      const { scanType, scanId, findingId, regenerate } = body || {};
+
+      const collectionByType = {
+        seo: COLLECTIONS.SEO_SCANS,
+        aeo: COLLECTIONS.AEO_SCANS,
+        geo: COLLECTIONS.GEO_SCANS,
+        aso: COLLECTIONS.ASO_SCANS,
+        security: COLLECTIONS.SECURITY_SCANS,
+        performance: COLLECTIONS.PERFORMANCE_SCANS,
+      };
+      if (!collectionByType[scanType] || typeof scanId !== 'string' || !scanId || typeof findingId !== 'string' || !findingId) {
+        return NextResponse.json({ success: false, error: 'Invalid scanType, scanId, or findingId' }, { status: 400 });
+      }
+
+      const scansCol = await getCollection(collectionByType[scanType]);
+      const scan = await scansCol.findOne({ id: scanId, userId: sessionUser.id });
+      if (!scan) return NextResponse.json({ success: false, error: 'Scan not found' }, { status: 404 });
+
+      const finding = (scan.findings || []).find(f => f.id === findingId);
+      if (!finding) return NextResponse.json({ success: false, error: 'Finding not found' }, { status: 404 });
+      if (finding.passed) return NextResponse.json({ success: false, error: 'This finding already passed — nothing to fix.' }, { status: 400 });
+
+      const fixesCol = await getCollection(COLLECTIONS.GENERATED_FIXES);
+      const cacheKey = { userId: sessionUser.id, scanType, scanId, findingId };
+
+      if (!regenerate) {
+        const cached = await fixesCol.findOne(cacheKey);
+        if (cached) return NextResponse.json({ success: true, data: { fix: cached.fix, cached: true } });
+      }
+
+      const { generateFix } = await import('@/lib/scanners/shared/fixGenerator');
+      const prefs = await getAuditPrefs(sessionUser);
+      let result;
+      try {
+        result = await generateFix(finding, { url: scan.url, scanType, provider: prefs.provider });
+      } catch (err) {
+        console.error('[API] generate-fix:', err.message);
+        return NextResponse.json({ success: false, error: 'Could not generate a valid fix, please retry.' }, { status: 502 });
+      }
+
+      const now = new Date();
+      await fixesCol.updateOne(
+        cacheKey,
+        {
+          $set: {
+            ...cacheKey,
+            findingTitle: finding.title,
+            category: finding.category || '',
+            fix: result.fix,
+            provider: result.provider,
+            updatedAt: now,
+          },
+          $setOnInsert: { id: uuidv4(), createdAt: now },
+        },
+        { upsert: true }
+      );
+
+      return NextResponse.json({ success: true, data: { fix: result.fix, cached: false } });
+    }
     // Mark alert as read - alerts are mock data, so acknowledge without persistence
     if (pathParts[0] === 'alerts' && pathParts[2] === 'read') {
       return NextResponse.json({ success: true, data: { id: pathParts[1], read: true } });

@@ -20,6 +20,7 @@ import { NAV_PLATFORM, AI_ENGINES, HOW_IT_WORKS, SHOW_AUTH_CTAS } from '@/lib/la
 import { PLAN_PROMOTIONS } from '@/lib/constants';
 import FeatureFaqAccordion from '@/components/landing/FeatureFaqAccordion';
 import FreeScanner from '@/components/landing/FreeScanner';
+import InteractiveScannerDemo from '@/components/landing/InteractiveScannerDemo';
 import PromoPopup from '@/components/landing/PromoPopup';
 import JsonLd from '@/components/ui/JsonLd';
 import { faqPageJsonLd, softwareApplicationJsonLd, breadcrumbJsonLd, howToJsonLd, SITE_PUBLISHED, FOUNDER } from '@/lib/seo';
@@ -356,6 +357,11 @@ export default function LandingPage() {
               Each engine is purpose-built and independently scored. Run one, or run the full battery.
             </p>
           </Reveal>
+          
+          <div className="mb-14">
+            <InteractiveScannerDemo />
+          </div>
+
           <Stagger className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {NAV_PLATFORM.map((feature) => {
               const Icon = feature.icon;

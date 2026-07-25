@@ -43,6 +43,22 @@ export default function SecurityScanPage() {
   const [url, setUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  const [cachedFixes, setCachedFixes] = useState({});
+
+  useEffect(() => {
+    const scanId = scanResult?.id;
+    if (!scanId) return;
+    fetch(`/api?path=generated-fixes&scanType=security&scanId=${scanId}`)
+      .then(r => r.json())
+      .then(j => {
+        if (j.success) {
+          const map = {};
+          for (const d of j.data) map[d.findingId] = d.fix;
+          setCachedFixes(map);
+        }
+      })
+      .catch(() => {});
+  }, [scanResult?.id]);
   const [scanHistory, setScanHistory] = useState([]);
   const [allHistory, setAllHistory] = useState([]);
   const [upgradeInfo, setUpgradeInfo] = useState(null);
@@ -227,7 +243,14 @@ export default function SecurityScanPage() {
             <div className="text-muted-foreground text-center py-8">No findings match the current filter in this category.</div>
           ) : (
             visible.map((finding) => (
-              <AuditFindingCard key={finding.id} finding={finding} />
+              <AuditFindingCard
+                key={finding.id}
+                finding={finding}
+                scanType="security"
+                scanId={scanResult?.id}
+                cachedFix={cachedFixes[finding.id]}
+                isPro={userPlan === 'pro'}
+              />
             ))
           )}
         </div>
@@ -263,7 +286,14 @@ export default function SecurityScanPage() {
             <div className="text-muted-foreground text-center py-8">No findings match the current filter in this tier.</div>
           ) : (
             visible.map((finding) => (
-              <AuditFindingCard key={finding.id} finding={finding} />
+              <AuditFindingCard
+                key={finding.id}
+                finding={finding}
+                scanType="security"
+                scanId={scanResult?.id}
+                cachedFix={cachedFixes[finding.id]}
+                isPro={userPlan === 'pro'}
+              />
             ))
           )}
         </div>

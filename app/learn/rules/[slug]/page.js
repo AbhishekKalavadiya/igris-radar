@@ -6,6 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FINDING_EXPLANATIONS } from '@/lib/scannerExplanations';
 import { slugify } from '@/lib/slugify';
 
+import { buildMetadata } from '@/lib/seo';
+
 // Pre-compute a map of slug -> original title
 const SLUG_MAP = new Map();
 Object.keys(FINDING_EXPLANATIONS).forEach(title => {
@@ -34,13 +36,11 @@ export async function generateMetadata({ params }) {
   const explanation = FINDING_EXPLANATIONS[originalTitle];
   const snippet = explanation.substring(0, 150) + (explanation.length > 150 ? '...' : '');
 
-  return {
+  return buildMetadata({
     title: `${originalTitle} | Igris Radar Rules Dictionary`,
     description: snippet,
-    alternates: {
-      canonical: `/learn/rules/${slug}`,
-    },
-  };
+    path: `/learn/rules/${slug}`,
+  });
 }
 
 export default function RuleDefinitionPage({ params }) {

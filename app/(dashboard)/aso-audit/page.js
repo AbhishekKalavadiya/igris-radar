@@ -44,6 +44,22 @@ export default function AsoAuditPage() {
 
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  const [cachedFixes, setCachedFixes] = useState({});
+
+  useEffect(() => {
+    const scanId = scanResult?.id;
+    if (!scanId) return;
+    fetch(`/api?path=generated-fixes&scanType=aso&scanId=${scanId}`)
+      .then(r => r.json())
+      .then(j => {
+        if (j.success) {
+          const map = {};
+          for (const d of j.data) map[d.findingId] = d.fix;
+          setCachedFixes(map);
+        }
+      })
+      .catch(() => {});
+  }, [scanResult?.id]);
   const [scanHistory, setScanHistory] = useState([]);
   const [allHistory, setAllHistory] = useState([]);
   const [upgradeInfo, setUpgradeInfo] = useState(null);
@@ -148,7 +164,16 @@ export default function AsoAuditPage() {
         {findings.length === 0 ? (
           <div className="text-muted-foreground text-center py-8">No checks match the current filter.</div>
         ) : (
-          findings.map((f) => <AuditFindingCard key={f.id} finding={f} />)
+          findings.map((f) => (
+            <AuditFindingCard
+              key={f.id}
+              finding={f}
+              scanType="aso"
+              scanId={scanResult?.id}
+              cachedFix={cachedFixes[f.id]}
+              isPro={userPlan === 'pro'}
+            />
+          ))
         )}
       </div>
     );
@@ -172,7 +197,16 @@ export default function AsoAuditPage() {
         {visible.length === 0 ? (
           <div className="text-muted-foreground text-center py-8">No checks in this tier for this scan.</div>
         ) : (
-          visible.map((f) => <AuditFindingCard key={f.id} finding={f} />)
+          visible.map((f) => (
+            <AuditFindingCard
+              key={f.id}
+              finding={f}
+              scanType="aso"
+              scanId={scanResult?.id}
+              cachedFix={cachedFixes[f.id]}
+              isPro={userPlan === 'pro'}
+            />
+          ))
         )}
       </div>
     );

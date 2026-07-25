@@ -43,9 +43,12 @@ const CATEGORY_METHODOLOGY = {
   'Best Practices': 'We check for the presence of recommended security files and configurations (e.g. security.txt).',
 };
 
-export default function AuditFindingCard({ finding }) {
+export default function AuditFindingCard({ finding, scanType, scanId, cachedFix, isPro = false }) {
   const [copiedId, setCopiedId] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [fix, setFix] = useState(cachedFix || null);
+  const [fixLoading, setFixLoading] = useState(false);
+  const [fixError, setFixError] = useState(null);
 
   // ─── LOCKED FINDING (plan-gated) ──────────────────────────────────────────
   if (finding.locked) {
@@ -123,6 +126,28 @@ export default function AuditFindingCard({ finding }) {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const canGenerate = !!(fix || (scanType && scanId && finding.id));
+
+  const generateFix = async (regenerate = false) => {
+    if (fixLoading) return;
+    setFixLoading(true);
+    setFixError(null);
+    try {
+      const res = await fetch('/api?path=generate-fix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanType, scanId, findingId: finding.id, regenerate }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Generation failed');
+      setFix(json.data.fix);
+    } catch (e) {
+      setFixError(e.message);
+    } finally {
+      setFixLoading(false);
+    }
   };
 
   const isPassed = finding.passed || finding.severity === 'passed';
@@ -239,6 +264,82 @@ export default function AuditFindingCard({ finding }) {
                     >
                       {copiedId === finding.id ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                     </Button>
+                  </div>
+                )}
+
+                {canGenerate && (
+                  <div className="pt-1">
+                    {!fix && !isPro && (
+                      <Link href="/plans">
+                        <Button size="sm" variant="outline" className="text-xs h-8 border-primary/30 text-primary hover:bg-primary/10">
+                          <Lock className="h-3 w-3 mr-1.5" /> Generate Fix — Pro
+                        </Button>
+                      </Link>
+                    )}
+
+                    {!fix && isPro && (
+                      <Button
+                        size="sm"
+                        className="text-xs h-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                        onClick={() => generateFix(false)}
+                        disabled={fixLoading}
+                      >
+                        <Sparkles className="h-3 w-3 mr-1.5" />
+                        {fixLoading ? 'Generating fix…' : 'Generate Fix'}
+                      </Button>
+                    )}
+
+                    {fixError && (
+                      <div className="mt-2 text-xs text-destructive flex items-center gap-2">
+                        {fixError}
+                        <button className="underline cursor-pointer" onClick={() => generateFix(false)}>Try again</button>
+                      </div>
+                    )}
+
+                    {fix && (
+                      <div className="mt-2 glass-card rounded-lg border border-border p-4 space-y-3">
+                        <div className="text-xs font-semibold text-primary flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" /> Generated Fix
+                        </div>
+                        <p className="text-sm text-foreground font-medium">{fix.summary}</p>
+
+                        <div className="text-xs">
+                          <span className="font-semibold text-foreground">Where to apply: </span>
+                          <span className="text-muted-foreground">{fix.whereToApply}</span>
+                        </div>
+
+                        <div className="bg-muted/50 rounded-md border border-border p-3 relative group overflow-hidden">
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">{fix.language}</div>
+                          <code className="text-sm text-foreground/80 block pr-10 break-words whitespace-pre-wrap">
+                            {fix.fixContent}
+                          </code>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                            onClick={() => copyToClipboard(fix.fixContent, `${finding.id}-fix`)}
+                            title="Copy Fix"
+                          >
+                            {copiedId === `${finding.id}-fix` ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+                          </Button>
+                        </div>
+
+                        <div className="text-xs">
+                          <span className="font-semibold text-foreground">Verification: </span>
+                          <span className="text-muted-foreground">{fix.verifyStep}</span>
+                        </div>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-xs h-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => generateFix(true)}
+                          disabled={fixLoading}
+                        >
+                          {fixLoading ? 'Regenerating…' : 'Regenerate'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

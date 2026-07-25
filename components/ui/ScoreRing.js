@@ -6,6 +6,7 @@ import { AnimatedNumber } from '@/components/ui/motion';
 /**
  * Animated circular score (0–100). Color follows score thresholds by default,
  * or a fixed scanner accent when `accent` is passed (ring color string).
+ * Font size scales proportionally to the `size` prop.
  */
 export default function ScoreRing({ score = 0, size = 180, label, accent, showLabel = true }) {
   const reduce = useReducedMotion();
@@ -19,8 +20,12 @@ export default function ScoreRing({ score = 0, size = 180, label, accent, showLa
   const color = accent || thresholdColor;
   const grade = clamped >= 70 ? 'Good' : clamped >= 40 ? 'Fair' : 'At Risk';
 
+  const scale = size / 180;
+  const numFontSize = Math.max(14, Math.round(48 * scale));
+  const labelFontSize = Math.max(9, Math.round(13 * scale));
+
   return (
-    <div className="relative flex flex-col items-center justify-center" style={{ width: size, height: size }}>
+    <div className="relative flex flex-col items-center justify-center shrink-0" style={{ width: size, height: size }}>
       <svg className="absolute -rotate-90" width={size} height={size} viewBox="0 0 180 180">
         <circle cx="90" cy="90" r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth="12" opacity="0.4" />
         <motion.circle
@@ -38,9 +43,13 @@ export default function ScoreRing({ score = 0, size = 180, label, accent, showLa
           style={{ filter: `drop-shadow(0 0 8px ${color.replace(')', ' / 0.35)')})` }}
         />
       </svg>
-      <div className="relative z-10 flex flex-col items-center justify-center">
-        <AnimatedNumber value={clamped} className="text-5xl font-bold leading-none" style={{ color }} />
-        {showLabel && <span className="text-sm text-muted-foreground mt-1.5 tracking-wide">{label || grade}</span>}
+      <div className="relative z-10 flex flex-col items-center justify-center leading-none text-center">
+        <AnimatedNumber value={clamped} className="font-bold leading-none" style={{ color, fontSize: `${numFontSize}px` }} />
+        {showLabel && (
+          <span className="text-muted-foreground font-medium tracking-wide mt-0.5" style={{ fontSize: `${labelFontSize}px` }}>
+            {label || grade}
+          </span>
+        )}
       </div>
     </div>
   );
