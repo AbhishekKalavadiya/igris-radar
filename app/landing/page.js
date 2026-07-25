@@ -100,15 +100,13 @@ export default function LandingPage() {
           </Reveal>
           <Reveal delay={0.08}>
             <h1 className="text-4xl sm:text-5xl lg:text-[64px] font-bold tracking-tight leading-[1.06]">
-              Win AI search visibility on<br />
-              <RotatingEngines />
+              Win AI Search & Brand Visibility<br />
+              <span className="text-primary">Across the Entire Web</span>
             </h1>
           </Reveal>
           <Reveal delay={0.16}>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              Your buyers now ask AI assistants for recommendations. Igris Radar is the only platform
-              that audits every signal deciding whether you're the answer — security, SEO, AEO, GEO,
-              brand visibility, and site health — in one scan.
+              Audits every signal deciding whether your brand gets cited and recommended — security, SEO, AEO, GEO, brand visibility, and site health — in one unified scan.
             </p>
           </Reveal>
           <Reveal delay={0.24}>
