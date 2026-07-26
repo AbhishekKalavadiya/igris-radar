@@ -1688,6 +1688,7 @@ export async function POST(request) {
         competitorUrl: competitorUrl || null,
         competitorScore: compResult?.score || null,
         competitorCategories: compResult?.categories || null,
+        competitorFindings: compResult?.findings || null,
         deepAnalysis: deepAnalysisResult,
         crawlData,
         isOnboarding: isOnboardingScan,
@@ -1704,6 +1705,7 @@ export async function POST(request) {
       return NextResponse.json({ success: true, data: {
         ...newScan,
         findings: filterFindingsByPlan(newScan.findings, userPlan),
+        competitorFindings: newScan.competitorFindings ? filterFindingsByPlan(newScan.competitorFindings, userPlan) : null,
       } });
     }
 
@@ -1787,6 +1789,7 @@ export async function POST(request) {
         competitorUrl: competitorUrl || null,
         competitorScore: compResult?.score || null,
         competitorCategories: compResult?.categories || null,
+        competitorFindings: compResult?.findings || null,
         deepAnalysis: deepAnalysisResult,
         crawlData,
         createdAt: new Date(),
@@ -1802,6 +1805,7 @@ export async function POST(request) {
       return NextResponse.json({ success: true, data: {
         ...newScan,
         findings: filterFindingsByPlan(newScan.findings, userPlan),
+        competitorFindings: newScan.competitorFindings ? filterFindingsByPlan(newScan.competitorFindings, userPlan) : null,
       } });
     }
 
@@ -1901,6 +1905,7 @@ export async function POST(request) {
         competitorUrl: competitorUrl || null,
         competitorScore: compResult?.score || null,
         competitorCategories: compResult?.categories || null,
+        competitorFindings: compResult?.findings || null,
         deepAnalysis: deepAnalysisResult,
         crawlData,
         promptCoverage,
@@ -1917,6 +1922,7 @@ export async function POST(request) {
       return NextResponse.json({ success: true, data: {
         ...newScan,
         findings: filterFindingsByPlan(newScan.findings, userPlan),
+        competitorFindings: newScan.competitorFindings ? filterFindingsByPlan(newScan.competitorFindings, userPlan) : null,
       } });
     }
 

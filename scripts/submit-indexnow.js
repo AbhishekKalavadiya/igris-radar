@@ -8,8 +8,9 @@ function extractSitemapUrls(xml) {
 }
 
 async function main() {
-  if (process.env.VERCEL_ENV !== 'production') {
-    console.log('[indexnow] Skipping submission - VERCEL_ENV is not "production".');
+  const force = process.argv.includes('--force') || process.env.FORCE_INDEXNOW === 'true';
+  if (!force && process.env.VERCEL_ENV !== 'production') {
+    console.log('[indexnow] Skipping submission - VERCEL_ENV is not "production" (pass --force to override).');
     return;
   }
 

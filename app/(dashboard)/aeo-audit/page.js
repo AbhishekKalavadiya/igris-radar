@@ -455,7 +455,8 @@ export default function AeoAuditPage() {
                     competitorResult={{
                       url: scanResult.competitorUrl,
                       score: scanResult.competitorScore,
-                      categories: scanResult.competitorCategories
+                      categories: scanResult.competitorCategories,
+                      findings: scanResult.competitorFindings,
                     }} 
                   />
                 ) : (

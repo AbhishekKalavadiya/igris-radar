@@ -494,7 +494,8 @@ export default function GeoAuditPage() {
                     competitorResult={{
                       url: scanResult.competitorUrl,
                       score: scanResult.competitorScore,
-                      categories: scanResult.competitorCategories
+                      categories: scanResult.competitorCategories,
+                      findings: scanResult.competitorFindings,
                     }} 
                   />
                 ) : (
