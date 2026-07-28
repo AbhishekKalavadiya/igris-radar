@@ -24,6 +24,8 @@ import dynamic from 'next/dynamic';
 import CompetitorCompare from '@/components/ui/CompetitorCompare';
 import ExportReportButton from '@/components/ui/ExportReportButton';
 import UpgradePrompt from '@/components/ui/UpgradePrompt';
+import LockedFindingsBanner from '@/components/ui/LockedFindingsBanner';
+import UnlockFindingModal from '@/components/ui/UnlockFindingModal';
 import { useSettings } from '@/hooks/use-settings';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 import { notifyScanDone } from '@/lib/browserNotify';
@@ -58,6 +60,7 @@ export default function GeoAuditPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [cachedFixes, setCachedFixes] = useState({});
+  const [selectedLockedFinding, setSelectedLockedFinding] = useState(null);
 
   useEffect(() => {
     const scanId = scanResult?.id;
@@ -205,6 +208,7 @@ export default function GeoAuditPage() {
               scanId={scanResult?.id}
               cachedFix={cachedFixes[f.id]}
               isPro={userPlan === 'pro'}
+              onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
             />
           ))
         )}
@@ -249,6 +253,7 @@ export default function GeoAuditPage() {
               scanId={scanResult?.id}
               cachedFix={cachedFixes[f.id]}
               isPro={userPlan === 'pro'}
+              onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
             />
           ))
         )}
@@ -427,7 +432,12 @@ export default function GeoAuditPage() {
 
       {/* Results */}
       {scanResult && !isScanning && (
-        <div className="animate-in fade-in slide-in-from-bottom-4">
+        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+          <LockedFindingsBanner
+            lockedFindings={scanResult.findings.filter(f => f.locked)}
+            scanType="geo"
+            onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
+          />
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="bg-card border border-border w-full justify-start h-auto flex-wrap p-1">
               <TabsTrigger value="overview" className="data-[state=active]:bg-scanner-geo/10 data-[state=active]:text-scanner-geo">Overview</TabsTrigger>
@@ -596,6 +606,13 @@ export default function GeoAuditPage() {
           </Tabs>
         </div>
       )}
+
+      <UnlockFindingModal
+        isOpen={!!selectedLockedFinding}
+        onClose={() => setSelectedLockedFinding(null)}
+        finding={selectedLockedFinding}
+        scanType="geo"
+      />
     </PageTransition>
   );
 }

@@ -21,6 +21,8 @@ import ScanProgressSteps from '@/components/ui/ScanProgressSteps';
 import FindingsToolbar, { filterFindings } from '@/components/ui/FindingsToolbar';
 import { PageTransition } from '@/components/ui/motion';
 import { SCANNERS } from '@/lib/scannerAccents';
+import LockedFindingsBanner from '@/components/ui/LockedFindingsBanner';
+import UnlockFindingModal from '@/components/ui/UnlockFindingModal';
 import { useSettings } from '@/hooks/use-settings';
 import { notifyScanDone } from '@/lib/browserNotify';
 import { useAuth } from '@/lib/authContext';
@@ -44,6 +46,7 @@ export default function SecurityScanPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [cachedFixes, setCachedFixes] = useState({});
+  const [selectedLockedFinding, setSelectedLockedFinding] = useState(null);
 
   useEffect(() => {
     const scanId = scanResult?.id;
@@ -250,6 +253,7 @@ export default function SecurityScanPage() {
                 scanId={scanResult?.id}
                 cachedFix={cachedFixes[finding.id]}
                 isPro={userPlan === 'pro'}
+                onUnlockClick={(f) => setSelectedLockedFinding(f)}
               />
             ))
           )}
@@ -293,6 +297,7 @@ export default function SecurityScanPage() {
                 scanId={scanResult?.id}
                 cachedFix={cachedFixes[finding.id]}
                 isPro={userPlan === 'pro'}
+                onUnlockClick={(f) => setSelectedLockedFinding(f)}
               />
             ))
           )}
@@ -429,7 +434,12 @@ export default function SecurityScanPage() {
 
       {/* Results */}
       {scanResult && !isScanning && (
-        <div className="animate-in fade-in slide-in-from-bottom-4">
+        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+          <LockedFindingsBanner
+            lockedFindings={scanResult.findings.filter(f => f.locked)}
+            scanType="security"
+            onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
+          />
           {/* Caveat note: a few checks depend on external data sources that can be
               temporarily unavailable and are skipped safely rather than faked. */}
           <div className="flex items-start gap-2 mb-4 text-xs text-muted-foreground/70">
@@ -708,6 +718,13 @@ export default function SecurityScanPage() {
           </Tabs>
         </div>
       )}
+
+      <UnlockFindingModal
+        isOpen={!!selectedLockedFinding}
+        onClose={() => setSelectedLockedFinding(null)}
+        finding={selectedLockedFinding}
+        scanType="security"
+      />
     </PageTransition>
   );
 }

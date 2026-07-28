@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, AlertTriangle, AlertCircle, Info, Copy, Check, Sparkles, ChevronDown, ChevronUp, Lock, Search } from 'lucide-react';
-import { SEVERITY_STYLES } from '@/lib/scannerAccents';
+import { SEVERITY_STYLES, getSeverityColorClass } from '@/lib/scannerAccents';
 import { getFindingExplanation, FINDING_EXPLANATIONS } from '@/lib/scannerExplanations';
 import Link from 'next/link';
 
@@ -43,7 +43,7 @@ const CATEGORY_METHODOLOGY = {
   'Best Practices': 'We check for the presence of recommended security files and configurations (e.g. security.txt).',
 };
 
-export default function AuditFindingCard({ finding, scanType, scanId, cachedFix, isPro = false }) {
+export default function AuditFindingCard({ finding, scanType, scanId, cachedFix, isPro = false, onUnlockClick }) {
   const [copiedId, setCopiedId] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [fix, setFix] = useState(cachedFix || null);
@@ -52,44 +52,55 @@ export default function AuditFindingCard({ finding, scanType, scanId, cachedFix,
 
   // ─── LOCKED FINDING (plan-gated) ──────────────────────────────────────────
   if (finding.locked) {
-    const planLabel = PLAN_LABELS[finding.requiredPlan] || 'a higher';
+    const planLabel = PLAN_LABELS[finding.requiredPlan] || 'Starter';
     // Explanation comes from the server (resolved from the real title, which is
     // never sent to the client). Fall back to the local resolver if absent.
     const explanation = finding.explanation || getFindingExplanation(finding);
     // The name is blurred: use a decoy string derived from already-visible
     // context so no real finding name is present in the DOM, while the blur still
     // has natural, varied-length text to render.
-    const decoyName = `${finding.category || 'Advanced'} ${finding.severity || ''} finding`;
+    const decoyName = `${finding.category || 'Advanced'} ${finding.severity || ''} diagnostic finding`;
+
+    const handleUnlockTrigger = (e) => {
+      e.stopPropagation();
+      if (onUnlockClick) {
+        onUnlockClick(finding);
+      }
+    };
+
     return (
-      <Card className="glass-card overflow-hidden">
+      <Card 
+        onClick={handleUnlockTrigger}
+        className="glass-card overflow-hidden transition-all duration-200 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 cursor-pointer group"
+      >
         <div className={`h-1 w-full ${getSeverityColorClass(finding.severity, false)}`} />
         <CardContent className="p-0">
           <div className="p-5 flex items-start gap-4">
-            <div className="mt-0.5 opacity-70">
+            <div className="mt-0.5 opacity-80 group-hover:scale-110 transition-transform">
               {getSeverityIcon(finding.severity)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <Lock className="h-3.5 w-3.5 text-primary shrink-0 animate-pulse" />
                 <h4 className="text-sm font-semibold text-foreground blur-[6px] select-none pointer-events-none" aria-hidden="true">
                   {decoyName}
                 </h4>
                 <span className="sr-only">Locked finding — upgrade to {planLabel} to view</span>
-                <Badge variant="outline" className="text-[10px] py-0 bg-muted/50">
+                <Badge variant="outline" className="text-[10px] py-0 bg-muted/50 font-mono">
                   {finding.passed ? 'Passed' : finding.severity?.toUpperCase()}
                 </Badge>
                 {finding.category && (
-                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{finding.category}</span>
+                  <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-mono">{finding.category}</span>
                 )}
               </div>
 
               {/* The site-specific result is blurred/redacted; the check's purpose is explained. */}
-              <p className="mt-2 text-xs text-muted-foreground select-none">
-                <span className="blur-sm">Your result for this check is hidden on the {planLabel} plan.</span>
+              <p className="mt-2 text-xs text-muted-foreground select-none pointer-events-none">
+                <span className="blur-sm">Specific technical diagnostic & 1-click AI fix are locked on free tier.</span>
               </p>
 
               {isExpanded && explanation && (
-                <div className="mt-3 rounded-md bg-muted/40 border border-border/50 p-3">
+                <div className="mt-3 rounded-md bg-muted/40 border border-border/50 p-3" onClick={(e) => e.stopPropagation()}>
                   <p className="text-xs text-muted-foreground leading-relaxed">{explanation}</p>
                 </div>
               )}
@@ -100,18 +111,33 @@ export default function AuditFindingCard({ finding, scanType, scanId, cachedFix,
                     size="sm"
                     variant="ghost"
                     className="text-xs h-7 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsExpanded(!isExpanded);
+                    }}
                   >
                     {isExpanded ? <ChevronUp className="h-3 w-3 mr-1.5" /> : <ChevronDown className="h-3 w-3 mr-1.5" />}
                     More information
                   </Button>
                 )}
-                <Link href="/plans">
-                  <Button size="sm" variant="outline" className="text-xs h-7 border-primary/30 text-primary hover:bg-primary/10">
-                    <Lock className="h-3 w-3 mr-1.5" />
-                    Upgrade to {planLabel} to unlock
+                {onUnlockClick ? (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs h-7 border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 font-medium"
+                    onClick={handleUnlockTrigger}
+                  >
+                    <Lock className="h-3 w-3 mr-1.5 text-primary" />
+                    Unlock Title & 1-Click Fix ({planLabel})
                   </Button>
-                </Link>
+                ) : (
+                  <Link href="/plans" onClick={(e) => e.stopPropagation()}>
+                    <Button size="sm" variant="outline" className="text-xs h-7 border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 font-medium">
+                      <Lock className="h-3 w-3 mr-1.5 text-primary" />
+                      Upgrade to {planLabel} to unlock
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -364,7 +390,3 @@ function getSeverityIcon(severity) {
   }
 }
 
-function getSeverityColorClass(severity, passed) {
-  if (passed || severity === 'passed') return SEVERITY_STYLES.passed.bar;
-  return (SEVERITY_STYLES[severity] || SEVERITY_STYLES.low).bar;
-}

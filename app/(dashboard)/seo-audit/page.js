@@ -24,6 +24,8 @@ import CompetitorCompare from '@/components/ui/CompetitorCompare';
 import ExportReportButton from '@/components/ui/ExportReportButton';
 import UpgradePrompt from '@/components/ui/UpgradePrompt';
 import FeatureGate from '@/components/ui/FeatureGate';
+import LockedFindingsBanner from '@/components/ui/LockedFindingsBanner';
+import UnlockFindingModal from '@/components/ui/UnlockFindingModal';
 import { useAuth } from '@/lib/authContext';
 import { useSettings } from '@/hooks/use-settings';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
@@ -54,6 +56,7 @@ export default function SeoAuditPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [cachedFixes, setCachedFixes] = useState({});
+  const [selectedLockedFinding, setSelectedLockedFinding] = useState(null);
 
   useEffect(() => {
     const scanId = scanResult?.id;
@@ -196,6 +199,7 @@ export default function SeoAuditPage() {
               scanId={scanResult?.id}
               cachedFix={cachedFixes[f.id]}
               isPro={userPlan === 'pro'}
+              onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
             />
           ))
         )}
@@ -239,6 +243,7 @@ export default function SeoAuditPage() {
               scanId={scanResult?.id}
               cachedFix={cachedFixes[f.id]}
               isPro={userPlan === 'pro'}
+              onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
             />
           ))
         )}
@@ -383,7 +388,12 @@ export default function SeoAuditPage() {
 
       {/* Results */}
       {scanResult && !isScanning && (
-        <div className="animate-in fade-in slide-in-from-bottom-4">
+        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+          <LockedFindingsBanner
+            lockedFindings={scanResult.findings.filter(f => f.locked)}
+            scanType="seo"
+            onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
+          />
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="bg-card border border-border w-full justify-start h-auto flex-wrap p-1">
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -629,6 +639,12 @@ export default function SeoAuditPage() {
         </div>
       )}
 
+      <UnlockFindingModal
+        isOpen={!!selectedLockedFinding}
+        onClose={() => setSelectedLockedFinding(null)}
+        finding={selectedLockedFinding}
+        scanType="seo"
+      />
     </PageTransition>
   );
 }

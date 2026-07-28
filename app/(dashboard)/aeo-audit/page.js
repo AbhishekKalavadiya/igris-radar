@@ -24,6 +24,8 @@ import CompetitorCompare from '@/components/ui/CompetitorCompare';
 import ExportReportButton from '@/components/ui/ExportReportButton';
 import UpgradePrompt from '@/components/ui/UpgradePrompt';
 import FeatureGate from '@/components/ui/FeatureGate';
+import LockedFindingsBanner from '@/components/ui/LockedFindingsBanner';
+import UnlockFindingModal from '@/components/ui/UnlockFindingModal';
 import { useAuth } from '@/lib/authContext';
 import { useSettings } from '@/hooks/use-settings';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
@@ -53,6 +55,7 @@ export default function AeoAuditPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [cachedFixes, setCachedFixes] = useState({});
+  const [selectedLockedFinding, setSelectedLockedFinding] = useState(null);
 
   useEffect(() => {
     const scanId = scanResult?.id;
@@ -194,6 +197,7 @@ export default function AeoAuditPage() {
               scanId={scanResult?.id}
               cachedFix={cachedFixes[f.id]}
               isPro={userPlan === 'pro'}
+              onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
             />
           ))
         )}
@@ -238,6 +242,7 @@ export default function AeoAuditPage() {
               scanId={scanResult?.id}
               cachedFix={cachedFixes[f.id]}
               isPro={userPlan === 'pro'}
+              onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
             />
           ))
         )}
@@ -384,7 +389,12 @@ export default function AeoAuditPage() {
 
       {/* Results */}
       {scanResult && !isScanning && (
-        <div className="animate-in fade-in slide-in-from-bottom-4">
+        <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+          <LockedFindingsBanner
+            lockedFindings={scanResult.findings.filter(f => f.locked)}
+            scanType="aeo"
+            onUnlockClick={(finding) => setSelectedLockedFinding(finding)}
+          />
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="bg-card border border-border w-full justify-start h-auto flex-wrap p-1">
               <TabsTrigger value="overview" className="data-[state=active]:bg-scanner-aeo/20 data-[state=active]:text-scanner-aeo">Overview</TabsTrigger>
@@ -612,6 +622,12 @@ export default function AeoAuditPage() {
         </div>
       )}
 
+      <UnlockFindingModal
+        isOpen={!!selectedLockedFinding}
+        onClose={() => setSelectedLockedFinding(null)}
+        finding={selectedLockedFinding}
+        scanType="aeo"
+      />
     </PageTransition>
   );
 }
