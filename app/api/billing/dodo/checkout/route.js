@@ -30,12 +30,12 @@ export async function POST(request) {
 
     const client = getDodoClient();
 
-    // If the user already has an active subscription, this is a mid-cycle
-    // upgrade - change the existing subscription in place (prorated, billed
-    // immediately) rather than creating a second subscription. This restarts
-    // the billing cycle from today, giving them a fresh 30 days.
+    // If the user already has an active subscription and is switching between
+    // recurring subscription tiers (e.g. upgrading to Pro), change the existing
+    // subscription in place. For one-time purchases (Starter), skip sub change
+    // and proceed to checkout session creation.
     const customerId = await getDodoCustomerId(sessionUser.id);
-    if (customerId) {
+    if (plan !== 'starter' && customerId) {
       const subsPage = await client.subscriptions.list({ customer_id: customerId, page_size: 20 });
       const activeSub = (subsPage?.items || []).find((s) => s.status === 'active' || s.status === 'on_hold') || null;
 

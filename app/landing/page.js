@@ -33,13 +33,13 @@ const PLANS = [
     cta: 'Start free',
   },
   {
-    name: 'Starter', price: '$5', period: '/month', highlight: false,
-    features: ['25 scans / month', '5 tracked sites', 'Unlimited team members', 'ASO Audit included', 'Scan history & trends', 'Everything in Free'],
-    cta: 'Start with Starter',
+    name: 'Starter', price: '$10', period: 'one-time', highlight: true,
+    features: ['50 scans / month', '5 tracked sites', 'Multi-page crawl', 'Competitor comparison scans', 'ASO Audit included', 'Scan history & trends'],
+    cta: 'Get Lifetime Starter',
   },
   {
-    name: 'Pro', price: '$20', period: '/month', highlight: true,
-    features: ['Unlimited scans', 'Unlimited tracked sites', 'Unlimited team members', 'Daily scheduled monitoring', 'AI deep analysis', 'Competitor comparison scans', 'White-label PDF reports', 'API access'],
+    name: 'Pro', price: '$20', period: '/month', highlight: false,
+    features: ['Unlimited scans', 'Unlimited tracked sites', 'Unlimited team members', 'Daily scheduled monitoring', 'AI deep analysis', 'White-label PDF reports', 'API access'],
     cta: 'Go Pro',
   },
 ];
@@ -50,7 +50,7 @@ const HOME_FAQS = [
   { q: 'Do I need to install anything on my site?', a: 'No. Every audit runs from the outside, exactly the way crawlers and attackers see your site. Enter a URL and results arrive in seconds to minutes depending on the audit.' },
   { q: 'What makes the fix workflow different?', a: 'Every failed check ships with a plain-language explanation and an agent-native fix prompt. That is a ready-to-paste instruction for your AI coding assistant, with the full context of the finding built in. You go from "we have an issue" straight to a merged fix.' },
   { q: 'Can I compare my site against competitors?', a: 'Yes. Point SEO, AEO, or GEO audits at a competitor\'s URL. We run the same checks on both sites and show a gap analysis by category. Brand visibility tracking also shows whether AI engines recommend you or them.' },
-  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across six web audit types, no credit card required. Starter is normally $5/month (currently $0/month, 100% off for a limited time) for 25 scans, 5 tracked sites, and unlocks ASO auditing. Pro is normally $20/month (currently $10/month, 50% off for a limited time) for unlimited scans and sites, AI deep analysis, daily monitoring, white-label PDF reports, and API access.' },
+  { q: 'How much does it cost?', a: 'The Free plan includes 10 full scans a month across six web audit types, no credit card required. Starter is normally $10 one-time (currently $0 one-time, 100% off for a limited time) for 50 scans/month, 5 tracked sites, Multi-page crawl, Competitor comparison, and unlocks ASO auditing. Pro is normally $20/month (currently $10/month, 50% off for a limited time) for unlimited scans and sites, AI deep analysis, daily monitoring, white-label PDF reports, and API access.' },
 ];
 
 /** Rotating AI engine name in the hero headline. */
@@ -506,8 +506,8 @@ headers() and verify on /.`}
                   : 'border-border bg-card'
               }`}>
                 {plan.highlight && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-wider">
-                    Most popular
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md shadow-amber-500/25 flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" /> Most Popular • Pay Once, Own Forever
                   </span>
                 )}
                 <h3 className="font-bold text-lg">{plan.name}</h3>
@@ -516,17 +516,31 @@ headers() and verify on /.`}
                     <div className="mt-2 flex items-baseline gap-2 flex-wrap">
                       <span className="text-lg text-muted-foreground line-through">{plan.price}</span>
                       <span className="text-3xl font-bold text-success">{promo.discountedPrice}</span>
-                      <span className="text-sm text-muted-foreground">{plan.period}</span>
+                      {plan.period === 'one-time' ? (
+                        <span className="px-2.5 py-0.5 rounded-md bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wide shadow-sm">
+                          One-Time Payment
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">{plan.period}</span>
+                      )}
                     </div>
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex items-center gap-2 flex-wrap">
                       <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-bold uppercase tracking-wide">{promo.badge}</span>
-                      <span className="text-[11px] text-muted-foreground">Limited period offer</span>
+                      <span className="text-xs font-semibold text-foreground">
+                        {plan.period === 'one-time' ? '⚡ Pay once • Refreshed monthly' : 'Limited period offer'}
+                      </span>
                     </div>
                   </>
                 ) : (
-                  <div className="mt-2 flex items-baseline gap-1">
+                  <div className="mt-2 flex items-baseline gap-2 flex-wrap">
                     <span className="text-3xl font-bold">{plan.price}</span>
-                    <span className="text-sm text-muted-foreground">{plan.period}</span>
+                    {plan.period === 'one-time' ? (
+                      <span className="px-2.5 py-0.5 rounded-md bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wide shadow-sm">
+                        One-Time Payment
+                      </span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">{plan.period}</span>
+                    )}
                   </div>
                 )}
                 <ul className="mt-5 space-y-2.5 flex-1">
@@ -543,8 +557,14 @@ headers() and verify on /.`}
                 ) : SHOW_AUTH_CTAS ? (
                   <Link href="/signup" className="mt-6">
                     <Button
-                      className={`w-full font-semibold ${plan.highlight ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
-                      variant={plan.highlight ? 'default' : 'outline'}
+                      className={`w-full font-semibold transition-all duration-200 ${
+                        plan.name.toLowerCase() === 'starter'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-md shadow-amber-500/25'
+                          : plan.highlight
+                            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                            : ''
+                      }`}
+                      variant={plan.name.toLowerCase() === 'starter' || plan.highlight ? 'default' : 'outline'}
                     >
                       {plan.cta}
                     </Button>

@@ -233,14 +233,14 @@ export default function UsersPanel({ plansMap = {} }) {
                       </td>
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize border" style={{ borderColor: PLAN_COLORS[user.plan||'free'], color: PLAN_COLORS[user.plan||'free'] }}>
-                          {user.plan || 'free'}
+                          {user.isLifetimeStarter && user.plan === 'starter' ? 'starter (lifetime)' : (user.plan || 'free')}
                         </span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-3 w-3 shrink-0" />
-                          <span title={`Renews / resets ${user.planPeriod?.end ? shortDate(user.planPeriod.end) : ''}`}>
-                            {formatPeriod(user.planPeriod)}
+                          <span title={user.isLifetimeStarter && user.plan === 'starter' ? 'Lifetime Access' : `Renews / resets ${user.planPeriod?.end ? shortDate(user.planPeriod.end) : ''}`}>
+                            {user.isLifetimeStarter && user.plan === 'starter' ? 'Lifetime Access' : formatPeriod(user.planPeriod)}
                           </span>
                         </div>
                       </td>

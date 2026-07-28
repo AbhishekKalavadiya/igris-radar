@@ -81,31 +81,42 @@ export default function PromoPopup() {
           </p>
 
           <div className="mt-5 grid grid-cols-2 gap-3 text-left">
-            <div className="rounded-xl border border-success/30 bg-success/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Starter</p>
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 relative overflow-hidden">
+              <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[9px] font-black uppercase">
+                LIFETIME
+              </span>
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-500">Starter</p>
               <div className="mt-1 flex items-baseline gap-2 flex-wrap">
                 <span className="text-sm text-muted-foreground line-through">{starter.originalPrice}</span>
-                <span className="text-2xl font-bold text-success">{starter.discountedPrice}</span>
+                <span className="text-2xl font-black text-success">{starter.discountedPrice}</span>
+                <span className="text-[10px] font-extrabold uppercase text-amber-500">One-Time</span>
               </div>
-              <span className="mt-2 inline-block px-2 py-0.5 rounded-full bg-success/15 text-success text-[10px] font-bold uppercase tracking-wide">
-                {starter.badge}
-              </span>
+              <div className="mt-2 space-y-1">
+                <span className="inline-block px-2 py-0.5 rounded-full bg-success/15 text-success text-[10px] font-bold uppercase tracking-wide">
+                  {starter.badge}
+                </span>
+                <p className="text-[10px] font-semibold text-foreground">50 scans/mo • Pay once forever</p>
+              </div>
             </div>
             <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pro</p>
               <div className="mt-1 flex items-baseline gap-2 flex-wrap">
                 <span className="text-sm text-muted-foreground line-through">{pro.originalPrice}</span>
                 <span className="text-2xl font-bold text-primary">{pro.discountedPrice}</span>
+                <span className="text-[10px] text-muted-foreground">/mo</span>
               </div>
-              <span className="mt-2 inline-block px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-wide">
-                {pro.badge}
-              </span>
+              <div className="mt-2 space-y-1">
+                <span className="inline-block px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-wide">
+                  {pro.badge}
+                </span>
+                <p className="text-[10px] font-semibold text-muted-foreground">Unlimited scans • AI Deep</p>
+              </div>
             </div>
           </div>
 
           <Link href="/signup" onClick={close}>
-            <Button size="lg" className="w-full mt-6 font-bold bg-primary hover:bg-primary/90 text-primary-foreground">
-              Claim the discount <ArrowRight className="ml-2 h-4 w-4" />
+            <Button size="lg" className="w-full mt-6 font-bold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/25 border-none">
+              Claim Lifetime Starter — Free <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
           <button

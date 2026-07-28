@@ -16,9 +16,9 @@ import { useBfcacheReload } from '@/hooks/use-bfcache-reload';
 import { isPlanAvailable, PLAN_PROMOTIONS } from '@/lib/constants';
 
 const PLAN_META = {
-  free:       { label: 'Free',       price: '$0',    period: null,    color: 'text-muted-foreground', badge: 'bg-white/10' },
-  starter:    { label: 'Starter',    price: '$5',    period: '/mo',   color: 'text-blue-400',         badge: 'bg-blue-500/10 border-blue-500/20' },
-  pro:        { label: 'Pro',        price: '$20',   period: '/mo',   color: 'text-primary',          badge: 'bg-primary/10 border-primary/30' },
+  free:       { label: 'Free',       price: '$0',    period: null,        color: 'text-muted-foreground', badge: 'bg-white/10' },
+  starter:    { label: 'Starter',    price: '$10',   period: ' one-time', color: 'text-blue-400',         badge: 'bg-blue-500/10 border-blue-500/20' },
+  pro:        { label: 'Pro',        price: '$20',   period: '/mo',       color: 'text-primary',          badge: 'bg-primary/10 border-primary/30' },
 };
 const PLANS_ORDER = ['free', 'starter', 'pro'];
 // Every plan includes the full audit suite - the scanners are the core product,
@@ -39,9 +39,10 @@ const COMPARISON_ROWS = [
   { key: 'scansPerMonth',  label: 'Scans / month',         format: (v) => v === undefined ? null : (v === Infinity || v === null) ? 'Unlimited' : String(v) },
   { key: 'sites',          label: 'Sites',                  format: (v) => v === undefined ? null : (v === Infinity || v === null) ? 'Unlimited' : String(v) },
   { key: 'teamMembers',    label: 'Team members',           format: (v) => v === undefined ? null : (v === Infinity || v === null) ? 'Unlimited' : String(v) },
+  { key: 'multiPageCrawl', label: 'Multi-page crawl',       format: (v) => v ? 'Included' : null },
+  { key: 'competitorScan', label: 'Competitor comparison',  format: (v) => v ? 'Included' : null },
   { key: 'monitoring',     label: 'Monitoring',             format: (v) => !v || v === 'false' ? null : (v === true ? 'Yes' : String(v).charAt(0).toUpperCase() + String(v).slice(1)) },
   { key: 'deepAnalysis',   label: 'AI deep analysis',       format: (v) => v ? 'Included' : null },
-  { key: 'competitorScan', label: 'Competitor comparison',  format: (v) => v ? 'Included' : null },
   { key: 'whiteLabel',     label: 'White-label reports',    format: (v) => v ? 'Included' : null },
 ];
 
@@ -230,16 +231,21 @@ export default function BillingTab({ currentPlan = 'free' }) {
         const isCurrent = p === plan;
         const promo = key === 'price' ? PLAN_PROMOTIONS[p] : null;
         return (
-          <td key={p} className={`text-center py-3 px-3 ${isCurrent ? 'bg-muted/50' : ''}`}>
+          <td key={p} className={`text-center py-3 px-3 ${isCurrent ? 'bg-muted/50' : p === 'starter' ? 'bg-amber-500/5' : ''}`}>
             {formatted === null ? (
               <XCircle className="h-4 w-4 text-muted-foreground/30 mx-auto" />
             ) : promo ? (
               <span className="inline-flex flex-col items-center gap-0.5">
                 <span className="text-xs text-muted-foreground line-through">{formatted}</span>
-                <span className="font-semibold text-success">{promo.discountedPrice}</span>
+                <span className="font-extrabold text-success text-base">{promo.discountedPrice}</span>
+                {p === 'starter' && (
+                  <span className="mt-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/35 text-[10px] font-black uppercase tracking-wide">
+                    Pay Once • 100% OFF
+                  </span>
+                )}
               </span>
             ) : (
-              <span className={`font-medium ${isCurrent ? PLAN_META[p].color : 'text-foreground/80'}`}>
+              <span className={`font-medium ${isCurrent ? PLAN_META[p].color : p === 'starter' ? 'text-amber-500 font-bold' : 'text-foreground/80'}`}>
                 {formatted === 'Included' ? <CheckCircle2 className="h-4 w-4 mx-auto text-primary" /> : formatted}
               </span>
             )}
@@ -254,7 +260,7 @@ export default function BillingTab({ currentPlan = 'free' }) {
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-base">Current Plan</CardTitle>
-          <CardDescription>Your active subscription and this month's usage</CardDescription>
+          <CardDescription>Your active plan and this month's usage</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {pendingDowngrade && downgradeDate && (
@@ -263,7 +269,7 @@ export default function BillingTab({ currentPlan = 'free' }) {
               <p className="text-sm text-foreground">
                 Plan cancelled for{' '}
                 <span className="font-semibold">{PLAN_META[pendingDowngrade.plan]?.label || pendingDowngrade.plan}</span>.
-                You'll switch to the <span className="font-semibold">Free</span> tier from{' '}
+                You'll switch to the <span className="font-semibold">{PLAN_META[pendingDowngrade.targetPlan]?.label || 'Free'}</span> tier from{' '}
                 <span className="font-semibold">{downgradeDate}</span>. You keep full access until then.
               </p>
             </div>
@@ -289,14 +295,18 @@ export default function BillingTab({ currentPlan = 'free' }) {
                 isPlanAvailable(PLANS_ORDER[currentIdx + 1]) ? (
                   <Button
                     size="sm"
-                    className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 font-semibold"
+                    className={`gap-2 h-9 px-4 font-semibold ${
+                      PLANS_ORDER[currentIdx + 1] === 'starter'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-md shadow-amber-500/25'
+                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    }`}
                     onClick={() => handleUpgrade(PLANS_ORDER[currentIdx + 1])}
                     disabled={!!redirecting}
                   >
                     {redirecting === PLANS_ORDER[currentIdx + 1]
                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       : <Zap className="h-3.5 w-3.5" />}
-                    Upgrade to {PLAN_META[PLANS_ORDER[currentIdx + 1]]?.label}
+                    Upgrade to {PLAN_META[PLANS_ORDER[currentIdx + 1]]?.label} {PLANS_ORDER[currentIdx + 1] === 'starter' ? '(Lifetime)' : ''}
                   </Button>
                 ) : (
                   <Button size="sm" variant="outline" className="gap-2 h-9 px-4 font-semibold" disabled>
@@ -462,10 +472,46 @@ export default function BillingTab({ currentPlan = 'free' }) {
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left py-3 pr-4 text-muted-foreground font-medium w-40">Feature</th>
-                {PLANS_ORDER.map((p) => (
-                  <th key={p} className={`text-center py-3 px-3 font-semibold ${p === plan ? PLAN_META[p].color : 'text-muted-foreground'}`}>
-                    {PLAN_META[p].label}
-                    {p === plan && <span className="block text-xs font-normal opacity-70">Current</span>}
+                {PLANS_ORDER.map((p, i) => (
+                  <th key={p} className={`text-center py-3 px-3 font-semibold align-top ${p === plan ? PLAN_META[p].color : p === 'starter' ? 'text-amber-500 font-extrabold' : 'text-muted-foreground'}`}>
+                    <div className="flex flex-col items-center justify-between min-h-[105px] py-1">
+                      <span className="text-base font-bold">{PLAN_META[p].label}</span>
+                      
+                      <div className="h-6 flex items-center justify-center my-1">
+                        {p === plan ? (
+                          <span className="text-xs font-normal opacity-70">Current Plan</span>
+                        ) : p === 'starter' ? (
+                          <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-black uppercase tracking-wider shadow-sm whitespace-nowrap">
+                            ✨ Lifetime Deal
+                          </span>
+                        ) : (
+                          <div className="h-5" />
+                        )}
+                      </div>
+
+                      <div className="h-9 flex items-center justify-center w-full">
+                        {i > currentIdx && isPlanAvailable(p) ? (
+                          <Button
+                            size="sm"
+                            variant={p === 'starter' ? 'default' : 'outline'}
+                            className={`h-8 px-3 text-xs font-semibold gap-1.5 w-full max-w-[170px] justify-center ${
+                              p === 'starter'
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-md shadow-amber-500/25 font-bold'
+                                : ''
+                            }`}
+                            onClick={() => handleUpgrade(p)}
+                            disabled={!!redirecting}
+                          >
+                            {redirecting === p
+                              ? <Loader2 className="h-3 w-3 animate-spin" />
+                              : <ArrowRight className="h-3 w-3" />}
+                            {p === 'starter' ? 'Get Lifetime Starter' : 'Upgrade'}
+                          </Button>
+                        ) : (
+                          <div className="h-8" />
+                        )}
+                      </div>
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -487,35 +533,12 @@ export default function BillingTab({ currentPlan = 'free' }) {
                 <tr key={tool} className="border-b border-border/50 hover:bg-muted/50">
                   <td className="py-3 pr-4 text-muted-foreground">{tool}</td>
                   {PLANS_ORDER.map((p) => (
-                    <td key={p} className={`text-center py-3 px-3 ${p === plan ? 'bg-muted/50' : ''}`}>
+                    <td key={p} className={`text-center py-3 px-3 ${p === plan ? 'bg-muted/50' : p === 'starter' ? 'bg-amber-500/5' : ''}`}>
                       <CheckCircle2 className="h-4 w-4 mx-auto text-primary" />
                     </td>
                   ))}
                 </tr>
               ))}
-              <tr>
-                <td className="py-4"></td>
-                {PLANS_ORDER.map((p, i) => (
-                  <td key={p} className="text-center py-4 px-2">
-                    {i > currentIdx && isPlanAvailable(p) ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 px-3 text-xs font-semibold gap-1.5 w-full justify-center"
-                        onClick={() => handleUpgrade(p)}
-                        disabled={!!redirecting}
-                      >
-                        {redirecting === p
-                          ? <Loader2 className="h-3 w-3 animate-spin" />
-                          : <ArrowRight className="h-3 w-3" />}
-                        Upgrade
-                      </Button>
-                    ) : i > currentIdx && !isPlanAvailable(p) ? (
-                      <span className="text-[10px] text-muted-foreground uppercase font-semibold block text-center mt-2">Not offered yet</span>
-                    ) : null}
-                  </td>
-                ))}
-              </tr>
             </tbody>
           </table>
         </CardContent>

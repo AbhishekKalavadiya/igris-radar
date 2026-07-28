@@ -287,7 +287,7 @@ export default function AeoAuditPage() {
                   autoCorrect="off"
                 />
               </div>
-              <FeatureGate currentPlan={userPlan} feature="competitorScan" planLimits={planLimits} minPlan="pro" className="flex-1">
+              <FeatureGate currentPlan={userPlan} feature="competitorScan" planLimits={planLimits} minPlan="starter" className="flex-1">
                 <div className="relative flex-1">
                   <Target className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50" />
                   <Input

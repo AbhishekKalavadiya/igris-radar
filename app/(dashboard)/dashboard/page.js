@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import UsageMeter from '@/components/ui/UsageMeter';
 import PageHeader from '@/components/ui/PageHeader';
+import StarterBanner from '@/components/ui/StarterBanner';
 import StatCard from '@/components/ui/StatCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { StatRowSkeleton } from '@/components/ui/PageSkeleton';
@@ -73,6 +74,8 @@ export default function DashboardPage() {
         title="Command Center"
         description="Monitor your web security, optimize for AI answer engines, and track site health."
       />
+
+      <StarterBanner />
 
       {/* Quick Scan */}
       <Card className="glass-panel rounded-xl border-t-2 border-t-primary/50 overflow-hidden relative">

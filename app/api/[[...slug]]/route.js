@@ -1395,7 +1395,9 @@ export async function POST(request) {
     // itself - otherwise any user could self-upgrade for free
     // (SECURITY_CHECKLIST C4).
     if (pathParts[0] === 'auth' && pathParts[1] === 'update-plan') {
-      if (env.stripeSecretKey || env.dodoApiKey) {
+      // SECURITY: Block in production unconditionally. In dev, also block when
+      // a real payment provider is configured (use Dodo/Stripe checkout instead).
+      if (env.isProd || env.stripeSecretKey || env.dodoApiKey) {
         return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
       }
 

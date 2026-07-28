@@ -91,17 +91,18 @@ export async function POST(req) {
         const dodoCustomerId = data.customer?.customer_id || data.customer_id || null;
 
         const usersCol = await getCollection(COLLECTIONS.USERS);
+        const updateFields = {
+          plan: targetPlan,
+          planCycleStart: new Date(),
+          ...(targetPlan === 'starter' ? { isLifetimeStarter: true } : {}),
+          ...(dodoCustomerId ? { dodoCustomerId } : {}),
+          updatedAt: new Date(),
+        };
+
         await usersCol.updateOne(
           { id: userId },
           {
-            // Reset the 30-day usage cycle to start now, and clear any pending
-            // downgrade (the user is active/paid again).
-            $set: {
-              plan: targetPlan,
-              planCycleStart: new Date(),
-              ...(dodoCustomerId ? { dodoCustomerId } : {}),
-              updatedAt: new Date(),
-            },
+            $set: updateFields,
             $unset: { pendingDowngrade: '' },
           }
         );
@@ -111,12 +112,7 @@ export async function POST(req) {
       }
     }
 
-    // Subscription ended for good - downgrade the user back to the free plan.
-    // Only terminal states are handled here: a scheduled cancellation keeps the
-    // subscription 'active' until the period end, and a failed payment goes to
-    // 'on_hold' (dunning/retries) rather than being terminal - so we must NOT
-    // downgrade on those, or a transient card decline would strip a paying
-    // customer's plan mid-cycle.
+    // Subscription ended for good - downgrade the user back to starter (if lifetime) or free plan.
     if (event.type === 'subscription.cancelled' || event.type === 'subscription.expired') {
       const data = event.data;
       const userId = await resolveUserId(data);
@@ -127,16 +123,17 @@ export async function POST(req) {
       }
 
       const usersCol = await getCollection(COLLECTIONS.USERS);
+      const userDoc = await usersCol.findOne({ id: userId });
+      const targetFallbackPlan = userDoc?.isLifetimeStarter ? PLANS.STARTER : PLANS.FREE;
+
       await usersCol.updateOne(
         { id: userId },
         {
-          // Free tier begins now (this event fires at the paid period's end).
-          // Start a fresh 30-day cycle and clear the pending-downgrade banner.
-          $set: { plan: PLANS.FREE, planCycleStart: new Date(), updatedAt: new Date() },
+          $set: { plan: targetFallbackPlan, planCycleStart: new Date(), updatedAt: new Date() },
           $unset: { pendingDowngrade: '' },
         }
       );
-      console.log(`[Dodo Webhook] Downgraded user ${userId} to ${PLANS.FREE} (${event.type})`);
+      console.log(`[Dodo Webhook] Downgraded user ${userId} to ${targetFallbackPlan} (${event.type})`);
     }
 
     return NextResponse.json({ success: true });

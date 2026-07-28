@@ -47,9 +47,10 @@ export async function POST(request) {
     // once the change actually takes effect (or if the user re-subscribes).
     if (!immediate) {
       const usersCol = await getCollection(COLLECTIONS.USERS);
+      const targetFallback = sessionUser.isLifetimeStarter ? 'starter' : 'free';
       await usersCol.updateOne(
         { id: sessionUser.id },
-        { $set: { pendingDowngrade: { plan: sessionUser.plan || null, effectiveDate, cancelledAt: new Date() }, updatedAt: new Date() } }
+        { $set: { pendingDowngrade: { plan: sessionUser.plan || null, targetPlan: targetFallback, effectiveDate, cancelledAt: new Date() }, updatedAt: new Date() } }
       );
     }
 

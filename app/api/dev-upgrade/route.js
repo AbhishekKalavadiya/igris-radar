@@ -7,9 +7,14 @@ import { decodeSession, encodeSession, buildSessionCookie } from '@/lib/auth/ses
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
-  // Security check: Only allow this in development
+  // SECURITY: Only allow this in development AND when no real payment provider
+  // is configured. Double-guard so a misconfigured NODE_ENV can never expose
+  // a free upgrade vector.
   if (process.env.NODE_ENV !== 'development') {
     return NextResponse.json({ error: 'This endpoint is strictly for local development testing.' }, { status: 403 });
+  }
+  if (process.env.DODO_PAYMENTS_API_KEY || process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: 'Dev upgrade is disabled when a payment provider is configured. Use the real checkout flow.' }, { status: 403 });
   }
 
   const { searchParams } = new URL(request.url);

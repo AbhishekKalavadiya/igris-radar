@@ -188,7 +188,7 @@ export default function AdminDashboardPage() {
                       <h3 className="text-lg font-semibold border-b pb-2">Core Limits</h3>
                       
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Price Label (e.g. $49 /mo)</label>
+                        <label className="text-sm font-medium">Price Label (e.g. $10 one-time or $20 /mo)</label>
                         <Input 
                           value={planData.price || ''} 
                           onChange={(e) => updatePlan(planId, 'price', e.target.value)}

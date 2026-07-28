@@ -41,19 +41,19 @@ const PLANS = [
   {
     key: 'starter',
     name: 'Starter',
-    price: '$5',
-    period: '/month',
-    highlight: false,
-    cta: 'Get Starter',
+    price: '$10',
+    period: 'one-time',
+    highlight: true,
+    cta: 'Get Lifetime Starter',
     ctaHref: '/signup',
-    tagline: 'For founders and solo marketers with apps',
+    tagline: 'For founders and solo marketers needing ASO & core scanning',
   },
   {
     key: 'pro',
     name: 'Pro',
     price: '$20',
     period: '/month',
-    highlight: true,
+    highlight: false,
     cta: 'Go Pro',
     ctaHref: '/signup',
     tagline: 'For teams and agencies that need unlimited scanning, monitoring and deep analysis',
@@ -66,7 +66,7 @@ const PLATFORM_FEATURES = [
   {
     label: 'Scans per month',
     free: '10',
-    starter: '25',
+    starter: '50',
     pro: 'Unlimited',
   },
   {
@@ -82,6 +82,18 @@ const PLATFORM_FEATURES = [
     pro: 'Unlimited',
   },
   {
+    label: 'Multi-page crawl',
+    free: false,
+    starter: true,
+    pro: true,
+  },
+  {
+    label: 'Competitor comparison scans',
+    free: false,
+    starter: true,
+    pro: true,
+  },
+  {
     label: 'Scan history & trends',
     free: false,
     starter: true,
@@ -92,18 +104,6 @@ const PLATFORM_FEATURES = [
     free: false,
     starter: false,
     pro: 'Daily',
-  },
-  {
-    label: 'Multi-page crawl',
-    free: false,
-    starter: false,
-    pro: true,
-  },
-  {
-    label: 'Competitor comparison scans',
-    free: false,
-    starter: false,
-    pro: true,
   },
   {
     label: 'AI deep analysis (Gemini)',
@@ -505,8 +505,8 @@ export default function PricingPage() {
                 }`}
               >
                 {plan.highlight && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-wider">
-                    Most popular
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md shadow-amber-500/25 flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" /> Most Popular • Pay Once, Own Forever
                   </span>
                 )}
                 <div>
@@ -517,17 +517,31 @@ export default function PricingPage() {
                       <div className="mt-4 flex items-baseline gap-2 flex-wrap">
                         <span className="text-xl text-muted-foreground line-through">{plan.price}</span>
                         <span className="text-4xl font-bold text-success">{promo.discountedPrice}</span>
-                        <span className="text-sm text-muted-foreground">{plan.period}</span>
+                        {plan.period === 'one-time' ? (
+                          <span className="px-2.5 py-0.5 rounded-md bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wide shadow-sm">
+                            One-Time Payment
+                          </span>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">{plan.period}</span>
+                        )}
                       </div>
-                      <div className="mt-1.5 flex items-center gap-2">
+                      <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                         <span className="px-2 py-0.5 rounded-full bg-success/10 text-success text-[11px] font-bold uppercase tracking-wide">{promo.badge}</span>
-                        <span className="text-[11px] text-muted-foreground">Limited period offer</span>
+                        <span className="text-xs font-semibold text-foreground">
+                          {plan.period === 'one-time' ? '⚡ Pay once • Refreshed monthly' : 'Limited period offer'}
+                        </span>
                       </div>
                     </>
                   ) : (
-                    <div className="mt-4 flex items-baseline gap-1">
+                    <div className="mt-4 flex items-baseline gap-2 flex-wrap">
                       <span className="text-4xl font-bold">{plan.price}</span>
-                      <span className="text-sm text-muted-foreground">{plan.period}</span>
+                      {plan.period === 'one-time' ? (
+                        <span className="px-2.5 py-0.5 rounded-md bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 text-xs font-black uppercase tracking-wide shadow-sm">
+                          One-Time Payment
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">{plan.period}</span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -539,8 +553,14 @@ export default function PricingPage() {
                 ) : SHOW_AUTH_CTAS ? (
                   <Link href={plan.ctaHref} className="mt-6">
                     <Button
-                      className={`w-full font-semibold ${plan.highlight ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}`}
-                      variant={plan.highlight ? 'default' : 'outline'}
+                      className={`w-full font-semibold transition-all duration-200 ${
+                        plan.key === 'starter'
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-none shadow-md shadow-amber-500/25'
+                          : plan.highlight
+                            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                            : ''
+                      }`}
+                      variant={plan.key === 'starter' || plan.highlight ? 'default' : 'outline'}
                     >
                       {plan.cta}
                     </Button>
