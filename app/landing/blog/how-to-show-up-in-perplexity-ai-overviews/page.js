@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import JsonLd from '@/components/ui/JsonLd';
-import { breadcrumbJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = buildMetadata({
   title: 'How to make your site show up in Perplexity and AI Overviews | Igris Radar',
-  alternates: { canonical: '/landing/blog/how-to-show-up-in-perplexity-ai-overviews' },
   description: 'The strategies and technical changes you need to get your content sourced in Perplexity AI and Google AI Overviews.',
-};
+  path: '/landing/blog/how-to-show-up-in-perplexity-ai-overviews',
+});
 
 export default function BlogPost() {
   return (

@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import JsonLd from '@/components/ui/JsonLd';
-import { breadcrumbJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = buildMetadata({
   title: "What Is AEO? Here's What Our Scanner Found Across 500 Sites | Igris Radar",
-  alternates: { canonical: '/landing/blog/what-is-answer-engine-optimization' },
   description: 'A beginner guide to Answer Engine Optimization, backed by real data from the Igris Radar AEO scanner.',
-};
+  path: '/landing/blog/what-is-answer-engine-optimization',
+});
 
 export default function BlogPost() {
   return (

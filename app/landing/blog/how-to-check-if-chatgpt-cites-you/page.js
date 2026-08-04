@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Search, Copy, CheckCircle2, AlertCircle, Bot, Zap, ArrowRight } from 'lucide-react';
 import JsonLd from '@/components/ui/JsonLd';
-import { breadcrumbJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = buildMetadata({
   title: 'How to Check If ChatGPT Recommends Your Business | Igris Radar',
-  alternates: { canonical: '/landing/blog/how-to-check-if-chatgpt-cites-you' },
   description: "Does ChatGPT recommend your brand? Learn the manual way to check AI citations, the limits of manual testing, and how to automate your AI visibility tracking.",
-};
+  path: '/landing/blog/how-to-check-if-chatgpt-cites-you',
+});
 
 export default function BlogPost() {
   return (

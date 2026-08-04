@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import JsonLd from '@/components/ui/JsonLd';
-import { breadcrumbJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = buildMetadata({
   title: "AEO vs GEO vs SEO, what's the difference? | Igris Radar",
-  alternates: { canonical: '/landing/blog/aeo-vs-geo-vs-seo-difference' },
   description: 'SEO earns rankings, AEO earns the extracted answer, and GEO earns the citation. We break down the differences and signals for each.',
-};
+  path: '/landing/blog/aeo-vs-geo-vs-seo-difference',
+});
 
 export default function BlogPost() {
   return (

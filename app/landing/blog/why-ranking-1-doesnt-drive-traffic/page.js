@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, AlertTriangle, TrendingUp, Search, MousePointerClick, ShieldCheck, Database, FileCode } from 'lucide-react';
 import JsonLd from '@/components/ui/JsonLd';
-import { breadcrumbJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = buildMetadata({
   title: "Why Your Site Ranks #1 on Google but Gets Zero AI Traffic | Igris Radar",
-  alternates: { canonical: '/landing/blog/why-ranking-1-doesnt-drive-traffic' },
   description: "Search didn't die. It stopped sending clicks. Learn why winning in AI search means optimizing for citations, not just rankings.",
-};
+  path: '/landing/blog/why-ranking-1-doesnt-drive-traffic',
+});
 
 export default function BlogPost() {
   return (

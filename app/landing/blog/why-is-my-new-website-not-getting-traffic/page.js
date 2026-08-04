@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, AlertCircle, Globe, Search, BarChart3, Clock, Link as LinkIcon, Bot, CheckSquare, SearchX, FileX, ArrowRight, CheckCircle2 } from 'lucide-react';
 import JsonLd from '@/components/ui/JsonLd';
-import { breadcrumbJsonLd } from '@/lib/seo';
+import { breadcrumbJsonLd, buildMetadata } from '@/lib/seo';
 
-export const metadata = {
+export const metadata = buildMetadata({
   title: 'Why Is My New Website Not Getting Any Organic Traffic? | Igris Radar',
-  alternates: { canonical: '/landing/blog/why-is-my-new-website-not-getting-traffic' },
   description: "Frustrated that your new domain isn't ranking? Learn the top 5 reasons new websites fail to get organic traffic and the exact 7-day checklist to fix it.",
-};
+  path: '/landing/blog/why-is-my-new-website-not-getting-traffic',
+});
 
 export default function BlogPost() {
   return (
