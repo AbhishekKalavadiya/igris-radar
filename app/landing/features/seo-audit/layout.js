@@ -3,8 +3,8 @@ import { buildMetadata, faqPageJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 import { FEATURE_PAGES } from '@/lib/landingContent';
 
 export const metadata = buildMetadata({
-  title: 'SEO Audit Tool: Technical, On-Page, Schema & Links | Igris Radar',
-  description: 'Run a complete SEO audit in minutes: 25+ checks across technical SEO, on-page signals, Schema.org structured data and link health, with competitor comparison and a 100-point score.',
+  title: 'Free Technical SEO Audit Tool & On-Page Analysis | Igris Radar',
+  description: 'Analyze your website with our free technical SEO audit tool. 30+ checks covering on-page optimization, Schema markup, crawlability, and Core Web Vitals.',
   path: '/landing/features/seo-audit',
 });
 

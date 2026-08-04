@@ -3,8 +3,8 @@ import { buildMetadata, faqPageJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 import { FEATURE_PAGES } from '@/lib/landingContent';
 
 export const metadata = buildMetadata({
-  title: 'Site Health Check: Core Web Vitals & Accessibility | Igris Radar',
-  description: 'Measure LCP, INP, CLS and FCP through Google PageSpeed analysis and audit WCAG 2.2 accessibility rules in one scan and one report, with plain-language fixes.',
+  title: 'Core Web Vitals Test & Free Website Health Checker | Igris Radar',
+  description: 'Test your Core Web Vitals, page speed, and WCAG 2.2 accessibility compliance in seconds with our free site health audit tool.',
   path: '/landing/features/site-health',
 });
 

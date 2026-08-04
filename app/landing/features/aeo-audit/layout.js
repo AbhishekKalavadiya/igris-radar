@@ -3,8 +3,8 @@ import { buildMetadata, faqPageJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 import { FEATURE_PAGES } from '@/lib/landingContent';
 
 export const metadata = buildMetadata({
-  title: 'AEO Audit: Answer Engine Optimization for ChatGPT | Igris Radar',
-  description: 'Measure whether ChatGPT, Claude, Perplexity and Gemini can crawl, parse and cite your content. AI crawler access, answer-ready structure, llms.txt and citation-readiness, all scored in one AEO audit.',
+  title: 'Answer Engine Optimization (AEO) Audit & ChatGPT Visibility | Igris Radar',
+  description: 'Optimize for AI answer engines. Run an AEO audit to ensure your content gets cited by ChatGPT, Perplexity AI, Claude, and Google AI Overviews.',
   path: '/landing/features/aeo-audit',
 });
 

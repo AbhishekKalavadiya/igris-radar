@@ -101,13 +101,13 @@ export default function LandingPage() {
           </Reveal>
           <Reveal delay={0.08}>
             <h1 className="text-4xl sm:text-5xl lg:text-[64px] font-bold tracking-tight leading-[1.06]">
-              Win AI Search & Brand Visibility<br />
-              <span className="text-primary">Across the Entire Web</span>
+              AI Search Visibility & Website Audit Platform<br />
+              <span className="text-primary">Increase Google & AI Search Ranking</span>
             </h1>
           </Reveal>
           <Reveal delay={0.16}>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              Audits every signal deciding whether your brand gets cited and recommended across security, SEO, AEO, GEO, brand visibility, and site health in one unified scan.
+              Free AI website analysis tool. Audit every signal determining how to increase search visibility across Security, SEO, AEO, GEO, Brand Tracking, and Site Health in one unified scan.
             </p>
           </Reveal>
           <Reveal delay={0.24}>

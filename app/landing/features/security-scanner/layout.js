@@ -3,8 +3,8 @@ import { buildMetadata, faqPageJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 import { FEATURE_PAGES } from '@/lib/landingContent';
 
 export const metadata = buildMetadata({
-  title: 'Web Risk Scanner & Security Audit Tool | Subdomain Radar | Igris Radar',
-  description: 'Automated Web Risk Scanner & Subdomain Radar: audit website risks, OWASP security headers, exposed API secrets, vulnerable JS libraries, and subdomain takeover vulnerabilities in 30 seconds.',
+  title: 'Free Website Security Scanner & Vulnerability Audit | Igris Radar',
+  description: 'Free website security scanner online. Run 90+ automated vulnerability checks: TLS, security headers, exposed secrets, live JS CVEs, and subdomain takeover risks.',
   path: '/landing/features/security-scanner',
 });
 

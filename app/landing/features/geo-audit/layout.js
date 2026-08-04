@@ -3,8 +3,8 @@ import { buildMetadata, faqPageJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 import { FEATURE_PAGES } from '@/lib/landingContent';
 
 export const metadata = buildMetadata({
-  title: 'GEO Audit: Generative Engine Optimization Score | Igris Radar',
-  description: 'Score your entity authority, topical depth, factual density and AI readability. The GEO audit measures whether generative AI engines treat your brand as the source worth citing.',
+  title: 'Generative Engine Optimization (GEO) Audit & AI Citation Checker | Igris Radar',
+  description: 'Master Generative Engine Optimization (GEO). Audit your entity authority, structured data, and citation-worthiness across generative AI models.',
   path: '/landing/features/geo-audit',
 });
 
