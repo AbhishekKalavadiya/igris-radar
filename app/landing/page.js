@@ -107,7 +107,7 @@ export default function LandingPage() {
           </Reveal>
           <Reveal delay={0.16}>
             <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              Free AI website analysis tool. Audit every signal determining how to increase search visibility across Security, SEO, AEO, GEO, Brand Tracking, and Site Health in one unified scan.
+              Free AI website audit tool. Audit every signal that determines how to increase search visibility across Security, SEO, AEO, GEO, Brand Tracking, and Site Health in one unified scan.
             </p>
           </Reveal>
           <Reveal delay={0.24}>

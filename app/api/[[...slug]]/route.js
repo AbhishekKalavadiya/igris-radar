@@ -1580,6 +1580,7 @@ export async function POST(request) {
         score: scanResult.score,
         totalChecks: scanResult.totalChecks || scanResult.findings.length,
         findings: scanResult.findings,  // Store FULL findings in DB
+        subdomainRadar: scanResult.subdomainRadar || null,
         ai: null,
         aiPending,
         isOnboarding: isOnboardingScan,

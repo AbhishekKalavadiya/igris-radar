@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Shield, Loader2, Search, Lock, Sparkles, AlertCircle, Zap, Star, CheckCircle2, Network } from 'lucide-react';
+import { Shield, Loader2, Search, Lock, Sparkles, AlertCircle, Zap, Star, CheckCircle2, Network, Radio } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ScoreRing from '@/components/ui/ScoreRing';
 import AuditFindingCard from '@/components/ui/AuditFindingCard';
 import CategoryScoreBreakdown from '@/components/ui/CategoryScoreBreakdown';
 import SecurityGraphView from '@/components/ui/SecurityGraphView';
+import DanglingDnsRadar from '@/components/ui/DanglingDnsRadar';
 import dynamic from 'next/dynamic';
 import ExportReportButton from '@/components/ui/ExportReportButton';
 import UpgradePrompt from '@/components/ui/UpgradePrompt';
@@ -452,6 +453,14 @@ export default function SecurityScanPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-card border border-border w-full justify-start h-auto flex-wrap p-1">
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="dns-radar" className="gap-1.5 font-medium relative">
+                <Radio className="w-3.5 h-3.5 text-primary" /> Subdomain Radar
+                {userPlan === 'free' && (
+                  <span className="ml-1 inline-flex items-center gap-0.5 text-[9px] bg-warning/20 text-warning px-1.5 py-0.5 rounded-full border border-warning/30">
+                    <Lock className="h-2.5 w-2.5" /> STARTER+
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="topology" className="gap-1.5 font-medium relative">
                 <Network className="w-3.5 h-3.5 text-primary" /> Topology Graph
                 {userPlan === 'free' && (
@@ -699,6 +708,29 @@ export default function SecurityScanPage() {
               )}
 
               <CategoryScoreBreakdown categories={scanResult.categories} />
+            </TabsContent>
+
+            <TabsContent value="dns-radar" className="m-0 space-y-4">
+              {userPlan === 'starter' || userPlan === 'pro' || user?.role === 'admin' || user?.role === 'owner' ? (
+                <DanglingDnsRadar
+                  data={scanResult.subdomainRadar}
+                  targetDomain={scanResult?.url ? scanResult.url.replace(/^https?:\/\//, '').split('/')[0] : ''}
+                />
+              ) : (
+                <div className="relative">
+                  <div className="filter blur-md pointer-events-none select-none opacity-40">
+                    <DanglingDnsRadar
+                      data={scanResult.subdomainRadar}
+                      targetDomain={scanResult?.url ? scanResult.url.replace(/^https?:\/\//, '').split('/')[0] : ''}
+                    />
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center p-4">
+                    <div className="max-w-md w-full">
+                      <UpgradePrompt currentPlan={userPlan} reason="subdomainRadar" />
+                    </div>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="topology" className="m-0 space-y-4">

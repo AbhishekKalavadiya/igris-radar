@@ -12,14 +12,15 @@ export const dynamic = 'force-static';
 export const revalidate = 86400;
 
 export const metadata = buildMetadata({
-  title: 'AI Search Visibility & Website Audit Platform — Free SEO, AEO & Security Audit | Igris Radar',
+  title: 'AI Website Audit Tool — Free SEO, Security & AI Search Visibility Platform | Igris Radar',
   description: SITE_DESCRIPTION,
   path: '/landing',
   keywords: [
-    'ai search visibility platform', 'ai website audit tool', 'how to increase google search visibility',
+    'ai website audit tool', 'ai search visibility platform', 'ai site audit',
+    'how to increase google search visibility', 'ai search optimization tool',
     'AEO', 'answer engine optimization', 'GEO', 'generative engine optimization',
     'AI visibility', 'AI search', 'SEO audit', 'website security scanner',
-    'brand visibility', 'core web vitals',
+    'brand visibility', 'core web vitals', 'website audit free',
   ],
 });
 
