@@ -2,6 +2,8 @@ import { SITE_URL } from '@/lib/seo'
 import { FINDING_EXPLANATIONS } from '@/lib/scannerExplanations'
 import { slugify } from '@/lib/slugify'
 import { getLastModified } from '@/lib/gitLastModified'
+import { SECURITY_CHECKS } from '@/lib/securityChecksData'
+import { TOP_DOMAINS } from '@/lib/topDomainsSecurityData'
 
 const FEATURE_SLUGS = [
   'security-scanner',
@@ -75,7 +77,39 @@ export default function sitemap() {
     priority: 0.8,
   }))
 
+  const securityCheckPages = [
+    {
+      url: `${SITE_URL}/landing/features/security-scanner/checks`,
+      lastModified: featuresModified,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    ...SECURITY_CHECKS.map((check) => ({
+      url: `${SITE_URL}/landing/features/security-scanner/checks/${check.slug}`,
+      lastModified: featuresModified,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    })),
+  ];
+
+  const domainReportPages = [
+    {
+      url: `${SITE_URL}/landing/features/security-scanner/reports`,
+      lastModified: featuresModified,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    ...TOP_DOMAINS.map((d) => ({
+      url: `${SITE_URL}/landing/features/security-scanner/reports/${d.slug}`,
+      lastModified: featuresModified,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    })),
+  ];
+
   return [
+    ...securityCheckPages,
+    ...domainReportPages,
     { url: SITE_URL, lastModified: landingModified, changeFrequency: 'daily', priority: 1.0 },
     { url: `${SITE_URL}/landing`, lastModified: landingModified, changeFrequency: 'weekly', priority: 0.9 },
     ...FEATURE_SLUGS.map((slug) => ({

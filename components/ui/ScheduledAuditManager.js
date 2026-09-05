@@ -10,14 +10,16 @@
  */
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Clock, Plus, Trash2, Loader2, Bell, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
 const FREQUENCY_OPTIONS = [
-  { value: 'monthly', label: 'Monthly',  planRequired: 'starter' },
   { value: 'daily',   label: 'Daily',    planRequired: 'pro' },
+  { value: 'weekly',  label: 'Weekly',   planRequired: 'starter' },
+  { value: 'monthly', label: 'Monthly',  planRequired: 'starter' },
 ];
 
 const THRESHOLD_OPTIONS = [50, 60, 70, 80];
@@ -25,16 +27,16 @@ const THRESHOLD_OPTIONS = [50, 60, 70, 80];
 /**
  * @param {{
  *   url: string,
- *   scanType: 'seo'|'aeo',
+ *   scanType: 'seo'|'aeo'|'security'|'geo',
  *   userPlan: string,
  * }} props
  */
-export default function ScheduledAuditManager({ url, scanType, userPlan = 'free' }) {
+export default function ScheduledAuditManager({ url, scanType = 'security', userPlan = 'free' }) {
   const [audits, setAudits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [frequency, setFrequency] = useState('weekly');
+  const [frequency, setFrequency] = useState(userPlan === 'pro' ? 'daily' : 'weekly');
   const [alertThreshold, setAlertThreshold] = useState(70);
   const { toast } = useToast();
 
@@ -42,7 +44,7 @@ export default function ScheduledAuditManager({ url, scanType, userPlan = 'free'
   const monitoringAllowed = ['starter', 'pro'].includes(userPlan);
   const allowedFrequencies = FREQUENCY_OPTIONS.filter(f => {
     if (userPlan === 'pro') return true;
-    if (userPlan === 'starter') return f.value === 'monthly';
+    if (userPlan === 'starter') return f.value === 'monthly' || f.value === 'weekly';
     return false;
   });
 
@@ -104,9 +106,16 @@ export default function ScheduledAuditManager({ url, scanType, userPlan = 'free'
 
   if (!monitoringAllowed) {
     return (
-      <div className="border border-border bg-muted p-4 flex items-center gap-3 text-sm text-muted-foreground">
-        <Clock className="h-4 w-4 shrink-0 text-primary/50" />
-        <span>Automated monitoring is available on Starter and above. <a href="/settings?tab=billing" className="text-primary hover:underline">Upgrade your plan</a></span>
+      <div className="border border-border bg-muted/40 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm">
+        <div className="flex items-center gap-2.5 text-muted-foreground">
+          <Clock className="h-4 w-4 shrink-0 text-primary" />
+          <span>Automated Daily Monitoring is available on Starter and Pro plans.</span>
+        </div>
+        <Link href="/plans">
+          <Button size="sm" className="bg-primary text-primary-foreground text-xs font-semibold h-8 px-3.5">
+            Upgrade Plan
+          </Button>
+        </Link>
       </div>
     );
   }

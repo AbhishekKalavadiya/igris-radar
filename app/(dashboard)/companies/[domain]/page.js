@@ -29,6 +29,16 @@ export default function CompanyDetailsPage() {
 
   useEffect(() => {
     fetchCompanyData();
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get('monitoring') === 'true' || searchParams.get('action') === 'monitoring') {
+        setShowMonitoringDialog(true);
+        const type = searchParams.get('type');
+        if (type && ['security', 'seo', 'aeo', 'geo'].includes(type.toLowerCase())) {
+          setMonitoringScanType(type.toLowerCase());
+        }
+      }
+    }
   }, [domain]);
 
   const fetchCompanyData = async () => {

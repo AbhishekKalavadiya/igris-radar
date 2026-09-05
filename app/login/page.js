@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/lib/authContext';
@@ -17,8 +17,21 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, isOnboarded } = useAuth();
+  const { login, isOnboarded, user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect') || searchParams.get('returnUrl') || searchParams.get('callbackUrl');
+
+  useEffect(() => {
+    if (user) {
+      if (redirectParam && redirectParam.startsWith('/')) {
+        router.push(redirectParam);
+      } else {
+        const onboarded = localStorage.getItem('provenance_onboarded') === 'true';
+        router.push(onboarded ? '/dashboard' : '/onboarding');
+      }
+    }
+  }, [user, redirectParam, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,8 +46,12 @@ function LoginForm() {
 
     const result = await login(email, password);
     if (result.success) {
-      const onboarded = localStorage.getItem('provenance_onboarded') === 'true';
-      router.push(onboarded ? '/dashboard' : '/onboarding');
+      if (redirectParam && redirectParam.startsWith('/')) {
+        router.push(redirectParam);
+      } else {
+        const onboarded = localStorage.getItem('provenance_onboarded') === 'true';
+        router.push(onboarded ? '/dashboard' : '/onboarding');
+      }
     } else {
       setError(result.error || 'Invalid credentials');
     }
@@ -122,7 +139,10 @@ function LoginForm() {
 
             <div className="mt-6 text-center text-sm">
               <span className="text-muted-foreground">Don't have an account? </span>
-              <Link href="/signup" className="text-primary hover:underline font-medium">
+              <Link
+                href={redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : '/signup'}
+                className="text-primary hover:underline font-medium"
+              >
                 Sign up
               </Link>
             </div>
@@ -140,7 +160,9 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <AuthProvider>
-      <LoginForm />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>}>
+        <LoginForm />
+      </Suspense>
     </AuthProvider>
   );
 }

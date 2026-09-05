@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Mail, Lock, User, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/lib/authContext';
@@ -32,6 +32,8 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   const { signup } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect') || searchParams.get('returnUrl') || searchParams.get('callbackUrl');
 
   const passwordRules = PASSWORD_RULES.map((rule) => ({ ...rule, met: rule.test(password) }));
   const allPasswordValid = passwordRules.every((rule) => rule.met);
@@ -56,7 +58,12 @@ function SignupForm() {
 
     const result = await signup(email, password, name);
     if (result.success) {
-      router.push('/onboarding');
+      if (redirectParam && redirectParam.startsWith('/')) {
+        sessionStorage.setItem('post_auth_redirect', redirectParam);
+        router.push(`/onboarding?redirect=${encodeURIComponent(redirectParam)}`);
+      } else {
+        router.push('/onboarding');
+      }
     } else {
       setError(result.error || 'Signup failed. Please try again.');
     }
@@ -172,8 +179,11 @@ function SignupForm() {
 
             <div className="mt-6 text-center text-sm">
               <span className="text-muted-foreground">Already have an account? </span>
-              <Link href="/login" className="text-primary hover:underline font-medium">
-                Sign in
+              <Link
+                href={redirectParam ? `/login?redirect=${encodeURIComponent(redirectParam)}` : '/login'}
+                className="text-primary hover:underline font-medium"
+              >
+                Log in
               </Link>
             </div>
           </CardContent>
@@ -193,7 +203,9 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <AuthProvider>
-      <SignupForm />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>}>
+        <SignupForm />
+      </Suspense>
     </AuthProvider>
   );
 }

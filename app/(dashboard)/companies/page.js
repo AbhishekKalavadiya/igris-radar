@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Briefcase, Plus, Loader2, Globe, ArrowRight, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import { PageTransition, Stagger, MotionItem } from '@/components/ui/motion';
 import { ListSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function CompaniesPage() {
+  const router = useRouter();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -22,6 +24,17 @@ export default function CompaniesPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const targetDomain = params.get('domain');
+      if (targetDomain) {
+        router.push(`/companies/${encodeURIComponent(targetDomain)}?monitoring=true`);
+        return;
+      }
+      if (params.get('monitoring') === 'true') {
+        setAddModalOpen(true);
+      }
+    }
     fetchCompanies();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

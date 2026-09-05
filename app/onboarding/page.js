@@ -37,7 +37,15 @@ function OnboardingContent() {
       primaryDomain: null,
       competitorDomain: null,
     });
-    router.push('/dashboard');
+    const savedRedirect = typeof window !== 'undefined'
+      ? (sessionStorage.getItem('post_auth_redirect') || new URLSearchParams(window.location.search).get('redirect'))
+      : null;
+    if (savedRedirect && savedRedirect.startsWith('/')) {
+      try { sessionStorage.removeItem('post_auth_redirect'); } catch {}
+      router.push(savedRedirect);
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   return (
