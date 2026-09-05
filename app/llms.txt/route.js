@@ -18,12 +18,15 @@ ${SITE_NAME} is built for teams that want to be cited and recommended by AI assi
 
 - [Home](${SITE_URL}/landing): Platform overview, pricing, and FAQ
 - [Web Risk Scanner & Subdomain Radar](${SITE_URL}/landing/features/security-scanner): Security headers, exposed secrets, cookies, CORS, SPF/DMARC, subdomain takeover risks
+- [Security Checks Directory](${SITE_URL}/landing/features/security-scanner/checks): Complete index of 90+ automated website security checks and remediation guides
+- [Domain Security Reports](${SITE_URL}/landing/features/security-scanner/reports): Public security audit reports, vulnerability scores, and topology graphs for top domains
 - [SEO Audit](${SITE_URL}/landing/features/seo-audit): Technical SEO, canonical tags, on-page signals, structured data, link health
 - [AEO Audit](${SITE_URL}/landing/features/aeo-audit): AI crawler access, answer-ready structure, llms.txt, citation-readiness
 - [GEO Audit](${SITE_URL}/landing/features/geo-audit): Entity authority, topical depth, factual density, AI readability
 - [Brand Radar & AI Brand Visibility Tracker](${SITE_URL}/landing/features/brand-visibility): Live prompt tracking across ChatGPT, Claude, Perplexity, Gemini
 - [Site Health Monitor](${SITE_URL}/landing/features/site-health): Core Web Vitals via PageSpeed and WCAG 2.2 accessibility
 - [Knowledge Base & Guides](${SITE_URL}/learn): Technical SEO guides, canonical tag documentation, Core Web Vitals thresholds, and security rules
+- [Free Tools](${SITE_URL}/tools): Interactive developer utilities including llms.txt generator and security validators
 
 ## Company
 
